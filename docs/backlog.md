@@ -96,21 +96,21 @@ Sprint 2 · Size S · **Status: Done** — merged into `dev` in [#52](https://gi
 - [x] BE · Build setup so `server` and `client` can import it
 
 ### SETUP-3 · Server skeleton
-Sprint 2 · Size M · Status: In review — branch `feat/SETUP-3-server-skeleton` · Depends on SETUP-2
-- [ ] BE · `app.ts` / `server.ts` with `GET /api/health`
-- [ ] BE · Env validation with zod (`config/env.ts`); fail fast on missing variables
-- [ ] BE · Request ID middleware + pino-http logging (request ID on every log line and in `X-Request-Id`)
-- [ ] BE · Security middleware: helmet, CORS allowlist, JSON size limit, cookie-parser, `trust proxy` for nginx
-- [ ] BE · `origin-check` middleware: reject cross-site `POST`/`PATCH`/`PUT`/`DELETE` with 403 (architecture §7)
-- [ ] BE · Central error handler (standard format, no stack traces) + 404 handler
-- [ ] BE · Graceful shutdown on `SIGTERM`; log and exit on unhandled errors (engineering standards §6.4)
-- [ ] BE · OpenAPI spec generated from the shared zod schemas (`/api/openapi.json`)
-- [ ] BE · Swagger UI at `/api/docs`
-- [ ] QA · Integration tests: health, unknown route → 404 in the standard format, thrown error → 500 without a stack trace
-- [ ] QA · Integration tests: cross-site `POST` → 403, same-origin `POST` is allowed
+Sprint 2 · Size M · **Status: Done** — merged into `dev` in [#53](https://github.com/OrelTzarfaty/Mini-Jira/pull/53) · Depends on SETUP-2
+- [x] BE · `app.ts` / `server.ts` with `GET /api/health`
+- [x] BE · Env validation with zod (`config/env.ts`); fail fast on missing variables
+- [x] BE · Request ID middleware + pino-http logging (request ID on every log line and in `X-Request-Id`)
+- [x] BE · Security middleware: helmet, CORS allowlist, JSON size limit, cookie-parser, `trust proxy` for nginx
+- [x] BE · `origin-check` middleware: reject cross-site `POST`/`PATCH`/`PUT`/`DELETE` with 403 (architecture §7)
+- [x] BE · Central error handler (standard format, no stack traces) + 404 handler
+- [x] BE · Graceful shutdown on `SIGTERM`; log and exit on unhandled errors (engineering standards §6.4)
+- [x] BE · OpenAPI spec generated from the shared zod schemas (`/api/openapi.json`)
+- [x] BE · Swagger UI at `/api/docs`
+- [x] QA · Integration tests: health, unknown route → 404 in the standard format, thrown error → 500 without a stack trace
+- [x] QA · Integration tests: cross-site `POST` → 403, same-origin `POST` is allowed
 
 ### SETUP-4 · Database
-Sprint 2 · Size M · Status: To do · Depends on SETUP-3
+Sprint 2 · Size M · Status: In progress — branch `feat/SETUP-4-database` · Depends on SETUP-3
 - [ ] BE · Prisma setup + PostgreSQL container for development
 - [ ] BE · Separate test database + helper that resets it per test file
 - [ ] BE · First migration: `User` table (each later epic adds its own tables)
