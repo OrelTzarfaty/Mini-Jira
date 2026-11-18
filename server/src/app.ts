@@ -7,6 +7,7 @@ import type { Logger } from 'pino';
 
 import { errorHandler, notFoundHandler } from './middleware/error-handler.js';
 import { createHttpLogger } from './middleware/http-logger.js';
+import { createOriginCheck } from './middleware/origin-check.js';
 import { createApiRouter } from './routes.js';
 
 const JSON_BODY_LIMIT = '100kb';
@@ -31,6 +32,7 @@ export function createApp({
   app.use(createHttpLogger(logger));
   app.use(helmet());
   app.use(cors({ origin: clientOrigin, credentials: true }));
+  app.use(createOriginCheck(clientOrigin));
   app.use(express.json({ limit: JSON_BODY_LIMIT }));
   app.use(cookieParser());
 
