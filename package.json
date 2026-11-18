@@ -14,6 +14,10 @@
     "e2e"
   ],
   "scripts": {
+    "build:shared": "npm run build --workspace @mini-jira/shared",
+    "prelint": "npm run build:shared",
+    "pretypecheck": "npm run build:shared",
+    "pretest": "npm run build:shared",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
