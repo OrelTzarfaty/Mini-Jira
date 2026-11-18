@@ -5,7 +5,7 @@ import { createLogger } from './lib/logger.js';
 const env = loadEnv();
 const logger = createLogger(env.LOG_LEVEL);
 
-createApp({ logger }).listen(env.PORT, (error) => {
+createApp({ logger, clientOrigin: env.CLIENT_ORIGIN }).listen(env.PORT, (error) => {
   if (error) {
     logger.fatal({ err: error }, 'The API could not start');
     process.exit(1);

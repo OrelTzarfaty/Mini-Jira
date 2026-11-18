@@ -4,6 +4,8 @@ import type { Logger } from 'pino';
 import { createApp } from '../../src/app.js';
 import { createLogger } from '../../src/lib/logger.js';
 
+export const TEST_CLIENT_ORIGIN = 'http://localhost:5173';
+
 interface TestAppOptions {
   logger?: Logger;
   apiRouter?: Router;
@@ -13,7 +15,11 @@ export function createTestApp({
   logger = createLogger('silent'),
   apiRouter,
 }: TestAppOptions = {}): Express {
-  return createApp({ logger, ...(apiRouter ? { apiRouter } : {}) });
+  return createApp({
+    logger,
+    clientOrigin: TEST_CLIENT_ORIGIN,
+    ...(apiRouter ? { apiRouter } : {}),
+  });
 }
 
 export interface LogLine {
