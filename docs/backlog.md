@@ -77,19 +77,19 @@ Sprint 1 · Size S · Status: To do
 ## E1 · Foundations — Sprint 2
 
 ### SETUP-1 · Repository and workspaces
-Sprint 2 · Size M · Status: In progress — built on branch `chore/SETUP-1-repo-setup`, not merged yet
+Sprint 2 · Size M · Status: In progress — merged into `dev` in [#43](https://github.com/OrelTzarfaty/Mini-Jira/pull/43); only protecting `main` is left
 - [x] You · Create the public GitHub repo: [OrelTzarfaty/Mini-Jira](https://github.com/OrelTzarfaty/Mini-Jira)
 - [x] BE · `git init` and connect the local project to GitHub
 - [ ] You · Protect `main` (PRs only)
-- [ ] BE · Root `package.json` with npm workspaces (`shared`, `server`, `client`, `e2e`)
-- [ ] BE · Base `tsconfig` shared by all workspaces (strict settings from [engineering standards §5](engineering-standards.md))
-- [ ] BE · ESLint (`typescript-eslint` `recommendedTypeChecked` + `stylisticTypeChecked`) + Prettier, and root scripts (`lint`, `format`, `typecheck`, `test`, `build`)
-- [ ] BE · `.gitignore`: `node_modules`, `.env`, `dist`, `.playwright/`, `.playwright-cli/`, `test-results/`, `playwright-report/`, `qa-evidence/`
-- [ ] BE · README skeleton
-- [ ] BE · PR template with the Definition of Done and the standards checklist (engineering standards §12)
+- [x] BE · Root `package.json` with npm workspaces (`shared`, `server`, `client`, `e2e`)
+- [x] BE · Base `tsconfig` shared by all workspaces (strict settings from [engineering standards §5](engineering-standards.md))
+- [x] BE · ESLint (`typescript-eslint` `recommendedTypeChecked` + `stylisticTypeChecked`) + Prettier, and root scripts (`lint`, `format`, `typecheck`, `test`, `build`)
+- [x] BE · `.gitignore`: `node_modules`, `.env`, `dist`, `.playwright/`, `.playwright-cli/`, `test-results/`, `playwright-report/`, `qa-evidence/`
+- [x] BE · README skeleton
+- [x] BE · PR template with the Definition of Done and the standards checklist (engineering standards §12)
 
 ### SETUP-2 · Shared package
-Sprint 2 · Size S · Status: In progress — built on branch `feat/SETUP-2-shared-package`, waiting for SETUP-1 to merge · Depends on SETUP-1
+Sprint 2 · Size S · Status: In review — branch `feat/SETUP-2-shared-package` · Depends on SETUP-1
 - [ ] BE · `@mini-jira/shared`: enums (TicketType, Priority, Status, Role)
 - [ ] BE · Error codes and the error response type (architecture §9)
 - [ ] BE · `Page<T>` type and pagination query schema
