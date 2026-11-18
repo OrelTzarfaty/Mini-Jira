@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url';
 
 import { afterEach, describe, expect, it } from 'vitest';
 
+import { createPrismaClient } from '../../src/lib/prisma.js';
 import { TEST_DATABASE_URL } from '../helpers/test-database-url.js';
 
 const SERVER_DIR = fileURLToPath(new URL('../..', import.meta.url));
@@ -167,6 +168,19 @@ describe('API startup', () => {
       const run = await runServerUntilExit(databaseUrlForPort(port));
 
       expectCleanStartupFailure(run);
+    },
+    TEST_TIMEOUT_MS,
+  );
+
+  it(
+    'SETUP-4: a database connection gives up when the database never answers',
+    async () => {
+      const port = await startSilentDatabase();
+      const prisma = createPrismaClient(databaseUrlForPort(port));
+
+      await expect(prisma.$queryRaw`SELECT 1`).rejects.toThrow(/connection timeout/);
+
+      await prisma.$disconnect();
     },
     TEST_TIMEOUT_MS,
   );
