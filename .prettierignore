@@ -6,6 +6,7 @@ mini-jira-requirements.md
 
 # Generated files
 package-lock.json
+server/src/generated/
 dist/
 build/
 coverage/

@@ -5,6 +5,7 @@ node_modules/
 dist/
 build/
 *.tsbuildinfo
+server/src/generated/
 
 # Environment files: secrets never go into git
 .env

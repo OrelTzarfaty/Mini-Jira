@@ -316,6 +316,8 @@ Patterns are a shared vocabulary, not a goal. Use one only when it removes a rea
 
 **Merging:** a mission's pull request merges into `dev`. At the end of each sprint, `dev` merges into `main`.
 
+**QA check:** `qa-engineer` must give a **PASS** on the final commit of every pull request before it can be merged. Any code change after that needs a new QA check.
+
 **Commits** follow [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/), with the requirement ID:
 
 ```
