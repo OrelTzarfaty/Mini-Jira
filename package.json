@@ -1,0 +1,40 @@
+{
+  "name": "mini-jira",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A lightweight team task board: projects, tickets, a drag-and-drop board, comments, and activity history.",
+  "type": "module",
+  "engines": {
+    "node": ">=26 <27"
+  },
+  "workspaces": [
+    "shared",
+    "server",
+    "client",
+    "e2e"
+  ],
+  "scripts": {
+    "build:shared": "npm run build --workspace @mini-jira/shared",
+    "prelint": "npm run build:shared",
+    "pretypecheck": "npm run build:shared",
+    "pretest": "npm run build:shared",
+    "prestart": "npm run build:shared && npm run build --workspace @mini-jira/server",
+    "start": "npm run start --workspace @mini-jira/server",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "build": "npm run build --workspaces --if-present"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@stylistic/eslint-plugin": "6.0.1",
+    "eslint": "10.15.0",
+    "eslint-config-prettier": "10.1.8",
+    "prettier": "3.10.1",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.73.0"
+  }
+}
