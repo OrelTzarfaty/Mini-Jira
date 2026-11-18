@@ -9,7 +9,8 @@ const logger = createLogger(env.LOG_LEVEL);
 const prisma = createPrismaClient(env.DATABASE_URL);
 
 try {
-  await prisma.$connect();
+  // A real query, because Prisma opens the connection only when it first needs it.
+  await prisma.$queryRaw`SELECT 1`;
 } catch (error) {
   logger.fatal({ err: error }, 'The API could not connect to the database');
   process.exit(1);
