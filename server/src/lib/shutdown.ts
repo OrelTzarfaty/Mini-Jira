@@ -6,17 +6,35 @@ interface ClosableServer {
   close(callback: (error?: Error) => void): unknown;
 }
 
+type Disconnect = () => Promise<void>;
 type Exit = (code: number) => void;
 
 interface ShutdownOptions {
   server: ClosableServer;
+  disconnect: Disconnect;
   logger: Logger;
   exit: Exit;
   timeoutMs?: number;
 }
 
+async function closeResources(server: ClosableServer, disconnect: Disconnect): Promise<void> {
+  await new Promise<void>((resolve, reject) => {
+    server.close((error) => {
+      if (error) {
+        reject(error);
+
+        return;
+      }
+      resolve();
+    });
+  });
+
+  await disconnect();
+}
+
 export function createShutdown({
   server,
+  disconnect,
   logger,
   exit,
   timeoutMs = SHUTDOWN_TIMEOUT_MS,
@@ -35,17 +53,18 @@ export function createShutdown({
       exit(1);
     }, timeoutMs);
 
-    server.close((error) => {
-      clearTimeout(timeout);
-      if (error) {
+    closeResources(server, disconnect).then(
+      () => {
+        clearTimeout(timeout);
+        logger.info('Shutdown complete');
+        exit(0);
+      },
+      (error: unknown) => {
+        clearTimeout(timeout);
         logger.error({ err: error }, 'Shutdown failed');
         exit(1);
-
-        return;
-      }
-      logger.info('Shutdown complete');
-      exit(0);
-    });
+      },
+    );
   };
 }
 
@@ -57,9 +76,13 @@ export function createFatalErrorHandler(logger: Logger, exit: Exit): (error: unk
   };
 }
 
-export function registerProcessHandlers(server: ClosableServer, logger: Logger): void {
+export function registerProcessHandlers(
+  server: ClosableServer,
+  disconnect: Disconnect,
+  logger: Logger,
+): void {
   const exit: Exit = (code) => process.exit(code);
-  const shutdown = createShutdown({ server, logger, exit });
+  const shutdown = createShutdown({ server, disconnect, logger, exit });
   const handleFatalError = createFatalErrorHandler(logger, exit);
 
   process.on('SIGTERM', shutdown);
