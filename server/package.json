@@ -6,6 +6,7 @@
   "scripts": {
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
+    "predb:seed": "npm run db:generate",
     "db:seed": "prisma db seed",
     "predev": "npm run db:generate",
     "dev": "tsx watch --env-file-if-exists=../.env src/server.ts",
