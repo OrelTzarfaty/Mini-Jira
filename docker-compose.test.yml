@@ -1,0 +1,19 @@
+# A throwaway database for automated tests. Its data is kept in memory only.
+name: minijira-test
+
+services:
+  db-test:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_USER: minijira_test
+      POSTGRES_PASSWORD: minijira_test
+      POSTGRES_DB: minijira_test
+    ports:
+      - '127.0.0.1:5433:5432'
+    tmpfs:
+      - /var/lib/postgresql
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"']
+      interval: 2s
+      timeout: 3s
+      retries: 15
