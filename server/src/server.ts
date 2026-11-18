@@ -1,5 +1,6 @@
 import { createApp } from './app.js';
+import { loadEnv } from './config/env.js';
 
-const PORT = 3000;
+const env = loadEnv();
 
-createApp().listen(PORT);
+createApp().listen(env.PORT);
