@@ -46,4 +46,20 @@ describe('User table', () => {
 
     expect(await testPrisma.user.count()).toBe(0);
   });
+
+  it('SETUP-4: resetting the database keeps the migration history', async () => {
+    const countMigrations = async (): Promise<number> => {
+      const [row] = await testPrisma.$queryRaw<{ total: number }[]>`
+        SELECT COUNT(*)::int AS total FROM "_prisma_migrations"
+      `;
+
+      return row?.total ?? 0;
+    };
+    const migrationsBefore = await countMigrations();
+
+    await resetDatabase();
+
+    expect(migrationsBefore).toBeGreaterThan(0);
+    expect(await countMigrations()).toBe(migrationsBefore);
+  });
 });
