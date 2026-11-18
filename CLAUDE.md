@@ -111,7 +111,12 @@ Agents live in `.claude/agents/`:
 - **`frontend-developer`** — React client, board, forms, states, accessibility, frontend tests. Uses the design skills below.
 - **`qa-engineer`** — verifies acceptance criteria, writes API and E2E tests, reports bugs. Does not change app code.
 
-Workflow per story: backend builds the API → frontend builds the UI → QA verifies → fix bugs → PR.
+**Every mission uses the agents:**
+1. `backend-developer` does all `BE` tasks, and `frontend-developer` does all `FE` tasks.
+2. The pull request is opened into `dev`.
+3. **QA check (required):** `qa-engineer` tests the final commit of **every** pull request and gives a **PASS** or **FAIL** verdict.
+4. On **FAIL**, the owning agent fixes the root cause and `qa-engineer` tests again.
+5. A pull request is merged only after a QA **PASS** on its final commit **and** the project owner's approval.
 
 **Browser checks:** `frontend-developer` and `qa-engineer` use the **Chrome DevTools MCP** (`chrome-devtools`, configured in the user's Claude settings, not in this repo) to check features in a real browser: console and network errors, multi-user scenarios via isolated contexts, phone width, slow/offline network, and Lighthouse accessibility. Only local URLs and seed test accounts. QA screenshots go in `qa-evidence/` (not committed).
 
