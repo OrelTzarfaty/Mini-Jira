@@ -129,7 +129,7 @@ Installed locally in `.claude/skills/` (about 40 MB, not committed to git): `des
 ## Working rules
 
 - Follow [docs/engineering-standards.md](docs/engineering-standards.md), and complete its §12 checklist before saying work is done.
-- **Missions:** one backlog story = one mission = one GitHub issue, one branch (`feat/AUTH-1-register`), and one PR into `dev`. Each task = one commit. `dev` merges into `main` at the end of each sprint. CI must be green.
+- **Missions:** one backlog story = one mission = one GitHub issue, one branch (`feat/AUTH-1-register`), and one PR into `dev`. Each task = one commit. `dev` merges into `main` at the end of each sprint. CI must be green. Run a whole mission with `/mission <STORY-ID>` (for example `/mission AUTH-1`); it stops before merging.
 - Definition of Done: acceptance criteria met, server-side validation and permission checks, tests for the main path and at least one failure path, loading/empty/error states, API docs updated.
 - Secrets only in environment variables; commit `.env.example`, never `.env`.
 - This is a learning project: explain **why** behind design decisions so the user can defend them in the design doc and demo.
