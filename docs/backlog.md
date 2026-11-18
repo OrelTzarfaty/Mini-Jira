@@ -89,14 +89,14 @@ Sprint 2 · Size M · Status: In progress — merged into `dev` in [#43](https:/
 - [x] BE · PR template with the Definition of Done and the standards checklist (engineering standards §12)
 
 ### SETUP-2 · Shared package
-Sprint 2 · Size S · Status: In review — branch `feat/SETUP-2-shared-package` · Depends on SETUP-1
-- [ ] BE · `@mini-jira/shared`: enums (TicketType, Priority, Status, Role)
-- [ ] BE · Error codes and the error response type (architecture §9)
-- [ ] BE · `Page<T>` type and pagination query schema
-- [ ] BE · Build setup so `server` and `client` can import it
+Sprint 2 · Size S · **Status: Done** — merged into `dev` in [#52](https://github.com/OrelTzarfaty/Mini-Jira/pull/52) · Depends on SETUP-1
+- [x] BE · `@mini-jira/shared`: enums (TicketType, Priority, Status, Role)
+- [x] BE · Error codes and the error response type (architecture §9)
+- [x] BE · `Page<T>` type and pagination query schema
+- [x] BE · Build setup so `server` and `client` can import it
 
 ### SETUP-3 · Server skeleton
-Sprint 2 · Size M · Status: To do · Depends on SETUP-2
+Sprint 2 · Size M · Status: In progress — branch `feat/SETUP-3-server-skeleton` · Depends on SETUP-2
 - [ ] BE · `app.ts` / `server.ts` with `GET /api/health`
 - [ ] BE · Env validation with zod (`config/env.ts`); fail fast on missing variables
 - [ ] BE · Request ID middleware + pino-http logging (request ID on every log line and in `X-Request-Id`)
