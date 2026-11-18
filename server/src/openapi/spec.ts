@@ -5,6 +5,7 @@ const API_VERSION = '0.1.0';
 
 function toComponentSchema(schema: z.ZodType): Record<string, unknown> {
   const entries = Object.entries(z.toJSONSchema(schema));
+
   return Object.fromEntries(entries.filter(([key]) => key !== '$schema'));
 }
 

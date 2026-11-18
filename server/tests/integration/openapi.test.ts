@@ -18,6 +18,7 @@ interface OpenApiSpec {
 async function getSpec(): Promise<OpenApiSpec> {
   const response = await request(createTestApp()).get('/api/openapi.json');
   expect(response.status).toBe(200);
+
   return response.body as OpenApiSpec;
 }
 

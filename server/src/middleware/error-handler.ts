@@ -22,6 +22,7 @@ function isClientRequestError(error: unknown): error is ClientRequestError {
     return false;
   }
   const { status } = error;
+
   return typeof status === 'number' && status >= 400 && status < 500;
 }
 
@@ -31,8 +32,10 @@ function toAppError(error: unknown): AppError | undefined {
   }
   if (isClientRequestError(error)) {
     const message = error.type ? REQUEST_ERROR_MESSAGES[error.type] : undefined;
+
     return new ValidationError(message ?? INVALID_REQUEST_MESSAGE);
   }
+
   return undefined;
 }
 
@@ -47,6 +50,7 @@ export const notFoundHandler: RequestHandler = (_req, _res, next) => {
 export const errorHandler: ErrorRequestHandler = (error: unknown, req, res, next) => {
   if (res.headersSent) {
     next(error);
+
     return;
   }
 
@@ -55,6 +59,7 @@ export const errorHandler: ErrorRequestHandler = (error: unknown, req, res, next
   if (appError) {
     req.log.warn({ code: appError.code }, appError.message);
     res.status(appError.status).json(toResponseBody(appError));
+
     return;
   }
 

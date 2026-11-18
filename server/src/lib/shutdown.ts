@@ -40,6 +40,7 @@ export function createShutdown({
       if (error) {
         logger.error({ err: error }, 'Shutdown failed');
         exit(1);
+
         return;
       }
       logger.info('Shutdown complete');

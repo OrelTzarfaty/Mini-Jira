@@ -12,6 +12,7 @@ function createFakeServer() {
   const close = vi.fn((callback: CloseCallback) => {
     finishClosing = callback;
   });
+
   return { close, finishClosing: (error?: Error) => finishClosing(error) };
 }
 

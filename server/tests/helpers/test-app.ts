@@ -37,5 +37,6 @@ export function createMemoryLogger(): { logger: Logger; lines: LogLine[] } {
       lines.push(JSON.parse(line) as LogLine);
     },
   });
+
   return { logger, lines };
 }

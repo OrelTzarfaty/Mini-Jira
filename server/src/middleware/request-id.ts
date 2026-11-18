@@ -10,5 +10,6 @@ export function assignRequestId(req: IncomingMessage, res: ServerResponse): stri
     typeof incoming === 'string' && SAFE_REQUEST_ID.test(incoming) ? incoming : randomUUID();
 
   res.setHeader('X-Request-Id', id);
+
   return id;
 }

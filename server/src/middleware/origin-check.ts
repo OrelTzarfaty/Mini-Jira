@@ -10,6 +10,7 @@ export function createOriginCheck(clientOrigin: string): RequestHandler {
   return (req, _res, next) => {
     if (!STATE_CHANGING_METHODS.has(req.method)) {
       next();
+
       return;
     }
 
