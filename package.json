@@ -25,6 +25,7 @@
     "db:test:up": "docker compose --file docker-compose.test.yml up --detach --wait",
     "db:test:down": "docker compose --file docker-compose.test.yml down",
     "db:migrate": "npm run db:migrate --workspace @mini-jira/server",
+    "db:seed": "npm run db:seed --workspace @mini-jira/server",
     "start": "npm run start --workspace @mini-jira/server",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
