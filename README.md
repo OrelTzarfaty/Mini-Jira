@@ -30,12 +30,17 @@ You need [Node.js 26](https://nodejs.org/) and npm.
 
 ```bash
 npm ci
+cp .env.example .env
+npm run dev --workspace @mini-jira/server
 ```
+
+The API runs at `http://localhost:3000`, and its documentation is at [`/api/docs`](http://localhost:3000/api/docs).
 
 ## Commands
 
 | Command                | What it does                             |
 | ---------------------- | ---------------------------------------- |
+| `npm start`            | Builds and runs the production API       |
 | `npm run lint`         | Checks the code for problems             |
 | `npm run lint:fix`     | Fixes the problems that can be automated |
 | `npm run format`       | Formats the code                         |

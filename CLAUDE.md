@@ -79,7 +79,13 @@ Conventions (from the requirements):
   { "error": { "code": "VALIDATION_ERROR", "message": "Title is required", "details": [{ "field": "title", "message": "Required" }] } }
   ```
 
-Endpoints: none yet. Keep a short list here (method, path, purpose) as they're added; Swagger holds the full details.
+Endpoints so far (full details in Swagger at `/api/docs`):
+
+| Method | Path | Purpose |
+|---|---|---|
+| `GET` | `/api/health` | Check that the API is running |
+| `GET` | `/api/openapi.json` | The OpenAPI description of the API |
+| `GET` | `/api/docs` | Swagger UI |
 
 ## Features
 
@@ -130,10 +136,13 @@ Run from the repo root (Node.js 26 required):
 | Command | Purpose |
 |---|---|
 | `npm ci` | Install dependencies from the lockfile |
+| `cp .env.example .env` | Create local settings (first time only) |
+| `npm run dev --workspace @mini-jira/server` | Run the API at `http://localhost:3000` and restart it on changes |
+| `npm start` | Build `shared` and `server`, then run the production version of the API |
 | `npm run lint` / `npm run lint:fix` | Check code with ESLint / apply automatic fixes |
 | `npm run format` / `npm run format:check` | Format code with Prettier / check formatting |
 | `npm run typecheck` | Type-check every workspace that has a `typecheck` script |
-| `npm test` | Run tests in every workspace that has a `test` script |
+| `npm test` | Build `shared`, then run tests in every workspace that has a `test` script |
 | `npm run build` | Build every workspace that has a `build` script |
 
 Run `npm run build` after changing `shared/`, because other workspaces import its built files.

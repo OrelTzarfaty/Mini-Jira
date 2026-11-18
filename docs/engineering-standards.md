@@ -72,6 +72,7 @@ Names say **what and why**, using the product's words (ticket, project, member, 
 
 - A function does **one thing** at one level of detail.
 - Return early instead of nesting. *Guideline:* at most 3 levels of nesting.
+- Put an **empty line before every `return`**, unless the `return` is the first line of its block. ESLint enforces this.
 - *Guideline:* about 40 lines per function, 300 per file, 200 per component. Longer usually means more than one job.
 - *Guideline:* at most 3 parameters; beyond that, pass one named object.
 - No boolean flag that switches behavior (`save(ticket, true)`): write two functions.
