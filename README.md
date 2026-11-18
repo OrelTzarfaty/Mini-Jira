@@ -40,6 +40,7 @@ The API runs at `http://localhost:3000`, and its documentation is at [`/api/docs
 
 | Command                | What it does                             |
 | ---------------------- | ---------------------------------------- |
+| `npm start`            | Builds and runs the production API       |
 | `npm run lint`         | Checks the code for problems             |
 | `npm run lint:fix`     | Fixes the problems that can be automated |
 | `npm run format`       | Formats the code                         |

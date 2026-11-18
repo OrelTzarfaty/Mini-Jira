@@ -138,6 +138,7 @@ Run from the repo root (Node.js 26 required):
 | `npm ci` | Install dependencies from the lockfile |
 | `cp .env.example .env` | Create local settings (first time only) |
 | `npm run dev --workspace @mini-jira/server` | Run the API at `http://localhost:3000` and restart it on changes |
+| `npm start` | Build `shared` and `server`, then run the production version of the API |
 | `npm run lint` / `npm run lint:fix` | Check code with ESLint / apply automatic fixes |
 | `npm run format` / `npm run format:check` | Format code with Prettier / check formatting |
 | `npm run typecheck` | Type-check every workspace that has a `typecheck` script |
