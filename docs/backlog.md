@@ -46,7 +46,7 @@ Sprint 1 · Size M · Status: In progress
 - [x] Claude · Break the requirements into epics, stories, and tasks (this file)
 - [x] Claude · Split tasks to about one day each; fix ordering mistakes (v1.1)
 - [ ] You · Review the backlog and sprint plan; adjust sizes
-- [ ] Claude · Create the 50 missions as GitHub issues on a GitHub Project, once `gh` is logged in — required by the milestone
+- [x] Claude · Create the 50 missions as GitHub issues on the [GitHub Project](https://github.com/users/OrelTzarfaty/projects/1) — required by the milestone
 
 ### DOC-3 · Wireframes
 Sprint 1 · Size M · **Status: Done** (all 7 approved 2026-11-18 — index: [wireframes/README.md](wireframes/README.md))
@@ -89,7 +89,7 @@ Sprint 2 · Size M · Status: In progress — built on branch `chore/SETUP-1-rep
 - [ ] BE · PR template with the Definition of Done and the standards checklist (engineering standards §12)
 
 ### SETUP-2 · Shared package
-Sprint 2 · Size S · Status: To do · Depends on SETUP-1
+Sprint 2 · Size S · Status: In progress — built on branch `feat/SETUP-2-shared-package`, waiting for SETUP-1 to merge · Depends on SETUP-1
 - [ ] BE · `@mini-jira/shared`: enums (TicketType, Priority, Status, Role)
 - [ ] BE · Error codes and the error response type (architecture §9)
 - [ ] BE · `Page<T>` type and pagination query schema

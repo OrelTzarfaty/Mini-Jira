@@ -5,7 +5,7 @@ A lightweight team task board: projects, members, tickets, a drag-and-drop board
 - **Requirements:** [mini-jira-requirements.md](mini-jira-requirements.md) (full path: `C:\Users\orel\OneDrive\Desktop\MiniJira Project\mini-jira-requirements.md`) is the source of truth for project information. Read it before any non-trivial task. Refer to requirement IDs (`AUTH-1`, `TKT-4`, `CON-1`, …) in code, tests, commits, and PRs.
 - **Architecture:** [docs/architecture.md](docs/architecture.md) — the agreed architecture and design decisions.
 - **Engineering standards:** [docs/engineering-standards.md](docs/engineering-standards.md) — **mandatory** rules for all code: clean code, DRY, SOLID, design patterns, security, testing, Git. Read it before writing or reviewing code.
-- **Backlog:** [docs/backlog.md](docs/backlog.md) — epics → stories → tasks, sprint plan, task owners. Work on stories in sprint order and respect each story's "Depends on".
+- **Backlog:** [docs/backlog.md](docs/backlog.md) — epics → stories → tasks, sprint plan, task owners. Work on stories in sprint order and respect each story's "Depends on". Live missions: [GitHub Project](https://github.com/users/OrelTzarfaty/projects/1).
 - **Design doc:** [docs/design-doc.md](docs/design-doc.md) — ready for mentor review. The 8 answers are the user's **own words**; don't rewrite them (if they need changes, help the user understand, then lightly fix grammar while keeping their meaning).
 
 ## Ground rule: be sure or ask
@@ -135,6 +135,8 @@ Run from the repo root (Node.js 26 required):
 | `npm run typecheck` | Type-check every workspace that has a `typecheck` script |
 | `npm test` | Run tests in every workspace that has a `test` script |
 | `npm run build` | Build every workspace that has a `build` script |
+
+Run `npm run build` after changing `shared/`, because other workspaces import its built files.
 
 Add how to run (`docker compose up`), migrate, and seed once that code exists.
 
