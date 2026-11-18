@@ -111,6 +111,7 @@ server/
 │  ├─ lib/
 │  │  ├─ logger.ts              pino logger with redaction
 │  │  ├─ shutdown.ts            clean shutdown and fatal error handling
+│  │  ├─ password.ts            Argon2id password hashing
 │  │  ├─ prisma.ts              single PrismaClient
 │  │  ├─ errors.ts              AppError subclasses (NotFound, Forbidden, Conflict, ...)
 │  │  ├─ pagination.ts

@@ -26,11 +26,14 @@ docs/     Architecture, backlog, design doc, standards, and wireframes
 
 ## Getting started
 
-You need [Node.js 26](https://nodejs.org/) and npm.
+You need [Node.js 26](https://nodejs.org/), npm, and [Docker Desktop](https://www.docker.com/products/docker-desktop/).
 
 ```bash
 npm ci
 cp .env.example .env
+npm run db:up
+npm run db:migrate
+npm run db:seed
 npm run dev --workspace @mini-jira/server
 ```
 
@@ -41,6 +44,10 @@ The API runs at `http://localhost:3000`, and its documentation is at [`/api/docs
 | Command                | What it does                             |
 | ---------------------- | ---------------------------------------- |
 | `npm start`            | Builds and runs the production API       |
+| `npm run db:up`        | Starts the development database          |
+| `npm run db:down`      | Stops the development database           |
+| `npm run db:migrate`   | Applies database changes                 |
+| `npm run db:seed`      | Adds the demo accounts                   |
 | `npm run lint`         | Checks the code for problems             |
 | `npm run lint:fix`     | Fixes the problems that can be automated |
 | `npm run format`       | Formats the code                         |
