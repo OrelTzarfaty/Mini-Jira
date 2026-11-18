@@ -8,6 +8,7 @@ import type { StartServerOptions, StartupDatabase } from '../../src/start-server
 import { createMemoryLogger } from '../helpers/test-app.js';
 
 const FATAL_LOG_LEVEL = 60;
+const DATABASE_CHECK_TIMEOUT_MS = 10_000;
 
 function createDatabase() {
   return {
@@ -34,6 +35,7 @@ function failOnProcessExit() {
 
 describe('startServer', () => {
   afterEach(() => {
+    vi.useRealTimers();
     vi.restoreAllMocks();
   });
 
@@ -82,6 +84,22 @@ describe('startServer', () => {
         msg: 'The API could not connect to the database',
       }),
     );
+  });
+
+  it('SETUP-4: exits with code 1 when the database check never finishes', async () => {
+    vi.useFakeTimers();
+    const exit = failOnProcessExit();
+    const database = createDatabase();
+    database.$queryRaw.mockReturnValueOnce(new Promise(() => undefined));
+
+    const stopped = expect(startServer(createOptions(database))).rejects.toThrow('process.exit(1)');
+
+    await vi.advanceTimersByTimeAsync(DATABASE_CHECK_TIMEOUT_MS - 1);
+    expect(exit).not.toHaveBeenCalled();
+
+    await vi.advanceTimersByTimeAsync(1);
+    await stopped;
+    expect(exit).toHaveBeenCalledExactlyOnceWith(1);
   });
 
   it('SETUP-4: disconnects the database when the API shuts down', async () => {
