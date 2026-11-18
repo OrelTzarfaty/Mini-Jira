@@ -1,0 +1,36 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+build/
+*.tsbuildinfo
+
+# Environment files: secrets never go into git
+.env
+.env.*
+!.env.example
+
+# Test output
+coverage/
+test-results/
+playwright-report/
+blob-report/
+qa-evidence/
+
+# Playwright CLI output
+.playwright/
+.playwright-cli/
+
+# Logs
+*.log
+
+# Operating system files
+.DS_Store
+Thumbs.db
+
+# Personal Claude Code settings
+.claude/settings.local.json
+
+# Third-party Claude Code skills (about 40 MB, installed locally)
+.claude/skills/
