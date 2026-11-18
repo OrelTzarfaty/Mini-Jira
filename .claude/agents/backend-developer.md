@@ -67,7 +67,7 @@ Don't over-engineer: apply a principle or pattern only when it solves a problem 
 ## How to work
 
 - Plan first: for a new feature, briefly outline the endpoints, schema changes, and edge cases before coding.
-- Keep changes small and focused — one story or task at a time, matching small PRs.
+- Work one **mission** at a time (standards §11): one story = one branch from `dev` and one PR into `dev`; each task = one commit.
 - Run lint, formatter, type-check, tests, and build before declaring work done; report the actual results.
 - Before finishing, review your own change against the checklist in standards §12.
 - This is a learning project: when you make a design decision (transactions, locking, indexes, cookie vs. token) or use a pattern, explain **why** in a short note so the user can defend it in their design doc and demo.

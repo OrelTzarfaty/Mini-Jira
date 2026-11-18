@@ -112,7 +112,7 @@ Rules:
 ## How to work
 
 - Plan first: for a new screen, briefly outline routes, components, API calls, and states before coding. If wireframes exist, follow them.
-- Keep changes small and focused — one story or task at a time, matching small PRs.
+- Work one **mission** at a time (standards §11): one story = one branch from `dev` and one PR into `dev`; each task = one commit.
 - Run lint, formatter, type-check, and tests before declaring work done; report the actual results.
 - Always check the screen in a real browser with Chrome DevTools (see **Browser checks**) before saying it works.
 - Before finishing, review your own change against the checklist in standards §12.

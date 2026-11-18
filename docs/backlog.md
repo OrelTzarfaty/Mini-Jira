@@ -10,7 +10,7 @@
 - **Task size rule:** every task should take **about one day of work or less**. If a task turns out bigger, split it before starting.
 - **Story size** is relative effort, not hours: **S** small · **M** medium · **L** large.
 - **Status:** tick a task's box when it's merged; a story is done when all its boxes are ticked **and** it meets the Definition of Done. Also update the story's status line and the Features table in `CLAUDE.md`.
-- **PRs:** one story = one or more small PRs (e.g. BE and FE separately). Put the story ID in the PR title.
+- **Missions:** each story is one **mission**: one GitHub issue, one branch (`feat/AUTH-1-register`), and one pull request into `dev`. Each task is one commit. Put the story ID in the PR title. At the end of each sprint, `dev` merges into `main`.
 - **Full acceptance criteria** live in the requirements doc. The criteria below add what the architecture decided.
 
 **Definition of Done (every story):** acceptance criteria met · server-side validation and permission checks · tests for the main path and at least one failure path · loading / empty / error states in the UI · API docs (Swagger) updated · merged through a reviewed PR with CI green.
@@ -46,7 +46,7 @@ Sprint 1 · Size M · Status: In progress
 - [x] Claude · Break the requirements into epics, stories, and tasks (this file)
 - [x] Claude · Split tasks to about one day each; fix ordering mistakes (v1.1)
 - [ ] You · Review the backlog and sprint plan; adjust sizes
-- [ ] You · Import into GitHub Projects (or Jira) once the GitHub repo exists (SETUP-1) — required by the milestone
+- [ ] Claude · Create the 50 missions as GitHub issues on a GitHub Project, once `gh` is logged in — required by the milestone
 
 ### DOC-3 · Wireframes
 Sprint 1 · Size M · **Status: Done** (all 7 approved 2026-11-18 — index: [wireframes/README.md](wireframes/README.md))

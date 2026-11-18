@@ -304,7 +304,16 @@ Patterns are a shared vocabulary, not a goal. Use one only when it removes a rea
 
 ## 11. Git, pull requests, and code review
 
-**Branches:** `feat/AUTH-1-register`, `fix/BRD-2-rollback`.
+**Missions:** one backlog story is one **mission**.
+
+| Backlog | In git and GitHub |
+|---|---|
+| **Mission** (a story, e.g. AUTH-1) | One GitHub issue, one branch, one pull request |
+| **Task** | One commit, one checkbox in the issue |
+
+**Branches:** `<type>/<STORY-ID>-<short-name>`, created from `dev`: `feat/AUTH-1-register`, `fix/BRD-2-rollback`, `chore/SETUP-1-repo-setup`.
+
+**Merging:** a mission's pull request merges into `dev`. At the end of each sprint, `dev` merges into `main`.
 
 **Commits** follow [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/), with the requirement ID:
 
@@ -317,9 +326,9 @@ Types: `feat`, `fix`, `refactor`, `test`, `docs`, `chore`, `ci`, `build`, `perf`
 
 **Pull requests**
 
-- One self-contained change that leaves the app working, with its tests. About **100 lines is a good size**; around 1,000 is too large.
+- One mission per pull request, leaving the app working, with its tests. About **100 lines is a good size**; around 1,000 is too large. If a mission grows too large, split it into smaller missions first.
 - Refactors go in their own PR, separate from features and fixes.
-- The description says what changed, why, how it was tested, and the requirement ID.
+- The description says what changed, why, how it was tested, and the requirement ID, and links the mission's issue (`Refs #123`). Close the issue when the pull request is merged into `dev`.
 
 **Reviewing** (approve when the change clearly improves code health; perfect isn't required). Check, in order: design → functionality and edge cases → concurrency → complexity and over-engineering → tests → naming → comments → docs. Facts and these standards outrank opinions. Mark optional comments `Nit:`.
 
