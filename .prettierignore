@@ -1,0 +1,17 @@
+# Planning documents keep their hand-drawn layouts
+.claude/
+docs/
+CLAUDE.md
+mini-jira-requirements.md
+
+# Generated files
+package-lock.json
+dist/
+build/
+coverage/
+test-results/
+playwright-report/
+blob-report/
+qa-evidence/
+.playwright/
+.playwright-cli/
