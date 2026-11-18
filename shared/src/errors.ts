@@ -1,3 +1,5 @@
+import { z } from 'zod';
+
 export const ErrorCode = {
   VALIDATION_ERROR: 'VALIDATION_ERROR',
   UNAUTHENTICATED: 'UNAUTHENTICATED',
@@ -31,15 +33,17 @@ export const ERROR_HTTP_STATUS: Readonly<Record<ErrorCode, number>> = {
   INTERNAL_ERROR: 500,
 };
 
-export interface ErrorDetail {
-  field: string;
-  message: string;
-}
+export const errorDetailSchema = z.object({
+  field: z.string(),
+  message: z.string(),
+});
+export type ErrorDetail = z.infer<typeof errorDetailSchema>;
 
-export interface ErrorResponse {
-  error: {
-    code: ErrorCode;
-    message: string;
-    details?: ErrorDetail[];
-  };
-}
+export const errorResponseSchema = z.object({
+  error: z.object({
+    code: z.enum(ErrorCode),
+    message: z.string(),
+    details: z.array(errorDetailSchema).optional(),
+  }),
+});
+export type ErrorResponse = z.infer<typeof errorResponseSchema>;
