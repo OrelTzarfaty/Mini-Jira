@@ -110,7 +110,7 @@ Sprint 2 · Size M · **Status: Done** — merged into `dev` in [#53](https://gi
 - [x] QA · Integration tests: cross-site `POST` → 403, same-origin `POST` is allowed
 
 ### SETUP-4 · Database
-Sprint 2 · Size M · Status: In review — branch `feat/SETUP-4-database` · Depends on SETUP-3
+Sprint 2 · Size M · Status: In review — QA fixes on branch `fix/SETUP-4-qa-findings` · Depends on SETUP-3
 - [ ] BE · Prisma setup + PostgreSQL container for development
 - [ ] BE · Separate test database + helper that resets it per test file
 - [ ] BE · First migration: `User` table (each later epic adds its own tables)

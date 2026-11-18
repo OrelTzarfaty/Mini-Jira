@@ -87,7 +87,8 @@ server/
 │  └─ seed.ts                   demo users, projects, 1,000+ tickets
 ├─ src/
 │  ├─ app.ts                    builds the Express app (exported for Supertest)
-│  ├─ server.ts                 starts listening
+│  ├─ server.ts                 entry point: reads the config, starts the API
+│  ├─ start-server.ts           checks the database, starts listening, handles shutdown
 │  ├─ routes.ts                 combines the module routers under /api
 │  ├─ config/env.ts             reads + validates env vars with zod; fails fast
 │  ├─ middleware/
@@ -425,7 +426,7 @@ Coding rules for this architecture: [engineering-standards.md](engineering-stand
 
 ## 12. Operations
 
-- **Environment variables** (`.env.example`): `DATABASE_URL`, `JWT_SECRET`, `JWT_EXPIRES_IN`, `CLIENT_ORIGIN`, `PORT`, `NODE_ENV`, `LOG_LEVEL`. Validated at startup; the API refuses to start if one is missing.
+- **Environment variables** (`.env.example`): `DATABASE_URL`, `JWT_SECRET`, `JWT_EXPIRES_IN`, `CLIENT_ORIGIN`, `PORT`, `NODE_ENV`, `LOG_LEVEL`. Validated at startup; the API refuses to start if one is missing. `POSTGRES_USER`, `POSTGRES_PASSWORD`, and `POSTGRES_DB` configure the PostgreSQL container in `docker-compose.yml`; the API doesn't read them.
 - **Logging:** pino JSON logs; every line has the request ID, which is also returned in the `X-Request-Id` header.
 - **Seed:** `server/prisma/seed.ts` creates demo users, several projects, 1,000+ tickets with ranks, comments, and activity.
 - **CI (GitHub Actions, every PR):** install → lint → typecheck → unit + integration tests (PostgreSQL service container) → build. E2E (Playwright) runs against `docker compose`.
