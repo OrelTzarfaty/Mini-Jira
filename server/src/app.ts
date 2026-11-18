@@ -5,6 +5,7 @@ import type { Express, Router } from 'express';
 import helmet from 'helmet';
 import type { Logger } from 'pino';
 
+import { errorHandler, notFoundHandler } from './middleware/error-handler.js';
 import { createHttpLogger } from './middleware/http-logger.js';
 import { createApiRouter } from './routes.js';
 
@@ -34,6 +35,9 @@ export function createApp({
   app.use(cookieParser());
 
   app.use('/api', apiRouter);
+
+  app.use(notFoundHandler);
+  app.use(errorHandler);
 
   return app;
 }
