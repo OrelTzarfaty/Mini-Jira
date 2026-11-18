@@ -96,7 +96,7 @@ Sprint 2 · Size S · **Status: Done** — merged into `dev` in [#52](https://gi
 - [x] BE · Build setup so `server` and `client` can import it
 
 ### SETUP-3 · Server skeleton
-Sprint 2 · Size M · Status: In progress — branch `feat/SETUP-3-server-skeleton` · Depends on SETUP-2
+Sprint 2 · Size M · Status: In review — branch `feat/SETUP-3-server-skeleton` · Depends on SETUP-2
 - [ ] BE · `app.ts` / `server.ts` with `GET /api/health`
 - [ ] BE · Env validation with zod (`config/env.ts`); fail fast on missing variables
 - [ ] BE · Request ID middleware + pino-http logging (request ID on every log line and in `X-Request-Id`)

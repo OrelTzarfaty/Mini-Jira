@@ -88,9 +88,11 @@ server/
 ├─ src/
 │  ├─ app.ts                    builds the Express app (exported for Supertest)
 │  ├─ server.ts                 starts listening
+│  ├─ routes.ts                 combines the module routers under /api
 │  ├─ config/env.ts             reads + validates env vars with zod; fails fast
 │  ├─ middleware/
 │  │  ├─ request-id.ts          X-Request-Id: reuse incoming or generate
+│  │  ├─ http-logger.ts         pino-http request logging
 │  │  ├─ require-auth.ts        verifies JWT cookie → req.user
 │  │  ├─ project-access.ts      loadProjectAccess, requireOwner (§6)
 │  │  ├─ validate.ts            zod for body / params / query
@@ -98,6 +100,7 @@ server/
 │  │  ├─ rate-limit.ts          login limiters (email + IP, and IP)
 │  │  └─ error-handler.ts       one error format, no stack traces
 │  ├─ modules/
+│  │  ├─ health/                GET /api/health
 │  │  ├─ auth/                  *.routes.ts · *.controller.ts · *.service.ts
 │  │  ├─ projects/
 │  │  ├─ members/
@@ -106,6 +109,8 @@ server/
 │  │  ├─ activity/
 │  │  └─ my-work/
 │  ├─ lib/
+│  │  ├─ logger.ts              pino logger with redaction
+│  │  ├─ shutdown.ts            clean shutdown and fatal error handling
 │  │  ├─ prisma.ts              single PrismaClient
 │  │  ├─ errors.ts              AppError subclasses (NotFound, Forbidden, Conflict, ...)
 │  │  ├─ pagination.ts
