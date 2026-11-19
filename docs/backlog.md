@@ -110,11 +110,11 @@ Sprint 2 · Size M · **Status: Done** — merged into `dev` in [#53](https://gi
 - [x] QA · Integration tests: cross-site `POST` → 403, same-origin `POST` is allowed
 
 ### SETUP-4 · Database
-Sprint 2 · Size M · Status: In review — QA fixes on branch `fix/SETUP-4-qa-findings` · Depends on SETUP-3
-- [ ] BE · Prisma setup + PostgreSQL container for development
-- [ ] BE · Separate test database + helper that resets it per test file
-- [ ] BE · First migration: `User` table (each later epic adds its own tables)
-- [ ] BE · `prisma/seed.ts` skeleton with demo users (test passwords only, documented in the seed file)
+Sprint 2 · Size M · **Status: Done** — merged into `dev` in [#55](https://github.com/OrelTzarfaty/Mini-Jira/pull/55) and [#58](https://github.com/OrelTzarfaty/Mini-Jira/pull/58) · Depends on SETUP-3
+- [x] BE · Prisma setup + PostgreSQL container for development
+- [x] BE · Separate test database + helper that resets it per test file
+- [x] BE · First migration: `User` table (each later epic adds its own tables)
+- [x] BE · `prisma/seed.ts` skeleton with demo users (test passwords only, documented in the seed file)
 
 ### SETUP-5 · Client skeleton
 Sprint 2 · Size L · Status: To do · Depends on SETUP-2
@@ -146,9 +146,9 @@ Sprint 2 · Size M · Status: To do · Depends on SETUP-3, SETUP-4, SETUP-5
 - [ ] QA · Verify `docker compose up` from a clean state: app loads, `/api/health` OK, `/api/docs` reachable
 
 ### SETUP-8 · CI
-Sprint 2 · Size S · Status: To do · Depends on SETUP-1
+Sprint 2 · Size S · Status: In progress — branch `chore/SETUP-8-ci` · Depends on SETUP-1
 - [ ] BE · GitHub Actions workflow on every PR: `npm ci` → `npm audit --audit-level=high` → lint → typecheck → build
-- [ ] BE · Add tests to CI with a PostgreSQL service container
+- [ ] BE · Add tests to CI against the Docker Compose test database (`docker-compose.test.yml`, the same one local runs use)
 - [ ] You · Make CI required for merging into `main`
 
 ### SETUP-9 · E2E workspace
@@ -160,9 +160,9 @@ Sprint 2 · Size M · Status: To do · Depends on SETUP-7
 - (Login fixtures per role come in AUTH-2, once login exists.)
 
 ### SETUP-10 · Mission command
-Sprint 2 · Size S · Status: In review — branch `chore/SETUP-10-mission-command` · Depends on SETUP-1
-- [ ] Claude · `/mission <STORY-ID>` command: runs a mission from a new branch to a QA-tested pull request, then stops for approval
-- [ ] QA · Review the command against the project rules
+Sprint 2 · Size S · **Status: Done** — merged into `dev` in [#57](https://github.com/OrelTzarfaty/Mini-Jira/pull/57) · Depends on SETUP-1
+- [x] Claude · `/mission <STORY-ID>` command: runs a mission from a new branch to a QA-tested pull request, then stops for approval
+- [x] QA · Review the command against the project rules
 
 ---
 
