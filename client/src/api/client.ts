@@ -5,6 +5,12 @@ import { ApiError, ClientErrorCode, NO_RESPONSE_STATUS } from './api-error';
 
 const API_BASE_PATH = '/api';
 const HTTP_NO_CONTENT = 204;
+const HTTP_UNAUTHORIZED = 401;
+
+const LOGIN_PATH = '/login';
+// Pages for visitors who aren't logged in, where a 401 is expected (AUTH-1, AUTH-2).
+// Redirecting from them would reload /login forever, or push visitors off the landing page.
+const PUBLIC_PATHS: ReadonlySet<string> = new Set(['/', LOGIN_PATH, '/register']);
 
 const NETWORK_ERROR_MESSAGE = "Couldn't reach the server. Check your connection and try again.";
 const UNEXPECTED_RESPONSE_MESSAGE = 'Something went wrong. Please try again.';
@@ -25,6 +31,7 @@ interface ApiRequestOptions<T> {
  * The one way the app calls the API (docs/architecture.md §5.1). It sends the HTTP-only
  * auth cookie, checks the response with a zod schema, and turns every failure into an
  * ApiError, whether the API answered with its error format or never answered at all.
+ * A 401 (session missing or expired) also sends the user to the login page.
  */
 export async function apiRequest<T>(
   path: string,
@@ -33,7 +40,13 @@ export async function apiRequest<T>(
   const response = await send(path, { method, body, signal });
 
   if (!response.ok) {
-    throw await toApiError(response);
+    const error = await toApiError(response);
+
+    if (error.status === HTTP_UNAUTHORIZED) {
+      redirectToLogin();
+    }
+
+    throw error;
   }
 
   const data = response.status === HTTP_NO_CONTENT ? undefined : await readJson(response);
@@ -77,6 +90,16 @@ async function send(
       message: NETWORK_ERROR_MESSAGE,
     });
   }
+}
+
+function redirectToLogin(): void {
+  if (PUBLIC_PATHS.has(window.location.pathname)) {
+    return;
+  }
+
+  // A full page load also drops every cached answer from the old session. replace() keeps
+  // the Back button from returning to a page that would only redirect again.
+  window.location.replace(LOGIN_PATH);
 }
 
 /** The body as JSON, or undefined when it isn't JSON (for example an HTML error page). */
