@@ -148,7 +148,7 @@ Sprint 2 · Size M · Status: To do · Depends on SETUP-3, SETUP-4, SETUP-5
 ### SETUP-8 · CI
 Sprint 2 · Size S · Status: In progress — branch `chore/SETUP-8-ci` · Depends on SETUP-1
 - [ ] BE · GitHub Actions workflow on every PR: `npm ci` → `npm audit --audit-level=high` → lint → typecheck → build
-- [ ] BE · Add tests to CI with a PostgreSQL service container
+- [ ] BE · Add tests to CI against the Docker Compose test database (`docker-compose.test.yml`, the same one local runs use)
 - [ ] You · Make CI required for merging into `main`
 
 ### SETUP-9 · E2E workspace
