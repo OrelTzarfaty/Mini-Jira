@@ -429,5 +429,5 @@ Coding rules for this architecture: [engineering-standards.md](engineering-stand
 - **Environment variables** (`.env.example`): `DATABASE_URL`, `JWT_SECRET`, `JWT_EXPIRES_IN`, `CLIENT_ORIGIN`, `PORT`, `NODE_ENV`, `LOG_LEVEL`. Validated at startup; the API refuses to start if one is missing. `POSTGRES_USER`, `POSTGRES_PASSWORD`, and `POSTGRES_DB` configure the PostgreSQL container in `docker-compose.yml`; the API doesn't read them.
 - **Logging:** pino JSON logs; every line has the request ID, which is also returned in the `X-Request-Id` header.
 - **Seed:** `server/prisma/seed.ts` creates demo users, several projects, 1,000+ tickets with ranks, comments, and activity.
-- **CI (GitHub Actions, every PR):** install → lint → typecheck → unit + integration tests (PostgreSQL service container) → build. E2E (Playwright) runs against `docker compose`.
+- **CI (GitHub Actions, every PR):** install → audit → lint → typecheck → build → format check → unit + integration tests (the Docker Compose test database, `docker-compose.test.yml`, the same one local runs use). E2E (Playwright) runs against `docker compose`.
 - **Testing layers:** unit (rank, ticket-key parsing, permission rules) · integration (every endpoint incl. 401/403/404/409 paths) · component (forms, states, optimistic board) · E2E (critical journeys). Details in the agent files.
