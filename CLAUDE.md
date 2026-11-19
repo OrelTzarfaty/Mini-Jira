@@ -159,6 +159,8 @@ Run `npm run build` after changing `shared/`, because other workspaces import it
 
 **CI:** [.github/workflows/ci.yml](.github/workflows/ci.yml) runs on every PR into `dev` or `main` and on every push to them, in one job named `checks` (keep the name; branch protection uses it): `npm ci` → `npm audit --audit-level=high` → `lint` → `typecheck` → `build` → `format:check` → `npm test` (same Compose test database as locally). Pin every action to a full commit SHA with a version comment, and check workflow changes with `actionlint`.
 
+**Branch protection:** `main` accepts changes only through a pull request, and `checks` (from GitHub Actions) must pass; the rules apply to admins too. `dev` blocks force-push and deletion only, so approved merges are pushed to it directly (see `/mission` step 7).
+
 Add how to run the full system (`docker compose up`) once SETUP-7 is done.
 
 ## Keeping this file up to date
