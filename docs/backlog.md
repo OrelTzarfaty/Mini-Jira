@@ -131,7 +131,7 @@ Sprint 2 · Size L · Status: In progress — branch `feat/SETUP-5-client-skelet
 - [ ] FE · Vitest + React Testing Library + MSW setup with one example test
 
 ### SETUP-6 · Design system
-Sprint 2 · Size S · Status: To do · Depends on SETUP-5, DOC-3
+Sprint 2 · Size S · Status: In progress — branch `feat/SETUP-6-design-system`, built on SETUP-5 ([#61](https://github.com/OrelTzarfaty/Mini-Jira/pull/61)) · Depends on SETUP-5, DOC-3
 - [ ] FE · Run `/impeccable init` to create `PRODUCT.md` and `DESIGN.md`
 - [ ] FE · Use the Taste skill to choose typography, colors, and spacing → Tailwind tokens (base already decided: **light theme, white main color, navy accent** — see `docs/wireframes/01-landing-and-login.md`)
 - [ ] You · Approve the visual direction
