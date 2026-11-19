@@ -3,7 +3,7 @@ name: minijira-test
 
 services:
   db-test:
-    image: postgres:18-alpine
+    image: postgres:18.7-alpine3.24
     environment:
       POSTGRES_USER: minijira_test
       POSTGRES_PASSWORD: minijira_test
