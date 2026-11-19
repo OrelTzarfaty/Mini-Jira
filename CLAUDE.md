@@ -140,7 +140,7 @@ Run from the repo root (Node.js 26 and a running Docker Desktop required):
 
 | Command | Purpose |
 |---|---|
-| `/mission <STORY-ID>` | Run a whole mission with the agents, from branch to QA-tested pull request |
+| `/mission <STORY-ID>` (type it in Claude Code, not a terminal) | Run a whole mission with the agents, from branch to QA-tested pull request |
 | `npm ci` | Install dependencies from the lockfile |
 | `cp .env.example .env` | Create local settings (first time only) |
 | `npm run db:up` / `npm run db:down` | Start / stop the development database |

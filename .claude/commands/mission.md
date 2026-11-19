@@ -12,7 +12,7 @@ You are the coordinator. The agents do the work, and the project owner makes the
 
 - `BE` tasks go to `backend-developer`, `FE` tasks to `frontend-developer`, and `QA` tasks to `qa-engineer`. A task with several owners, such as `You + BE + FE`, is split: agents do their parts, and the `You` part is reported to the project owner. Don't write application code yourself.
 - Only one agent changes the branch at a time. Agents commit but never push. You push.
-- Never do a task owned by `You`.
+- Never do a task owned by `You`, and never tick a `You` task unless the project owner says it's done.
 - **Never force-push** any branch, and never push to `main` or `dev` except for an approved merge in step 7.
 - **Merge only after the project owner explicitly approves that pull request.** An approval for one pull request never covers another.
 - Follow `CLAUDE.md` and `docs/engineering-standards.md`. If anything is unclear, blocked, or contradictory, stop and ask the project owner.
@@ -20,17 +20,19 @@ You are the coordinator. The agents do the work, and the project owner makes the
 ## 1. Check that the mission can start
 
 1. Run `git fetch origin` first, so every check uses current data.
-2. Read `CLAUDE.md`, the mission in `docs/backlog.md`, and the related parts of the requirements, architecture, and wireframes.
+2. Read the backlog from `dev`, not from the local folder: `git show origin/dev:docs/backlog.md`. Also read `CLAUDE.md`, the mission, and the related parts of the requirements, architecture, and wireframes.
 3. Find the mission's GitHub issue in `OrelTzarfaty/Mini-Jira`: its title starts with `<STORY-ID> ·`, for example `SETUP-1 ·`.
 
-**GitHub is the source of truth for progress.** A mission is done when its issue is closed. A mission is merged when a pull request with its story ID in the title is merged into `dev`.
+**GitHub is the source of truth for progress.** A mission is **done** when its issue is closed. Its work is **merged** when a merged pull request into `dev` has `(<STORY-ID>)` in its title, with the brackets, so `SETUP-1` doesn't match `SETUP-10`.
+
+The **current sprint** is the lowest sprint that still has an open mission with tasks for agents.
 
 Stop and explain the problem if:
 
 - no story ID was given, or the story isn't in the backlog
 - the mission's issue is already closed
-- a mission listed under "Depends on" has no merged pull request in `dev`
-- the mission isn't next in sprint order, and the project owner hasn't asked for it
+- a mission listed under "Depends on" is neither done nor merged
+- the mission is in a later sprint than the current sprint, unless the project owner confirms they want it now
 - the mission has no tasks for agents, or a `You` task must be finished before the agents can start
 - a task needs something that isn't in `dev` yet, for example a browser test before the Playwright setup (SETUP-9) exists
 - the mission includes work listed under "Pending the mentor's OK" in `CLAUDE.md`
@@ -38,14 +40,12 @@ Stop and explain the problem if:
 
 **If the mission already has an open pull request**, don't start over. Tell the project owner, and continue from step 5 only if they ask you to.
 
-**If an earlier mission is merged but its boxes aren't ticked** in `docs/backlog.md`, tick them and update its status line in this mission's first commit.
-
 ## 2. Prepare the branch
 
 1. Choose the branch type: `feat` for new features, `fix` for bug fixes, and `chore` for setup, tooling, and process work.
 2. Create the branch without tracking `dev`:
    `git switch --no-track -c <type>/<STORY-ID>-<short-name> origin/dev`
-3. Set the mission's status in `docs/backlog.md` to in progress, and commit that change.
+3. In the first commit, set this mission's status in `docs/backlog.md` to in progress. In the same commit, bring earlier merged missions up to date: tick only the agent tasks that were merged, and leave `You` tasks unticked unless the project owner confirmed them.
 4. Move the issue to **In Progress** on GitHub Project 1.
 
 ## 3. Build the mission
@@ -64,7 +64,7 @@ After each agent finishes, check its report and the commits before starting the 
 2. **If a check fails**, send the failure to the agent that owns that code, have it fix the root cause, and run all the checks again.
 3. Make sure `CLAUDE.md`, the API docs, and `docs/backlog.md` are up to date.
 4. Push with `git push -u origin HEAD`.
-5. Open a pull request into `dev`. Use the pull request template, put the story ID in the title, add `Refs #<issue>`, and add the mission's labels.
+5. Open a pull request into `dev`. Use the pull request template, put the story ID in brackets at the end of the title, add `Refs #<issue>`, and add the mission's labels.
 
 ## 5. Run the QA check
 
@@ -81,7 +81,7 @@ Before you report, confirm both of these, or go back to step 5:
 - **The pull request's head commit is exactly the commit QA passed.** Any newer commit, including tests added by QA, needs a new QA check.
 - **CI is green** on that commit (`gh pr checks <number>`). If the repository has no CI yet, say so.
 
-Then tell the project owner, in simple English:
+Update the pull request description if it no longer matches the work. Then tell the project owner, in simple English:
 
 - the pull request link
 - the QA verdict and the commit it tested
@@ -98,6 +98,14 @@ Then ask whether to merge this pull request. **Do not merge until the project ow
 Only after the project owner approves this pull request:
 
 1. Confirm again that the head commit is the one QA passed.
-2. Merge it into `dev` using the project owner's private commit email, then confirm GitHub shows the pull request as merged.
-3. **If every task box in the mission is ticked**, close the issue and move it to **Done** on GitHub Project 1.
-4. **If any task is still open**, for example a `You` task, keep the issue open and **In Progress**, and tell the project owner what is left.
+2. Confirm `git config user.email` ends in `@users.noreply.github.com`, so the project owner's personal email never appears in the public history.
+3. Merge on your computer, so the merge commit uses that private email:
+   1. `git switch dev`, then `git merge --ff-only origin/dev`
+   2. `git merge --no-ff origin/<branch> -m "Merge pull request #<number> from OrelTzarfaty/<branch>"`
+   3. Confirm the merged files are identical to the pull request's head commit: `git rev-parse HEAD^{tree}` must equal `git rev-parse <head-commit>^{tree}`.
+   4. `git push origin dev`, then confirm GitHub shows the pull request as merged.
+
+   If `dev` doesn't accept direct pushes, stop and ask the project owner. Don't use another merge method that would show their personal email.
+4. In the GitHub issue, tick the agent tasks that were merged. Record the same ticks in `docs/backlog.md` in the next mission's first commit.
+5. **If every task box in the issue is now ticked**, close the issue and move it to **Done** on GitHub Project 1.
+6. **If any task is still open**, for example a `You` task, keep the issue open and **In Progress**, and tell the project owner what is left.
