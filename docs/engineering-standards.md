@@ -1,6 +1,6 @@
 # Mini-Jira — Engineering Standards
 
-**Version:** v1 · 2026-11-18
+**Version:** v1.1 · 2026-11-19
 **Who follows this:** every session and agent that writes, reviews, or tests code in this repo.
 **Sources:** official docs and recognized references, listed in [§13](#13-sources).
 

@@ -45,7 +45,7 @@ Stop and explain the problem if:
 1. Choose the branch type: `feat` for new features, `fix` for bug fixes, and `chore` for setup, tooling, and process work.
 2. Create the branch without tracking `dev`:
    `git switch --no-track -c <type>/<STORY-ID>-<short-name> origin/dev`
-3. In the first commit, set this mission's status in `docs/backlog.md` to in progress. In the same commit, bring earlier merged missions up to date: tick only the agent tasks that were merged, and leave `You` tasks unticked unless the project owner confirmed them.
+3. In the first commit, set this mission's status in `docs/backlog.md` to in progress. In the same commit, bring earlier merged missions up to date: tick only the agent tasks that were merged, leave `You` tasks unticked unless the project owner confirmed them, and update their status lines and the Features table in `CLAUDE.md`.
 4. Move the issue to **In Progress** on GitHub Project 1.
 
 ## 3. Build the mission
@@ -97,15 +97,17 @@ Then ask whether to merge this pull request. **Do not merge until the project ow
 
 Only after the project owner approves this pull request:
 
-1. Confirm again that the head commit is the one QA passed.
+1. Run `git fetch origin`, then confirm the pull request's head commit is still the one QA passed.
 2. Confirm `git config user.email` ends in `@users.noreply.github.com`, so the project owner's personal email never appears in the public history.
-3. Merge on your computer, so the merge commit uses that private email:
-   1. `git switch dev`, then `git merge --ff-only origin/dev`
-   2. `git merge --no-ff origin/<branch> -m "Merge pull request #<number> from OrelTzarfaty/<branch>"`
-   3. Confirm the merged files are identical to the pull request's head commit: `git rev-parse HEAD^{tree}` must equal `git rev-parse <head-commit>^{tree}`.
-   4. `git push origin dev`, then confirm GitHub shows the pull request as merged.
+3. **If `dev` has moved on** since the branch was created (`git merge-base --is-ancestor origin/dev <qa-commit>` fails), don't merge yet. Merge `origin/dev` into the mission branch, push it, go back to step 5 for a new QA check, and ask for approval again.
+4. Merge in a temporary working copy, so locked files in the project folder can't break it:
+   1. `git worktree add --detach <temp-folder> origin/dev`, and run the next steps inside `<temp-folder>`
+   2. `git merge --no-ff <qa-commit> -m "Merge pull request #<number> from OrelTzarfaty/<branch>"`
+   3. Confirm the merged files are identical to the QA-passed commit: `git rev-parse HEAD^{tree}` must equal `git rev-parse <qa-commit>^{tree}`. If they differ, stop and ask the project owner.
+   4. `git push origin HEAD:refs/heads/dev`
+   5. Leave the folder, run `git worktree remove <temp-folder>`, then confirm GitHub shows the pull request as merged.
 
-   If `dev` doesn't accept direct pushes, stop and ask the project owner. Don't use another merge method that would show their personal email.
-4. In the GitHub issue, tick the agent tasks that were merged. Record the same ticks in `docs/backlog.md` in the next mission's first commit.
-5. **If every task box in the issue is now ticked**, close the issue and move it to **Done** on GitHub Project 1.
-6. **If any task is still open**, for example a `You` task, keep the issue open and **In Progress**, and tell the project owner what is left.
+   If `dev` refuses the push, stop and ask the project owner. Don't use another merge method that would show their personal email.
+5. In the GitHub issue, tick the agent tasks that were merged. Record the same ticks in `docs/backlog.md` in the next mission's first commit.
+6. **If every task box in the issue is now ticked**, close the issue and move it to **Done** on GitHub Project 1.
+7. **If any task is still open**, for example a `You` task, keep the issue open and **In Progress**, and tell the project owner what is left.
