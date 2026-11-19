@@ -4,9 +4,11 @@ import { describe, expect, it } from 'vitest';
 import { App } from '@/App';
 
 describe('App', () => {
-  it('SETUP-5: shows the app name as the page heading', () => {
+  it('SETUP-5: opens on the landing page', async () => {
     render(<App />);
 
-    expect(screen.getByRole('heading', { level: 1, name: 'Mini-Jira' })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', { level: 1, name: 'Welcome to Mini-Jira' }),
+    ).toBeInTheDocument();
   });
 });
