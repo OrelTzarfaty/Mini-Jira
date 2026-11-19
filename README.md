@@ -56,6 +56,10 @@ The API runs at `http://localhost:3000`, and its documentation is at [`/api/docs
 | `npm test`             | Runs the tests                           |
 | `npm run build`        | Builds every workspace                   |
 
+## Continuous integration
+
+GitHub Actions runs the checks in [`.github/workflows/ci.yml`](.github/workflows/ci.yml) on every pull request into `dev` or `main` and on every push to them: install, dependency audit, lint, type check, build, format check, and the tests. The tests use the same PostgreSQL test database (`docker-compose.test.yml`) as `npm test` on your computer.
+
 ## Documentation
 
 - [Requirements](mini-jira-requirements.md)
