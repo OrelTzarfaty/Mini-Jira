@@ -1,6 +1,6 @@
 # Mini-Jira — Engineering Standards
 
-**Version:** v1 · 2026-11-18
+**Version:** v1.1 · 2026-11-19
 **Who follows this:** every session and agent that writes, reviews, or tests code in this repo.
 **Sources:** official docs and recognized references, listed in [§13](#13-sources).
 
@@ -331,7 +331,7 @@ Types: `feat`, `fix`, `refactor`, `test`, `docs`, `chore`, `ci`, `build`, `perf`
 
 - One mission per pull request, leaving the app working, with its tests. About **100 lines is a good size**; around 1,000 is too large. If a mission grows too large, split it into smaller missions first.
 - Refactors go in their own PR, separate from features and fixes.
-- The description says what changed, why, how it was tested, and the requirement ID, and links the mission's issue (`Refs #123`). Close the issue when the pull request is merged into `dev`.
+- The description says what changed, why, how it was tested, and the requirement ID, and links the mission's issue (`Refs #123`). Close the issue when the pull request is merged into `dev` and none of its tasks are still open, for example a `You` task.
 
 **Reviewing** (approve when the change clearly improves code health; perfect isn't required). Check, in order: design → functionality and edge cases → concurrency → complexity and over-engineering → tests → naming → comments → docs. Facts and these standards outrank opinions. Mark optional comments `Nit:`.
 

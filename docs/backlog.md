@@ -22,7 +22,7 @@ One sprint = one week, following the milestones in the requirements (§7).
 | Sprint | Week | Goal | Stories |
 |---|---|---|---|
 | 1 | 1 | **Planning & design** ⛔ mentor review before coding | DOC-1 … DOC-5 |
-| 2 | 2 | **Foundations + auth** | SETUP-1 … SETUP-9, AUTH-1 … AUTH-4 |
+| 2 | 2 | **Foundations + auth** | SETUP-1 … SETUP-10, AUTH-1 … AUTH-4 |
 | 3 | 3 | **Projects & members** | PRJ-1, PRJ-2, PRJ-6, PRJ-3, PRJ-4, PRJ-5 |
 | 4 | 4 | **Tickets + board view** | TKT-1 … TKT-5, BRD-1 |
 | 5 | 5 | **Board interactions** | BRD-2, BRD-3, BRD-4 |
@@ -158,6 +158,11 @@ Sprint 2 · Size M · Status: To do · Depends on SETUP-7
 - [ ] QA · First smoke test: the app loads and the login page renders
 - [ ] QA · Add the E2E job to CI
 - (Login fixtures per role come in AUTH-2, once login exists.)
+
+### SETUP-10 · Mission command
+Sprint 2 · Size S · Status: In review — branch `chore/SETUP-10-mission-command` · Depends on SETUP-1
+- [ ] Claude · `/mission <STORY-ID>` command: runs a mission from a new branch to a QA-tested pull request, then stops for approval
+- [ ] QA · Review the command against the project rules
 
 ---
 
