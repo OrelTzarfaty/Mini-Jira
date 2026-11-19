@@ -1,5 +1,6 @@
 import type { RouteObject } from 'react-router';
 
+import { AppShell } from '@/components/app-shell';
 import { NotFoundPage } from '@/components/not-found-page';
 import { PublicLayout } from '@/components/public-layout';
 import { RootErrorBoundary, RouteErrorBoundary } from '@/components/route-error-boundary';
@@ -28,13 +29,23 @@ export const routes: RouteObject[] = [
               { path: '/', Component: LandingPage },
               { path: '/login', Component: LoginPage },
               { path: '/register', Component: RegisterPage },
+              { path: '*', Component: NotFoundPage },
+            ],
+          },
+        ],
+      },
+      {
+        Component: AppShell,
+        children: [
+          {
+            ErrorBoundary: RouteErrorBoundary,
+            children: [
               { path: '/projects', Component: MyProjectsPage },
               { path: '/projects/:projectKey/board', Component: BoardPage },
               { path: '/projects/:projectKey/list', Component: ListPage },
               { path: '/projects/:projectKey/tickets/:ticketKey', Component: TicketPage },
               { path: '/projects/:projectKey/settings', Component: ProjectSettingsPage },
               { path: '/my-work', Component: MyWorkPage },
-              { path: '*', Component: NotFoundPage },
             ],
           },
         ],
