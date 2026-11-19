@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@mini-jira/shared": "^0.1.0",
+    "@tanstack/react-query": "5.108.1",
     "class-variance-authority": "0.7.1",
     "cn": "0.5.2",
     "lucide-react": "1.76.0",
