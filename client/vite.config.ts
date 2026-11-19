@@ -1,3 +1,4 @@
+import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vitest/config';
 
@@ -9,7 +10,7 @@ const API_ORIGIN = 'http://localhost:3000';
 const DEV_SERVER_PORT = 5173;
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), tailwindcss()],
   resolve: {
     // Reads the "@/*" alias from tsconfig.app.json, so it is defined in one place.
     tsconfigPaths: true,
