@@ -10,6 +10,7 @@ const envSchema = z.object({
   CLIENT_ORIGIN: z.url().refine(isExactOrigin, {
     message: 'Must be an origin only, like http://localhost:5173',
   }),
+  DATABASE_URL: z.url({ protocol: /^postgres(ql)?$/ }),
 });
 
 export type Env = z.infer<typeof envSchema>;

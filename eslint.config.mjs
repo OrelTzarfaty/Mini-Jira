@@ -9,6 +9,7 @@ export default defineConfig(
     '**/node_modules/',
     '**/dist/',
     '**/build/',
+    '**/generated/',
     '**/coverage/',
     '**/test-results/',
     '**/playwright-report/',

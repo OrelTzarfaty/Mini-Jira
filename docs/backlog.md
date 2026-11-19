@@ -22,7 +22,7 @@ One sprint = one week, following the milestones in the requirements (§7).
 | Sprint | Week | Goal | Stories |
 |---|---|---|---|
 | 1 | 1 | **Planning & design** ⛔ mentor review before coding | DOC-1 … DOC-5 |
-| 2 | 2 | **Foundations + auth** | SETUP-1 … SETUP-9, AUTH-1 … AUTH-4 |
+| 2 | 2 | **Foundations + auth** | SETUP-1 … SETUP-10, AUTH-1 … AUTH-4 |
 | 3 | 3 | **Projects & members** | PRJ-1, PRJ-2, PRJ-6, PRJ-3, PRJ-4, PRJ-5 |
 | 4 | 4 | **Tickets + board view** | TKT-1 … TKT-5, BRD-1 |
 | 5 | 5 | **Board interactions** | BRD-2, BRD-3, BRD-4 |
@@ -96,25 +96,25 @@ Sprint 2 · Size S · **Status: Done** — merged into `dev` in [#52](https://gi
 - [x] BE · Build setup so `server` and `client` can import it
 
 ### SETUP-3 · Server skeleton
-Sprint 2 · Size M · Status: In review — branch `feat/SETUP-3-server-skeleton` · Depends on SETUP-2
-- [ ] BE · `app.ts` / `server.ts` with `GET /api/health`
-- [ ] BE · Env validation with zod (`config/env.ts`); fail fast on missing variables
-- [ ] BE · Request ID middleware + pino-http logging (request ID on every log line and in `X-Request-Id`)
-- [ ] BE · Security middleware: helmet, CORS allowlist, JSON size limit, cookie-parser, `trust proxy` for nginx
-- [ ] BE · `origin-check` middleware: reject cross-site `POST`/`PATCH`/`PUT`/`DELETE` with 403 (architecture §7)
-- [ ] BE · Central error handler (standard format, no stack traces) + 404 handler
-- [ ] BE · Graceful shutdown on `SIGTERM`; log and exit on unhandled errors (engineering standards §6.4)
-- [ ] BE · OpenAPI spec generated from the shared zod schemas (`/api/openapi.json`)
-- [ ] BE · Swagger UI at `/api/docs`
-- [ ] QA · Integration tests: health, unknown route → 404 in the standard format, thrown error → 500 without a stack trace
-- [ ] QA · Integration tests: cross-site `POST` → 403, same-origin `POST` is allowed
+Sprint 2 · Size M · **Status: Done** — merged into `dev` in [#53](https://github.com/OrelTzarfaty/Mini-Jira/pull/53) · Depends on SETUP-2
+- [x] BE · `app.ts` / `server.ts` with `GET /api/health`
+- [x] BE · Env validation with zod (`config/env.ts`); fail fast on missing variables
+- [x] BE · Request ID middleware + pino-http logging (request ID on every log line and in `X-Request-Id`)
+- [x] BE · Security middleware: helmet, CORS allowlist, JSON size limit, cookie-parser, `trust proxy` for nginx
+- [x] BE · `origin-check` middleware: reject cross-site `POST`/`PATCH`/`PUT`/`DELETE` with 403 (architecture §7)
+- [x] BE · Central error handler (standard format, no stack traces) + 404 handler
+- [x] BE · Graceful shutdown on `SIGTERM`; log and exit on unhandled errors (engineering standards §6.4)
+- [x] BE · OpenAPI spec generated from the shared zod schemas (`/api/openapi.json`)
+- [x] BE · Swagger UI at `/api/docs`
+- [x] QA · Integration tests: health, unknown route → 404 in the standard format, thrown error → 500 without a stack trace
+- [x] QA · Integration tests: cross-site `POST` → 403, same-origin `POST` is allowed
 
 ### SETUP-4 · Database
-Sprint 2 · Size M · Status: To do · Depends on SETUP-3
-- [ ] BE · Prisma setup + PostgreSQL container for development
-- [ ] BE · Separate test database + helper that resets it per test file
-- [ ] BE · First migration: `User` table (each later epic adds its own tables)
-- [ ] BE · `prisma/seed.ts` skeleton with demo users (test passwords only, documented in the seed file)
+Sprint 2 · Size M · **Status: Done** — merged into `dev` in [#55](https://github.com/OrelTzarfaty/Mini-Jira/pull/55) and [#58](https://github.com/OrelTzarfaty/Mini-Jira/pull/58) · Depends on SETUP-3
+- [x] BE · Prisma setup + PostgreSQL container for development
+- [x] BE · Separate test database + helper that resets it per test file
+- [x] BE · First migration: `User` table (each later epic adds its own tables)
+- [x] BE · `prisma/seed.ts` skeleton with demo users (test passwords only, documented in the seed file)
 
 ### SETUP-5 · Client skeleton
 Sprint 2 · Size L · Status: To do · Depends on SETUP-2
@@ -146,9 +146,9 @@ Sprint 2 · Size M · Status: To do · Depends on SETUP-3, SETUP-4, SETUP-5
 - [ ] QA · Verify `docker compose up` from a clean state: app loads, `/api/health` OK, `/api/docs` reachable
 
 ### SETUP-8 · CI
-Sprint 2 · Size S · Status: To do · Depends on SETUP-1
+Sprint 2 · Size S · Status: In progress — branch `chore/SETUP-8-ci` · Depends on SETUP-1
 - [ ] BE · GitHub Actions workflow on every PR: `npm ci` → `npm audit --audit-level=high` → lint → typecheck → build
-- [ ] BE · Add tests to CI with a PostgreSQL service container
+- [ ] BE · Add tests to CI against the Docker Compose test database (`docker-compose.test.yml`, the same one local runs use)
 - [ ] You · Make CI required for merging into `main`
 
 ### SETUP-9 · E2E workspace
@@ -158,6 +158,11 @@ Sprint 2 · Size M · Status: To do · Depends on SETUP-7
 - [ ] QA · First smoke test: the app loads and the login page renders
 - [ ] QA · Add the E2E job to CI
 - (Login fixtures per role come in AUTH-2, once login exists.)
+
+### SETUP-10 · Mission command
+Sprint 2 · Size S · **Status: Done** — merged into `dev` in [#57](https://github.com/OrelTzarfaty/Mini-Jira/pull/57) · Depends on SETUP-1
+- [x] Claude · `/mission <STORY-ID>` command: runs a mission from a new branch to a QA-tested pull request, then stops for approval
+- [x] QA · Review the command against the project rules
 
 ---
 

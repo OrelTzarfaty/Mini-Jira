@@ -19,9 +19,9 @@ A lightweight team task board: projects, members, tickets, a drag-and-drop board
 | Layer | Decision | Status |
 |---|---|---|
 | Backend | Node.js LTS (v26) + TypeScript + **Express 5** | Decided |
-| Database | **PostgreSQL**, schema changes only through migrations | Decided |
-| Frontend | **React** + TypeScript + Vite (replaces the Angular named in the requirements) | Decided — confirm with mentor |
-| DB access library | **Prisma** (schema, migrations, typed queries) | Decided |
+| Database | **PostgreSQL 18** in Docker, schema changes only through migrations | Decided |
+| Frontend | **React** + TypeScript + Vite (replaces the Angular named in the requirements) | Decided — the owner chose to keep building while the mentor confirms |
+| DB access library | **Prisma 7** (schema, migrations, typed queries) | Decided |
 | Auth session | **JWT in an HTTP-only cookie** (`SameSite=Lax`) + `origin-check` middleware against CSRF | Decided |
 | Password hashing | **Argon2id** | Decided |
 | Styling | **Tailwind CSS + shadcn/ui** (Radix primitives) | Decided |
@@ -111,7 +111,12 @@ Agents live in `.claude/agents/`:
 - **`frontend-developer`** — React client, board, forms, states, accessibility, frontend tests. Uses the design skills below.
 - **`qa-engineer`** — verifies acceptance criteria, writes API and E2E tests, reports bugs. Does not change app code.
 
-Workflow per story: backend builds the API → frontend builds the UI → QA verifies → fix bugs → PR.
+**Every mission uses the agents:**
+1. `backend-developer` does all `BE` tasks, and `frontend-developer` does all `FE` tasks.
+2. The pull request is opened into `dev`.
+3. **QA check (required):** `qa-engineer` tests the final commit of **every** pull request and gives a **PASS** or **FAIL** verdict.
+4. On **FAIL**, the owning agent fixes the root cause and `qa-engineer` tests again.
+5. A pull request is merged only after a QA **PASS** on its final commit **and** the project owner's approval.
 
 **Browser checks:** `frontend-developer` and `qa-engineer` use the **Chrome DevTools MCP** (`chrome-devtools`, configured in the user's Claude settings, not in this repo) to check features in a real browser: console and network errors, multi-user scenarios via isolated contexts, phone width, slow/offline network, and Lighthouse accessibility. Only local URLs and seed test accounts. QA screenshots go in `qa-evidence/` (not committed).
 
@@ -124,30 +129,37 @@ Installed locally in `.claude/skills/` (about 40 MB, not committed to git): `des
 ## Working rules
 
 - Follow [docs/engineering-standards.md](docs/engineering-standards.md), and complete its §12 checklist before saying work is done.
-- **Missions:** one backlog story = one mission = one GitHub issue, one branch (`feat/AUTH-1-register`), and one PR into `dev`. Each task = one commit. `dev` merges into `main` at the end of each sprint. CI must be green.
+- **Missions:** one backlog story = one mission = one GitHub issue, one branch (`feat/AUTH-1-register`), and one PR into `dev`. Each task = one commit. `dev` merges into `main` at the end of each sprint. CI must be green. Run a whole mission with `/mission <STORY-ID>` (for example `/mission AUTH-1`); it stops for approval, and merges only after the owner says yes.
 - Definition of Done: acceptance criteria met, server-side validation and permission checks, tests for the main path and at least one failure path, loading/empty/error states, API docs updated.
 - Secrets only in environment variables; commit `.env.example`, never `.env`.
 - This is a learning project: explain **why** behind design decisions so the user can defend them in the design doc and demo.
 
 ## Commands
 
-Run from the repo root (Node.js 26 required):
+Run from the repo root (Node.js 26 and a running Docker Desktop required):
 
 | Command | Purpose |
 |---|---|
+| `/mission <STORY-ID>` (type it in Claude Code, not a terminal) | Run a whole mission with the agents, from branch to QA-tested pull request |
 | `npm ci` | Install dependencies from the lockfile |
 | `cp .env.example .env` | Create local settings (first time only) |
+| `npm run db:up` / `npm run db:down` | Start / stop the development database |
+| `npm run db:migrate` | Apply migrations, or create one after changing `schema.prisma` |
+| `npm run db:seed` | Add the demo accounts (password documented in `server/prisma/seed.ts`) |
 | `npm run dev --workspace @mini-jira/server` | Run the API at `http://localhost:3000` and restart it on changes |
 | `npm start` | Build `shared` and `server`, then run the production version of the API |
 | `npm run lint` / `npm run lint:fix` | Check code with ESLint / apply automatic fixes |
 | `npm run format` / `npm run format:check` | Format code with Prettier / check formatting |
 | `npm run typecheck` | Type-check every workspace that has a `typecheck` script |
-| `npm test` | Build `shared`, then run tests in every workspace that has a `test` script |
+| `npm test` | Prepare the code, start the test database, and run all tests |
+| `npm run db:test:down` | Stop the test database |
 | `npm run build` | Build every workspace that has a `build` script |
 
 Run `npm run build` after changing `shared/`, because other workspaces import its built files.
 
-Add how to run (`docker compose up`), migrate, and seed once that code exists.
+**CI:** [.github/workflows/ci.yml](.github/workflows/ci.yml) runs on every PR into `dev` or `main` and on every push to them, in one job named `checks` (keep the name; branch protection uses it): `npm ci` → `npm audit --audit-level=high` → `lint` → `typecheck` → `build` → `format:check` → `npm test` (same Compose test database as locally). Pin every action to a full commit SHA with a version comment, and check workflow changes with `actionlint`.
+
+Add how to run the full system (`docker compose up`) once SETUP-7 is done.
 
 ## Keeping this file up to date
 
