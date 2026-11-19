@@ -147,6 +147,7 @@ Run from the repo root (Node.js 26 and a running Docker Desktop required):
 | `npm run db:migrate` | Apply migrations, or create one after changing `schema.prisma` |
 | `npm run db:seed` | Add the demo accounts (password documented in `server/prisma/seed.ts`) |
 | `npm run dev --workspace @mini-jira/server` | Run the API at `http://localhost:3000` and restart it on changes |
+| `npm run dev --workspace @mini-jira/client` | Run the web app at `http://localhost:5173` (builds `shared` first); it forwards `/api` to the API, so run both |
 | `npm start` | Build `shared` and `server`, then run the production version of the API |
 | `npm run lint` / `npm run lint:fix` | Check code with ESLint / apply automatic fixes |
 | `npm run format` / `npm run format:check` | Format code with Prettier / check formatting |
@@ -156,6 +157,8 @@ Run from the repo root (Node.js 26 and a running Docker Desktop required):
 | `npm run build` | Build every workspace that has a `build` script |
 
 Run `npm run build` after changing `shared/`, because other workspaces import its built files.
+
+**shadcn/ui components:** add them from `client/` with `npx shadcn@4.23.0 add <name>` (set `npm_config_save_exact=true` so new packages are pinned, and don't overwrite files we changed). Then run `npm run format` and give each component function a return type (standards §5). The shadcn CSS lives in `client/src/styles/shadcn.css` (inlined with `shadcn eject`), so the `shadcn` package is not a dependency.
 
 **CI:** [.github/workflows/ci.yml](.github/workflows/ci.yml) runs on every PR into `dev` or `main` and on every push to them, in one job named `checks` (keep the name; branch protection uses it): `npm ci` → `npm audit --audit-level=high` → `lint` → `typecheck` → `build` → `format:check` → `npm test` (same Compose test database as locally). Pin every action to a full commit SHA with a version comment, and check workflow changes with `actionlint`.
 

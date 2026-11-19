@@ -6,13 +6,13 @@ A lightweight task board for small teams: create projects, add teammates, track 
 
 ## Tech stack
 
-| Area     | Technology                                       |
-| -------- | ------------------------------------------------ |
-| Frontend | React, TypeScript, Vite, Tailwind CSS, shadcn/ui |
-| Backend  | Node.js, Express, TypeScript                     |
-| Database | PostgreSQL, Prisma                               |
-| Testing  | Vitest, Supertest, Playwright                    |
-| Tooling  | npm workspaces, ESLint, Prettier                 |
+| Area     | Technology                                                |
+| -------- | --------------------------------------------------------- |
+| Frontend | React, TypeScript, Vite, Tailwind CSS, shadcn/ui          |
+| Backend  | Node.js, Express, TypeScript                              |
+| Database | PostgreSQL, Prisma                                        |
+| Testing  | Vitest, Supertest, React Testing Library, MSW, Playwright |
+| Tooling  | npm workspaces, ESLint, Prettier                          |
 
 ## Project structure
 
@@ -39,22 +39,31 @@ npm run dev --workspace @mini-jira/server
 
 The API runs at `http://localhost:3000`, and its documentation is at [`/api/docs`](http://localhost:3000/api/docs).
 
+In a second terminal, start the web app:
+
+```bash
+npm run dev --workspace @mini-jira/client
+```
+
+Open `http://localhost:5173`. The web app forwards `/api` requests to the API, so keep both running.
+
 ## Commands
 
-| Command                | What it does                             |
-| ---------------------- | ---------------------------------------- |
-| `npm start`            | Builds and runs the production API       |
-| `npm run db:up`        | Starts the development database          |
-| `npm run db:down`      | Stops the development database           |
-| `npm run db:migrate`   | Applies database changes                 |
-| `npm run db:seed`      | Adds the demo accounts                   |
-| `npm run lint`         | Checks the code for problems             |
-| `npm run lint:fix`     | Fixes the problems that can be automated |
-| `npm run format`       | Formats the code                         |
-| `npm run format:check` | Checks the code formatting               |
-| `npm run typecheck`    | Checks TypeScript types                  |
-| `npm test`             | Runs the tests                           |
-| `npm run build`        | Builds every workspace                   |
+| Command                                     | What it does                             |
+| ------------------------------------------- | ---------------------------------------- |
+| `npm start`                                 | Builds and runs the production API       |
+| `npm run dev --workspace @mini-jira/client` | Runs the web app with live reload        |
+| `npm run db:up`                             | Starts the development database          |
+| `npm run db:down`                           | Stops the development database           |
+| `npm run db:migrate`                        | Applies database changes                 |
+| `npm run db:seed`                           | Adds the demo accounts                   |
+| `npm run lint`                              | Checks the code for problems             |
+| `npm run lint:fix`                          | Fixes the problems that can be automated |
+| `npm run format`                            | Formats the code                         |
+| `npm run format:check`                      | Checks the code formatting               |
+| `npm run typecheck`                         | Checks TypeScript types                  |
+| `npm test`                                  | Runs the tests                           |
+| `npm run build`                             | Builds every workspace                   |
 
 ## Continuous integration
 
