@@ -1,5 +1,5 @@
 import react from '@vitejs/plugin-react';
-import { defineConfig } from 'vite';
+import { defineConfig } from 'vitest/config';
 
 // The browser only talks to Vite, which forwards /api to the API. One origin keeps the
 // SameSite auth cookie working without CORS tricks (docs/architecture.md §1).
@@ -20,5 +20,9 @@ export default defineConfig({
     proxy: {
       '/api': API_ORIGIN,
     },
+  },
+  test: {
+    environment: 'jsdom',
+    setupFiles: ['./src/test/setup.ts'],
   },
 });
