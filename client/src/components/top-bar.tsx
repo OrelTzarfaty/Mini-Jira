@@ -1,0 +1,82 @@
+import { MenuIcon } from 'lucide-react';
+import type { ReactElement } from 'react';
+import { Link, NavLink } from 'react-router';
+
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+
+// NavLink marks the link to the current page with aria-current="page"; the style follows it.
+const CURRENT_PAGE_CLASSES = 'aria-[current=page]:bg-muted aria-[current=page]:font-semibold';
+
+/**
+ * On phones the links that don't fit move into a menu (wireframe 02 H).
+ * TODO(PRJ-2): add the user menu (name, email, Log out) here and on wide screens.
+ */
+function PhoneMenu(): ReactElement {
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button variant="ghost" size="icon" aria-label="Menu">
+          <MenuIcon aria-hidden="true" />
+        </Button>
+      </DialogTrigger>
+      {/* The menu needs no description: its links speak for themselves. */}
+      <DialogContent aria-describedby={undefined} className="top-4 translate-y-0">
+        <DialogTitle>Menu</DialogTitle>
+        <nav aria-label="Menu">
+          <ul>
+            <li>
+              <DialogClose asChild>
+                <Button asChild variant="ghost" className={CURRENT_PAGE_CLASSES}>
+                  <NavLink to="/my-work">My Work</NavLink>
+                </Button>
+              </DialogClose>
+            </li>
+          </ul>
+        </nav>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/** The bar at the top of every screen after login (wireframe 02 A). */
+export function TopBar(): ReactElement {
+  return (
+    <header className="border-b bg-background">
+      <div className="flex h-14 items-center gap-2 px-4 sm:gap-4 sm:px-6">
+        <Link
+          to="/projects"
+          className="inline-flex h-8 items-center rounded-md px-1 font-semibold outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+        >
+          Mini-Jira
+        </Link>
+        <nav aria-label="Main">
+          <ul className="flex items-center gap-1">
+            <li>
+              {/* TODO(PRJ-2): becomes the project dropdown (wireframe 02 E). */}
+              <Button asChild variant="ghost" className={CURRENT_PAGE_CLASSES}>
+                <NavLink to="/projects" end>
+                  Projects
+                </NavLink>
+              </Button>
+            </li>
+            <li className="hidden sm:block">
+              <Button asChild variant="ghost" className={CURRENT_PAGE_CLASSES}>
+                <NavLink to="/my-work">My Work</NavLink>
+              </Button>
+            </li>
+          </ul>
+        </nav>
+        <div className="ml-auto sm:hidden">
+          <PhoneMenu />
+        </div>
+      </div>
+    </header>
+  );
+}

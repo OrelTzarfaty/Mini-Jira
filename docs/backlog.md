@@ -77,10 +77,10 @@ Sprint 1 · Size S · Status: To do
 ## E1 · Foundations — Sprint 2
 
 ### SETUP-1 · Repository and workspaces
-Sprint 2 · Size M · Status: In progress — merged into `dev` in [#43](https://github.com/OrelTzarfaty/Mini-Jira/pull/43); only protecting `main` is left
+Sprint 2 · Size M · **Status: Done** — merged into `dev` in [#43](https://github.com/OrelTzarfaty/Mini-Jira/pull/43); `main` protected on 2026-11-19
 - [x] You · Create the public GitHub repo: [OrelTzarfaty/Mini-Jira](https://github.com/OrelTzarfaty/Mini-Jira)
 - [x] BE · `git init` and connect the local project to GitHub
-- [ ] You · Protect `main` (PRs only)
+- [x] You · Protect `main` (PRs only)
 - [x] BE · Root `package.json` with npm workspaces (`shared`, `server`, `client`, `e2e`)
 - [x] BE · Base `tsconfig` shared by all workspaces (strict settings from [engineering standards §5](engineering-standards.md))
 - [x] BE · ESLint (`typescript-eslint` `recommendedTypeChecked` + `stylisticTypeChecked`) + Prettier, and root scripts (`lint`, `format`, `typecheck`, `test`, `build`)
@@ -117,7 +117,7 @@ Sprint 2 · Size M · **Status: Done** — merged into `dev` in [#55](https://gi
 - [x] BE · `prisma/seed.ts` skeleton with demo users (test passwords only, documented in the seed file)
 
 ### SETUP-5 · Client skeleton
-Sprint 2 · Size L · Status: To do · Depends on SETUP-2
+Sprint 2 · Size L · Status: In progress — branch `feat/SETUP-5-client-skeleton` · Depends on SETUP-2
 - [ ] FE · Vite + React + TypeScript in `client/`; Vite proxy `/api` → API
 - [ ] FE · Tailwind CSS setup
 - [ ] FE · shadcn/ui init + first components (Button, Input, Dialog)
@@ -146,10 +146,10 @@ Sprint 2 · Size M · Status: To do · Depends on SETUP-3, SETUP-4, SETUP-5
 - [ ] QA · Verify `docker compose up` from a clean state: app loads, `/api/health` OK, `/api/docs` reachable
 
 ### SETUP-8 · CI
-Sprint 2 · Size S · Status: In progress — branch `chore/SETUP-8-ci` · Depends on SETUP-1
-- [ ] BE · GitHub Actions workflow on every PR: `npm ci` → `npm audit --audit-level=high` → lint → typecheck → build
-- [ ] BE · Add tests to CI against the Docker Compose test database (`docker-compose.test.yml`, the same one local runs use)
-- [ ] You · Make CI required for merging into `main`
+Sprint 2 · Size S · **Status: Done** — merged into `dev` in [#59](https://github.com/OrelTzarfaty/Mini-Jira/pull/59) · Depends on SETUP-1
+- [x] BE · GitHub Actions workflow on every PR: `npm ci` → `npm audit --audit-level=high` → lint → typecheck → build
+- [x] BE · Add tests to CI against the Docker Compose test database (`docker-compose.test.yml`, the same one local runs use)
+- [x] You · Make CI required for merging into `main`
 
 ### SETUP-9 · E2E workspace
 Sprint 2 · Size M · Status: To do · Depends on SETUP-7
