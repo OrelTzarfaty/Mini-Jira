@@ -68,7 +68,12 @@ After each agent finishes, check its report and the commits before starting the 
 
 ## 5. Run the QA check
 
-Start `qa-engineer` with the pull request link, the exact final commit, and the mission's story ID.
+Start `qa-engineer` with the pull request link, the exact final commit, the mission's story ID, and the QA level:
+
+- **light** if the pull request changes only Markdown (`.md`) files
+- **full** for every other pull request
+
+Check with `git diff --name-only --no-renames origin/dev...<final-commit>`. Without `--no-renames`, a file renamed to `.md` hides its old name. The levels are described in `.claude/agents/qa-engineer.md`.
 
 - **PASS:** continue to step 6.
 - **FAIL:** send the findings to the owning agent, have it fix the root cause, push the fix yourself, and run the QA check again on the new commit.
@@ -84,7 +89,7 @@ Before you report, confirm both of these, or go back to step 5:
 Update the pull request description if it no longer matches the work. Then tell the project owner, in simple English:
 
 - the pull request link
-- the QA verdict and the commit it tested
+- the QA verdict, its level (light or full), and the commit it tested
 - the CI result
 - what was built
 - every open QA finding, including Medium and Low ones

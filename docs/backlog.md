@@ -6,7 +6,7 @@
 ## How to use this backlog
 
 - **Epics → stories → tasks.** Functional stories keep their requirement IDs (`AUTH-1`, `TKT-4`, …). Enabler stories use `DOC-`, `SETUP-`, `HARD-`, `SHIP-`.
-- **Task owners:** `BE` = backend-developer · `FE` = frontend-developer · `QA` = qa-engineer · `You` = the project owner.
+- **Task owners:** `BE` = backend-developer · `FE` = frontend-developer · `QA` = qa-engineer · `Claude` = the main Claude Code session · `You` = the project owner.
 - **Task size rule:** every task should take **about one day of work or less**. If a task turns out bigger, split it before starting.
 - **Story size** is relative effort, not hours: **S** small · **M** medium · **L** large.
 - **Status:** tick a task's box when it's merged; a story is done when all its boxes are ticked **and** it meets the Definition of Done. Also update the story's status line and the Features table in `CLAUDE.md`.
@@ -22,7 +22,7 @@ One sprint = one week, following the milestones in the requirements (§7).
 | Sprint | Week | Goal | Stories |
 |---|---|---|---|
 | 1 | 1 | **Planning & design** ⛔ mentor review before coding | DOC-1 … DOC-5 |
-| 2 | 2 | **Foundations + auth** | SETUP-1 … SETUP-10, AUTH-1 … AUTH-4 |
+| 2 | 2 | **Foundations + auth** | SETUP-1 … SETUP-11, AUTH-1 … AUTH-4 |
 | 3 | 3 | **Projects & members** | PRJ-1, PRJ-2, PRJ-6, PRJ-3, PRJ-4, PRJ-5 |
 | 4 | 4 | **Tickets + board view** | TKT-1 … TKT-5, BRD-1 |
 | 5 | 5 | **Board interactions** | BRD-2, BRD-3, BRD-4 |
@@ -163,6 +163,11 @@ Sprint 2 · Size M · Status: To do · Depends on SETUP-7
 Sprint 2 · Size S · **Status: Done** — merged into `dev` in [#57](https://github.com/OrelTzarfaty/Mini-Jira/pull/57) · Depends on SETUP-1
 - [x] Claude · `/mission <STORY-ID>` command: runs a mission from a new branch to a QA-tested pull request, then stops for approval
 - [x] QA · Review the command against the project rules
+
+### SETUP-11 · QA levels
+Sprint 2 · Size S · Status: In progress — branch `chore/SETUP-11-qa-levels` · Depends on SETUP-10
+- [ ] Claude · Light QA for pull requests that change only Markdown files, full QA for all others (`qa-engineer`, `/mission`, `CLAUDE.md`, engineering standards §11)
+- [ ] QA · Review the change against the project rules
 
 ---
 
