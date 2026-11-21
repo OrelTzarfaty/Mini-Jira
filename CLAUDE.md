@@ -21,7 +21,7 @@ A lightweight team task board: projects, members, tickets, a drag-and-drop board
 | Backend | Node.js LTS (v26) + TypeScript + **Express 5** | Decided |
 | Database | **PostgreSQL 18** in Docker, schema changes only through migrations | Decided |
 | Frontend | **React** + TypeScript + Vite (replaces the Angular named in the requirements) | Decided — the owner chose to keep building while the mentor confirms |
-| DB access library | **Prisma 7** (schema, migrations, typed queries) | Decided |
+| DB access library | **Prisma 7** (schema, migrations, typed queries) | Decided — temporary npm `overrides` entry in the root `package.json` pins `effect` (used by `@prisma/config`) to 3.22.5 because of GHSA-7589-6fvf-x4pw; remove it once Prisma ships a fixed `@prisma/config` |
 | Auth session | **JWT in an HTTP-only cookie** (`SameSite=Lax`) + `origin-check` middleware against CSRF | Decided |
 | Password hashing | **Argon2id** | Decided |
 | Styling | **Tailwind CSS + shadcn/ui** (Radix primitives) | Decided |
