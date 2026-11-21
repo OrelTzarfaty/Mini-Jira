@@ -24,7 +24,7 @@ A lightweight team task board: projects, members, tickets, a drag-and-drop board
 | DB access library | **Prisma 7** (schema, migrations, typed queries) | Decided — temporary npm `overrides` entry in the root `package.json` pins `effect` (used by `@prisma/config`) to 3.22.5 because of GHSA-7589-6fvf-x4pw; remove it once Prisma ships a fixed `@prisma/config` |
 | Auth session | **JWT in an HTTP-only cookie** (`SameSite=Lax`) + `origin-check` middleware against CSRF | Decided |
 | Password hashing | **Argon2id** | Decided |
-| Styling | **Tailwind CSS + shadcn/ui** (Radix primitives); light-theme tokens and the self-hosted **Instrument Sans** font, recorded in [DESIGN.md](DESIGN.md) | Decided; visual direction awaits the owner's approval (SETUP-6) |
+| Styling | **Tailwind CSS + shadcn/ui** (Radix primitives); light-theme tokens and the self-hosted **Instrument Sans** font, recorded in [DESIGN.md](DESIGN.md) | Decided; visual direction approved by the owner on 2026-11-21 (SETUP-6) |
 | Repo layout | **npm workspaces**: `shared/`, `server/`, `client/`, `e2e/` · GitHub: [OrelTzarfaty/Mini-Jira](https://github.com/OrelTzarfaty/Mini-Jira) | Decided |
 | Code quality | **TypeScript 6.0** (typescript-eslint doesn't support 7 yet), ESLint, Prettier | Decided |
 | Infra | Docker Compose (client, API, DB), GitHub Actions CI (lint, test, build) | Required |
