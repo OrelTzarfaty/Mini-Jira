@@ -6,7 +6,7 @@
 ## How to use this backlog
 
 - **Epics → stories → tasks.** Functional stories keep their requirement IDs (`AUTH-1`, `TKT-4`, …). Enabler stories use `DOC-`, `SETUP-`, `HARD-`, `SHIP-`.
-- **Task owners:** `BE` = backend-developer · `FE` = frontend-developer · `QA` = qa-engineer · `You` = the project owner.
+- **Task owners:** `BE` = backend-developer · `FE` = frontend-developer · `QA` = qa-engineer · `Claude` = the main Claude Code session · `You` = the project owner.
 - **Task size rule:** every task should take **about one day of work or less**. If a task turns out bigger, split it before starting.
 - **Story size** is relative effort, not hours: **S** small · **M** medium · **L** large.
 - **Status:** tick a task's box when it's merged; a story is done when all its boxes are ticked **and** it meets the Definition of Done. Also update the story's status line and the Features table in `CLAUDE.md`.

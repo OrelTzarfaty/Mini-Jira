@@ -114,7 +114,7 @@ Agents live in `.claude/agents/`:
 **Every mission uses the agents:**
 1. `backend-developer` does all `BE` tasks, and `frontend-developer` does all `FE` tasks.
 2. The pull request is opened into `dev`.
-3. **QA check (required):** `qa-engineer` tests the final commit of **every** pull request and gives a **PASS** or **FAIL** verdict. A pull request that changes only Markdown files gets a **light** check (CI result plus a line-by-line content review); every other pull request gets the **full** check.
+3. **QA check (required):** `qa-engineer` tests the final commit of **every** pull request and gives a **PASS** or **FAIL** verdict. A pull request that changes only Markdown files gets a **light** check (CI result, a line-by-line content review, and a security review of agent instruction files); every other pull request gets the **full** check.
 4. On **FAIL**, the owning agent fixes the root cause and `qa-engineer` tests again.
 5. A pull request is merged only after a QA **PASS** on its final commit **and** the project owner's approval.
 
