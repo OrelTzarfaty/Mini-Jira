@@ -6,7 +6,7 @@
 ## How to use this backlog
 
 - **Epics → stories → tasks.** Functional stories keep their requirement IDs (`AUTH-1`, `TKT-4`, …). Enabler stories use `DOC-`, `SETUP-`, `HARD-`, `SHIP-`.
-- **Task owners:** `BE` = backend-developer · `FE` = frontend-developer · `QA` = qa-engineer · `You` = the project owner.
+- **Task owners:** `BE` = backend-developer · `FE` = frontend-developer · `QA` = qa-engineer · `Claude` = the main Claude Code session · `You` = the project owner.
 - **Task size rule:** every task should take **about one day of work or less**. If a task turns out bigger, split it before starting.
 - **Story size** is relative effort, not hours: **S** small · **M** medium · **L** large.
 - **Status:** tick a task's box when it's merged; a story is done when all its boxes are ticked **and** it meets the Definition of Done. Also update the story's status line and the Features table in `CLAUDE.md`.
@@ -22,7 +22,7 @@ One sprint = one week, following the milestones in the requirements (§7).
 | Sprint | Week | Goal | Stories |
 |---|---|---|---|
 | 1 | 1 | **Planning & design** ⛔ mentor review before coding | DOC-1 … DOC-5 |
-| 2 | 2 | **Foundations + auth** | SETUP-1 … SETUP-10, AUTH-1 … AUTH-4 |
+| 2 | 2 | **Foundations + auth** | SETUP-1 … SETUP-11, AUTH-1 … AUTH-4 |
 | 3 | 3 | **Projects & members** | PRJ-1, PRJ-2, PRJ-6, PRJ-3, PRJ-4, PRJ-5 |
 | 4 | 4 | **Tickets + board view** | TKT-1 … TKT-5, BRD-1 |
 | 5 | 5 | **Board interactions** | BRD-2, BRD-3, BRD-4 |
@@ -77,10 +77,10 @@ Sprint 1 · Size S · Status: To do
 ## E1 · Foundations — Sprint 2
 
 ### SETUP-1 · Repository and workspaces
-Sprint 2 · Size M · Status: In progress — merged into `dev` in [#43](https://github.com/OrelTzarfaty/Mini-Jira/pull/43); only protecting `main` is left
+Sprint 2 · Size M · **Status: Done** — merged into `dev` in [#43](https://github.com/OrelTzarfaty/Mini-Jira/pull/43); `main` protected on 2026-11-19
 - [x] You · Create the public GitHub repo: [OrelTzarfaty/Mini-Jira](https://github.com/OrelTzarfaty/Mini-Jira)
 - [x] BE · `git init` and connect the local project to GitHub
-- [ ] You · Protect `main` (PRs only)
+- [x] You · Protect `main` (PRs only)
 - [x] BE · Root `package.json` with npm workspaces (`shared`, `server`, `client`, `e2e`)
 - [x] BE · Base `tsconfig` shared by all workspaces (strict settings from [engineering standards §5](engineering-standards.md))
 - [x] BE · ESLint (`typescript-eslint` `recommendedTypeChecked` + `stylisticTypeChecked`) + Prettier, and root scripts (`lint`, `format`, `typecheck`, `test`, `build`)
@@ -117,7 +117,7 @@ Sprint 2 · Size M · **Status: Done** — merged into `dev` in [#55](https://gi
 - [x] BE · `prisma/seed.ts` skeleton with demo users (test passwords only, documented in the seed file)
 
 ### SETUP-5 · Client skeleton
-Sprint 2 · Size L · Status: To do · Depends on SETUP-2
+Sprint 2 · Size L · Status: In progress — branch `feat/SETUP-5-client-skeleton` · Depends on SETUP-2
 - [ ] FE · Vite + React + TypeScript in `client/`; Vite proxy `/api` → API
 - [ ] FE · Tailwind CSS setup
 - [ ] FE · shadcn/ui init + first components (Button, Input, Dialog)
@@ -146,10 +146,10 @@ Sprint 2 · Size M · Status: To do · Depends on SETUP-3, SETUP-4, SETUP-5
 - [ ] QA · Verify `docker compose up` from a clean state: app loads, `/api/health` OK, `/api/docs` reachable
 
 ### SETUP-8 · CI
-Sprint 2 · Size S · Status: In progress — branch `chore/SETUP-8-ci` · Depends on SETUP-1
-- [ ] BE · GitHub Actions workflow on every PR: `npm ci` → `npm audit --audit-level=high` → lint → typecheck → build
-- [ ] BE · Add tests to CI against the Docker Compose test database (`docker-compose.test.yml`, the same one local runs use)
-- [ ] You · Make CI required for merging into `main`
+Sprint 2 · Size S · **Status: Done** — merged into `dev` in [#59](https://github.com/OrelTzarfaty/Mini-Jira/pull/59) · Depends on SETUP-1
+- [x] BE · GitHub Actions workflow on every PR: `npm ci` → `npm audit --audit-level=high` → lint → typecheck → build
+- [x] BE · Add tests to CI against the Docker Compose test database (`docker-compose.test.yml`, the same one local runs use)
+- [x] You · Make CI required for merging into `main`
 
 ### SETUP-9 · E2E workspace
 Sprint 2 · Size M · Status: To do · Depends on SETUP-7
@@ -163,6 +163,11 @@ Sprint 2 · Size M · Status: To do · Depends on SETUP-7
 Sprint 2 · Size S · **Status: Done** — merged into `dev` in [#57](https://github.com/OrelTzarfaty/Mini-Jira/pull/57) · Depends on SETUP-1
 - [x] Claude · `/mission <STORY-ID>` command: runs a mission from a new branch to a QA-tested pull request, then stops for approval
 - [x] QA · Review the command against the project rules
+
+### SETUP-11 · QA levels
+Sprint 2 · Size S · Status: In progress — branch `chore/SETUP-11-qa-levels` · Depends on SETUP-10
+- [ ] Claude · Light QA for pull requests that change only Markdown files, full QA for all others (`qa-engineer`, `/mission`, `CLAUDE.md`, engineering standards §11)
+- [ ] QA · Review the change against the project rules
 
 ---
 

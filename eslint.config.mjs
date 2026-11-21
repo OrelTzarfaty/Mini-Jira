@@ -1,6 +1,8 @@
 import eslint from '@eslint/js';
 import stylistic from '@stylistic/eslint-plugin';
 import eslintConfigPrettier from 'eslint-config-prettier';
+import reactHooks from 'eslint-plugin-react-hooks';
+import { reactRefresh } from 'eslint-plugin-react-refresh';
 import { defineConfig, globalIgnores } from 'eslint/config';
 import tseslint from 'typescript-eslint';
 
@@ -49,6 +51,13 @@ export default defineConfig(
     rules: {
       'no-console': 'error',
     },
+  },
+
+  // The Rules of React (docs/engineering-standards.md §8.1), and component files that
+  // keep Vite's Fast Refresh working.
+  {
+    files: ['client/**/*.{ts,tsx}'],
+    extends: [reactHooks.configs.flat.recommended, reactRefresh.configs.vite()],
   },
 
   // JavaScript config files have no TypeScript type information.
