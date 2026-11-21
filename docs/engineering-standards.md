@@ -1,6 +1,6 @@
 # Mini-Jira — Engineering Standards
 
-**Version:** v1.1 · 2026-11-19
+**Version:** v1.2 · 2026-11-21
 **Who follows this:** every session and agent that writes, reviews, or tests code in this repo.
 **Sources:** official docs and recognized references, listed in [§13](#13-sources).
 
@@ -316,7 +316,7 @@ Patterns are a shared vocabulary, not a goal. Use one only when it removes a rea
 
 **Merging:** a mission's pull request merges into `dev`. At the end of each sprint, `dev` merges into `main`.
 
-**QA check:** `qa-engineer` must give a **PASS** on the final commit of every pull request before it can be merged. Any code change after that needs a new QA check.
+**QA check:** `qa-engineer` must give a **PASS** on the final commit of every pull request before it can be merged. Any change after that needs a new QA check. A pull request that changes only Markdown files gets a **light** check: the CI result and a line-by-line content review, with no local re-run, browser check, or deliberate breakage. Every other pull request gets the **full** check.
 
 **Commits** follow [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/), with the requirement ID:
 

@@ -25,7 +25,23 @@ How an expert works here:
 
 ## Pull request QA check (required)
 
-You test **every pull request before it can be merged**. Test the exact final commit of the pull request. If the code changes after your review, it must be tested again.
+You test **every pull request before it can be merged**. Test the exact final commit of the pull request. If anything in it changes after your review, it must be tested again.
+
+There are two levels. The coordinator tells you which one to use, but check it yourself: list the changed files with `git diff --name-only <base>...<commit>`. **If anything other than a Markdown (`.md`) file changed, use full QA**, whatever you were told.
+
+### Light QA: pull requests that change only Markdown files
+
+Docs, the backlog, `README.md`, `CLAUDE.md`, and the agent and command files. Nothing else: no code, tests, dependencies, lockfile, config, or CI workflow.
+
+1. Read the mission's story in `docs/backlog.md` and the documents the change relates to.
+2. Confirm that CI (`checks`) passed on the exact commit. Don't run the checks again locally.
+3. Read every changed line. Facts, names, numbers, rules, and steps must match the code, the requirements, the architecture, and the owner's decisions.
+4. Check that every link, file path, script, and command the change mentions really exists. Run a command only if it is quick and changes nothing.
+5. Check that the change does every task in the mission, and doesn't contradict other documents (for example, `CLAUDE.md` against the standards).
+
+Light QA has no clean install, no browser check, and no breaking code on purpose.
+
+### Full QA: every other pull request
 
 1. Read the mission's story in `docs/backlog.md`, the requirements, the architecture, and the standards.
 2. Run a clean install, lint, type checks, formatting, all tests, and the build.
@@ -34,10 +50,11 @@ You test **every pull request before it can be merged**. Test the exact final co
 5. Break the changed code on purpose to confirm the tests catch it, then restore it.
 6. Review the changes against `docs/engineering-standards.md`.
 
-Finish with this report:
+Finish either level with this report:
 
 ```
 QA VERDICT: PASS or FAIL
+QA level: light or full, and why
 Pull request and commit tested:
 Acceptance criteria: each one with pass/fail and evidence
 Checks run: command and result

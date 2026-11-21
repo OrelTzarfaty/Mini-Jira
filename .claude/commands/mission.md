@@ -68,7 +68,12 @@ After each agent finishes, check its report and the commits before starting the 
 
 ## 5. Run the QA check
 
-Start `qa-engineer` with the pull request link, the exact final commit, and the mission's story ID.
+Start `qa-engineer` with the pull request link, the exact final commit, the mission's story ID, and the QA level:
+
+- **light** if the pull request changes only Markdown (`.md`) files
+- **full** for every other pull request
+
+The levels are described in `.claude/agents/qa-engineer.md`.
 
 - **PASS:** continue to step 6.
 - **FAIL:** send the findings to the owning agent, have it fix the root cause, push the fix yourself, and run the QA check again on the new commit.
