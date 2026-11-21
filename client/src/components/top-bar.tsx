@@ -54,7 +54,7 @@ export function TopBar(): ReactElement {
       <div className="flex h-14 items-center gap-2 px-4 sm:gap-4 sm:px-6">
         <Link
           to="/projects"
-          className="inline-flex h-8 items-center gap-2 rounded-md px-1 font-semibold outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+          className="inline-flex h-8 items-center gap-2 rounded-md px-1 font-semibold"
         >
           {/* The logo mark is the same file as the favicon. The link text names it. */}
           <img src="/favicon.svg" alt="" className="size-6" />

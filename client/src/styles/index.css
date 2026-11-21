@@ -66,7 +66,13 @@
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border;
+    /* The focus ring's color, width, and gap are set on every element ahead of time, so focus
+       only switches the outline on. Nothing is left for a transition to animate, and the ring
+       appears at full strength at once. */
+    outline-color: var(--ring);
+    outline-offset: 2px;
+    outline-width: 2px;
   }
   html {
     @apply font-sans;
@@ -82,6 +88,12 @@
   }
   p {
     text-wrap: pretty;
+  }
+  /* One focus indicator for every control: a solid 2px navy outline with a 2px gap. Components
+     don't draw their own. A full-opacity outline is 13.7:1 against white (WCAG 1.4.11 asks
+     for 3:1), and unlike a box-shadow ring it stays visible in Windows high-contrast mode. */
+  :focus-visible {
+    outline-style: solid;
   }
   ::selection {
     background-color: color-mix(in oklch, var(--primary) 18%, transparent);
