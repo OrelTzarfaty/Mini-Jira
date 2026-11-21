@@ -28,5 +28,8 @@ export default defineConfig({
     // Undo vi.spyOn and vi.stubGlobal after every test, so tests stay independent.
     restoreMocks: true,
     unstubGlobals: true,
+    // Vitest replaces CSS imports with empty strings. design-tokens.test.ts reads the design
+    // tokens with "index.css?raw", so that one file keeps its text.
+    css: { include: [/src\/styles\/index\.css/] },
   },
 });

@@ -11,7 +11,7 @@ export function AppShell(): ReactElement {
           styles use focus: because sr-only and not-sr-only reset padding and border. */}
       <a
         href="#main-content"
-        className="sr-only outline-none focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:rounded-lg focus:border focus:bg-background focus:px-3 focus:py-2 focus:text-sm focus:font-medium focus:shadow-sm focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:rounded-lg focus:border focus:bg-background focus:px-3 focus:py-2 focus:text-sm focus:font-medium focus:shadow-sm"
       >
         Skip to main content
       </a>

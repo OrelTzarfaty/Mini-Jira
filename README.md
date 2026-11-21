@@ -77,3 +77,4 @@ GitHub Actions runs the checks in [`.github/workflows/ci.yml`](.github/workflows
 - [Engineering standards](docs/engineering-standards.md)
 - [Backlog](docs/backlog.md)
 - [Wireframes](docs/wireframes/README.md)
+- [Design system](DESIGN.md) and [product context](PRODUCT.md)
