@@ -21,7 +21,7 @@ A lightweight team task board: projects, members, tickets, a drag-and-drop board
 | Backend | Node.js LTS (v26) + TypeScript + **Express 5** | Decided |
 | Database | **PostgreSQL 18** in Docker, schema changes only through migrations | Decided |
 | Frontend | **React** + TypeScript + Vite (replaces the Angular named in the requirements) | Decided — the owner chose to keep building while the mentor confirms |
-| DB access library | **Prisma 7** (schema, migrations, typed queries) | Decided |
+| DB access library | **Prisma 7** (schema, migrations, typed queries) | Decided — temporary npm `overrides` entry in the root `package.json` pins `effect` (used by `@prisma/config`) to 3.22.5 because of GHSA-7589-6fvf-x4pw; remove it once Prisma ships a fixed `@prisma/config` |
 | Auth session | **JWT in an HTTP-only cookie** (`SameSite=Lax`) + `origin-check` middleware against CSRF | Decided |
 | Password hashing | **Argon2id** | Decided |
 | Styling | **Tailwind CSS + shadcn/ui** (Radix primitives); light-theme tokens and the self-hosted **Instrument Sans** font, recorded in [DESIGN.md](DESIGN.md) | Decided; visual direction awaits the owner's approval (SETUP-6) |
@@ -116,7 +116,7 @@ Agents live in `.claude/agents/`:
 **Every mission uses the agents:**
 1. `backend-developer` does all `BE` tasks, and `frontend-developer` does all `FE` tasks.
 2. The pull request is opened into `dev`.
-3. **QA check (required):** `qa-engineer` tests the final commit of **every** pull request and gives a **PASS** or **FAIL** verdict.
+3. **QA check (required):** `qa-engineer` tests the final commit of **every** pull request and gives a **PASS** or **FAIL** verdict. A pull request that changes only Markdown files gets a **light** check (CI result, a line-by-line content review, and a security review of agent instruction files); every other pull request gets the **full** check.
 4. On **FAIL**, the owning agent fixes the root cause and `qa-engineer` tests again.
 5. A pull request is merged only after a QA **PASS** on its final commit **and** the project owner's approval.
 

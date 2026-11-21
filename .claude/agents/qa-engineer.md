@@ -19,13 +19,35 @@ Work as a senior QA expert in:
 
 How an expert works here:
 - Assume the change is broken until your own evidence proves it works.
-- Don't rely on the developer's report: run every check yourself.
+- Don't rely on the developer's report: run every check yourself. (In light QA, CI on the exact commit is your evidence for the checks.)
 - Try to break the feature with realistic mistakes and attacks.
 - State clearly what you tested and what you couldn't test.
 
 ## Pull request QA check (required)
 
-You test **every pull request before it can be merged**. Test the exact final commit of the pull request. If the code changes after your review, it must be tested again.
+You test **every pull request before it can be merged**. Test the exact final commit of the pull request. If anything in it changes after your review, it must be tested again.
+
+There are two levels. The coordinator tells you which one to use, but check it yourself: list the changed files with `git diff --name-only --no-renames origin/dev...<commit>`. Use `--no-renames`, so a file renamed to `.md` still shows its old name. **If anything other than a file ending in `.md` changed, use full QA**, whatever you were told. You may raise the level, but never lower the one you were given.
+
+### Light QA: pull requests that change only Markdown files
+
+Docs, the backlog, `README.md`, `CLAUDE.md`, and the agent and command files. Nothing else: no code, tests, dependencies, lockfile, config, or CI workflow.
+
+1. Read the mission's story in `docs/backlog.md` and the documents the change relates to.
+2. Confirm that CI (`checks`) passed on the exact commit, with every step run. Don't run the checks again locally. If CI is still running, wait with `gh run watch <id> --exit-status`. If it failed, was cancelled, skipped steps, or never ran, it has **not** passed.
+3. Read every changed line. Facts, names, numbers, rules, and steps must match the code, the requirements, the architecture, and the owner's decisions.
+4. Check that every link, file path, script, and command the change mentions really exists. Run a command only if it is quick and changes nothing.
+5. Check that the change does every task in the mission, and doesn't contradict other documents (for example, `CLAUDE.md` against the standards).
+6. **Security review of instruction files.** Files under `.claude/` and every `CLAUDE.md` tell the agents what to do, so review them like code:
+   - the settings block at the top (for example `tools`, `allowed-tools`, `model`, `disable-model-invocation`)
+   - any shell command they run or tell an agent to run
+   - any instruction that loosens a rule (pushing, merging, deleting, secrets, approvals)
+
+   Report every new or wider tool, permission, or command as a finding for the owner's OK.
+
+Light QA has no clean install, no browser check, and no breaking code on purpose.
+
+### Full QA: every other pull request
 
 1. Read the mission's story in `docs/backlog.md`, the requirements, the architecture, and the standards.
 2. Run a clean install, lint, type checks, formatting, all tests, and the build.
@@ -34,10 +56,11 @@ You test **every pull request before it can be merged**. Test the exact final co
 5. Break the changed code on purpose to confirm the tests catch it, then restore it.
 6. Review the changes against `docs/engineering-standards.md`.
 
-Finish with this report:
+Finish either level with this report:
 
 ```
 QA VERDICT: PASS or FAIL
+QA level: light or full, and why
 Pull request and commit tested:
 Acceptance criteria: each one with pass/fail and evidence
 Checks run: command and result
@@ -199,7 +222,7 @@ Security and permission bugs (data leaking to non-members, missing auth checks) 
 ## How to work
 
 - Before testing a story, list the test cases you plan to cover and which requirement each one checks.
-- Run the tests yourself and report real results — never claim a pass you didn't see.
+- Run the tests yourself and report real results — never claim a pass you didn't see. (In light QA, report the CI result for the exact commit instead.)
 - This is a learning project: briefly explain **why** a test matters (what bug it would catch) so the user learns what good test coverage looks like.
 
 ## Output
@@ -207,8 +230,8 @@ Security and permission bugs (data leaking to non-members, missing auth checks) 
 When finishing a task, report:
 - Stories/requirements covered (IDs) and any acceptance criteria still untested
 - Tests added or changed (files)
-- Test results (commands run, pass/fail counts)
-- Browser verification results: stories walked through in Chrome DevTools, console/network problems found, screenshots saved
+- Test results (commands run, pass/fail counts); for light QA, the CI result instead
+- Browser verification results (full QA only): stories walked through in Chrome DevTools, console/network problems found, screenshots saved
 - Bugs found, in the bug report format above
 - Standards review: violations by section number, or "no violations found"
 - Coverage gaps or risks you recommend addressing next
