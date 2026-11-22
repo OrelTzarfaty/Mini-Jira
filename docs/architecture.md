@@ -3,7 +3,7 @@
 **Status:** v1 · 2026-11-17 · all decisions confirmed by the project owner
 **Source of truth for requirements:** [mini-jira-requirements.md](../mini-jira-requirements.md)
 
-The defaults proposed in the draft were confirmed on 2026-11-17 (see [§11](#11-confirmed-defaults)). Only the deployment target is still open (week 8).
+The defaults proposed in the draft were confirmed on 2026-11-17 (see [§11](#11-confirmed-defaults)). The deployment target was decided on 2026-11-22: AWS (see [§13](#13-deployment-aws)); it is built in week 8.
 
 ---
 
@@ -417,7 +417,7 @@ Confirmed by the project owner on 2026-11-17. Changing any of these is an archit
 | 4 | Register logs the user in | Redirect to the login page after register | ✅ Confirmed |
 | 5 | Board returns up to 50 cards per column, "load more" per column | All cards at once (breaks "never unbounded") | ✅ Confirmed |
 | 6 | Auth cookie lasts 7 days, no refresh token | Shorter lifetime + refresh token | ✅ Confirmed |
-| 7 | Deployment target is chosen in week 8 (e.g. Render, Railway, Fly.io) | Choose now | ✅ Confirmed — target still **open** |
+| 7 | Deployment target: **AWS** — ECS Fargate + RDS, Terraform, GitHub Actions OIDC (§13); built in week 8 | Render, Railway, Fly.io | ✅ Decided 2026-11-22 |
 | 8 | Passwords hashed with **Argon2id** (OWASP's first choice) | bcrypt | ✅ Confirmed 2026-11-18 |
 | 9 | CSRF: `SameSite=Lax` **plus** an `origin-check` middleware | `SameSite=Lax` only | ✅ Confirmed 2026-11-18 |
 | 10 | Failed logins limited per **email + IP** and per **IP** | Per IP only | ✅ Confirmed 2026-11-18 |
@@ -432,3 +432,44 @@ Coding rules for this architecture: [engineering-standards.md](engineering-stand
 - **Seed:** `server/prisma/seed.ts` creates demo users, several projects, 1,000+ tickets with ranks, comments, and activity.
 - **CI (GitHub Actions, every PR):** install → audit → lint → typecheck → build → format check → unit + integration tests (the Docker Compose test database, `docker-compose.test.yml`, the same one local runs use). E2E (Playwright) runs against `docker compose`.
 - **Testing layers:** unit (rank, ticket-key parsing, permission rules) · integration (every endpoint incl. 401/403/404/409 paths) · component (forms, states, optimistic board) · E2E (critical journeys). Details in the agent files.
+
+## 13. Deployment (AWS)
+
+Decided by the project owner on 2026-11-22. Built in week 8 (SHIP-1); nothing exists in AWS before that.
+
+```
+browser ──HTTPS──▶ Application Load Balancer
+                        │
+                        ▼
+                 client task (ECS Fargate, nginx)
+                 ├─ serves the React SPA
+                 └─ /api ──▶ API task (ECS Fargate, Express)
+                                   │
+                                   ▼
+                            RDS for PostgreSQL 18
+```
+
+- **Compute:** the client (nginx) image and the API image run on **ECS Fargate**; images live in **ECR**.
+- **Entry:** an **Application Load Balancer** with HTTPS sits in front of the client task.
+- **Database:** **RDS for PostgreSQL 18**.
+- **Secrets:** `JWT_SECRET` and the database URL are kept in **Secrets Manager**. **Logs:** **CloudWatch**.
+- **Infrastructure as code:** **Terraform** in a new `infra/` folder. `terraform apply` creates everything, `terraform destroy` removes everything.
+- **Deploys:** GitHub Actions signs in to AWS with **OIDC** (a short-lived role), so no AWS keys are stored.
+- **Not used:** Kubernetes / EKS (too expensive for this project).
+
+**Cost rules (small budget):**
+- Use the AWS Free plan and its credits.
+- First setup step: a Budgets alarm at **$1** and **$5**.
+- Smallest sizes everywhere: smallest RDS instance, minimum Fargate CPU/memory, no NAT Gateway, no extra paid services.
+- The system runs only for testing and the demo, then is removed with `terraform destroy`.
+- No agent creates or changes anything in AWS without asking the owner first.
+
+**Who does what (owner decision, 2026-11-22 — the owner wants to learn AWS):**
+- The **owner** performs every AWS action: creating the account and choosing the Free plan, the Budgets alarms, IAM and the OIDC role, running `terraform apply` / `terraform destroy`, and checking the AWS console.
+- **Agents** don't run AWS or Terraform commands that change anything. They prepare the code (Terraform in `infra/`, the deploy workflow), explain each step in simple English (what it creates, why, what it costs), and give the owner a step-by-step guide to follow.
+
+**Why:**
+- **One origin kept:** nginx still serves the SPA and forwards `/api`, exactly like Docker Compose, so the cookie and CSRF setup (§7) work the same with no CORS changes.
+- **Managed database:** RDS handles backups and patching, which keeps the data safer than running PostgreSQL in a container.
+- **Terraform:** the whole system is written as code, so the owner can turn it all off with one command and stop paying, then bring it back the same way.
+- **OIDC:** GitHub gets short-lived access for each deploy, so there is no long-lived AWS key that could leak.

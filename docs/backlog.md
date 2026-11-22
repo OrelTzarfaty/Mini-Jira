@@ -505,13 +505,18 @@ Sprint 7 · Size S · Status: To do
 ## E11 · Ship — Sprint 8
 
 ### SHIP-1 · Deploy
-Sprint 8 · Size L · Status: To do
-- [ ] You · Choose the deployment target (architecture §11 #7) and update architecture.md + CLAUDE.md
-- [ ] BE · Deploy the database
-- [ ] BE · Deploy the API: env vars, run migrations
-- [ ] FE · Deploy the client
-- [ ] BE · Seed a demo account on the live demo
+Sprint 8 · Size L · Status: In progress
+- [x] You · Choose the deployment target (architecture §11 #7) and update architecture.md + CLAUDE.md — AWS, 2026-11-22 (architecture §13)
+- [ ] You · Create the AWS account, choose the Free plan, and create the Budgets alarms at $1 and $5 (first step, before anything else)
+- [ ] BE · Write Terraform in `infra/`: ECR, ECS Fargate, ALB (HTTPS), RDS PostgreSQL 18, Secrets Manager, CloudWatch; smallest sizes, no NAT Gateway; plus a step-by-step guide explaining what each part creates, why, and what it costs (agents don't run it)
+- [ ] BE · Prepare the API deploy: secrets in Secrets Manager, migrations on start; add it to the guide
+- [ ] FE · Prepare the client deploy (nginx image on ECS Fargate); add it to the guide
+- [ ] BE · Write the GitHub Actions deploy workflow with OIDC (no stored AWS keys) and the guide for the IAM/OIDC role
+- [ ] You · Create the IAM/OIDC role, run `terraform apply` following the guide, and check the AWS console
+- [ ] BE · Prepare the demo seed and a guide to run it against RDS
+- [ ] You · Run the demo seed on the live database
 - [ ] QA · Smoke-test the live demo (login, board, ticket, list)
+- [ ] You · Remove everything with `terraform destroy` after the demo
 
 ### SHIP-2 · README
 Sprint 8 · Size S · Status: To do
