@@ -88,6 +88,7 @@ Endpoints so far (full details in Swagger at `/api/docs`):
 | `GET` | `/api/health` | Check that the API is running |
 | `GET` | `/api/openapi.json` | The OpenAPI description of the API |
 | `GET` | `/api/docs` | Swagger UI |
+| `POST` | `/api/auth/register` | Create an account and log in (sets the auth cookie) |
 
 ## Features
 
@@ -95,7 +96,7 @@ Summary only — task-level status lives in [docs/backlog.md](docs/backlog.md).
 
 | Area | IDs | Priority | Status |
 |---|---|---|---|
-| Authentication | AUTH-1..4 | P0 | Not started |
+| Authentication | AUTH-1..4 | P0 | In progress (AUTH-1) |
 | Projects & members | PRJ-1..6 | P0 | Not started |
 | Tickets | TKT-1..5 | P0 | Not started |
 | Board | BRD-1..4 | P0 | Not started |
@@ -171,7 +172,7 @@ Run `npm run build` after changing `shared/`, because other workspaces import it
 
 **Branch protection:** `main` accepts changes only through a pull request, and `checks` (from GitHub Actions) must pass; the rules apply to admins too. `dev` blocks force-push and deletion only, so approved merges are pushed to it directly (see `/mission` step 7).
 
-**Full system (Docker):** after `cp .env.example .env`, `docker compose up --build` builds the images (`server/Dockerfile`, `client/Dockerfile`, build context = repo root) and serves the app at `http://localhost:8080`. nginx in `client` forwards `/api` to `api`, whose port isn't published. The `api` container runs `prisma migrate deploy` on start (so `prisma` is a server **dependency**, not a devDependency) and takes its settings from `docker-compose.yml`, not from the dev values in `.env`; only `POSTGRES_*` and `LOG_LEVEL` come from `.env`. It uses the same `db` service and volume as local development, so `npm run db:seed` (run on your computer) adds the demo data to it, and `npm run dev` can run at the same time.
+**Full system (Docker):** after `cp .env.example .env`, `docker compose up --build` builds the images (`server/Dockerfile`, `client/Dockerfile`, build context = repo root) and serves the app at `http://localhost:8080`. nginx in `client` forwards `/api` to `api`, whose port isn't published. The `api` container runs `prisma migrate deploy` on start (so `prisma` is a server **dependency**, not a devDependency) and takes its settings from `docker-compose.yml`, not from the dev values in `.env`; only `POSTGRES_*`, `LOG_LEVEL` and `JWT_SECRET` come from `.env`. Every `docker compose` command (also `npm run db:up`) stops with a clear message if `.env` has no `JWT_SECRET`: copy it from `.env.example` into an older `.env` (AUTH-1). It uses the same `db` service and volume as local development, so `npm run db:seed` (run on your computer) adds the demo data to it, and `npm run dev` can run at the same time.
 
 ## Keeping this file up to date
 

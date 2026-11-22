@@ -35,6 +35,19 @@ describe('GET /api/openapi.json', () => {
     expect(Object.keys(spec.paths['/health']?.get?.responses ?? {})).toEqual(['200', '500']);
   });
 
+  it('AUTH-1: documents the register endpoint with its responses', async () => {
+    const spec = await getSpec();
+
+    expect(Object.keys(spec.paths['/auth/register']?.post?.responses ?? {})).toEqual([
+      '201',
+      '400',
+      '403',
+      '409',
+      '413',
+      '500',
+    ]);
+  });
+
   it('SETUP-3: builds the error schema from the shared error codes', async () => {
     const spec = await getSpec();
 

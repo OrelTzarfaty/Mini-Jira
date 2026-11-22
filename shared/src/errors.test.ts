@@ -15,6 +15,7 @@ describe('ERROR_HTTP_STATUS', () => {
     [ErrorCode.PROJECT_KEY_TAKEN, 409],
     [ErrorCode.ALREADY_MEMBER, 409],
     [ErrorCode.CANNOT_REMOVE_OWNER, 409],
+    [ErrorCode.PAYLOAD_TOO_LARGE, 413],
     [ErrorCode.RATE_LIMITED, 429],
     [ErrorCode.INTERNAL_ERROR, 500],
   ])('SETUP-2: %s responds with HTTP %i', (code, status) => {

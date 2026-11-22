@@ -107,15 +107,15 @@ describe('error handling', () => {
     });
   });
 
-  it('SETUP-3: a body over the size limit is rejected', async () => {
+  it('SETUP-3: a body over the size limit gets 413 PAYLOAD_TOO_LARGE', async () => {
     const response = await request(failingApp())
       .post('/api/echo')
       .set('Origin', TEST_CLIENT_ORIGIN)
       .send({ title: 'x'.repeat(101 * 1024) });
 
-    expect(response.status).toBe(400);
+    expect(response.status).toBe(413);
     expect(response.body).toEqual({
-      error: { code: 'VALIDATION_ERROR', message: 'The request body is too large' },
+      error: { code: 'PAYLOAD_TOO_LARGE', message: 'The request body is too large' },
     });
   });
 

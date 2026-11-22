@@ -8,7 +8,6 @@ import type { Logger } from 'pino';
 import { errorHandler, notFoundHandler } from './middleware/error-handler.js';
 import { createHttpLogger } from './middleware/http-logger.js';
 import { createOriginCheck } from './middleware/origin-check.js';
-import { createApiRouter } from './routes.js';
 
 const JSON_BODY_LIMIT = '100kb';
 // nginx is the only proxy in front of the API.
@@ -17,14 +16,11 @@ const TRUSTED_PROXY_HOPS = 1;
 export interface AppOptions {
   logger: Logger;
   clientOrigin: string;
-  apiRouter?: Router;
+  /** Everything under /api (see routes.ts). */
+  apiRouter: Router;
 }
 
-export function createApp({
-  logger,
-  clientOrigin,
-  apiRouter = createApiRouter(),
-}: AppOptions): Express {
+export function createApp({ logger, clientOrigin, apiRouter }: AppOptions): Express {
   const app = express();
 
   app.set('trust proxy', TRUSTED_PROXY_HOPS);

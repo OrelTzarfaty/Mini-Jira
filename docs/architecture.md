@@ -344,6 +344,7 @@ Base path `/api`, JSON only. Full contract: Swagger UI at `/api/docs`, raw spec 
 | 403 | `FORBIDDEN` |
 | 404 | `NOT_FOUND`, `USER_NOT_FOUND` |
 | 409 | `EDIT_CONFLICT`, `EMAIL_TAKEN`, `PROJECT_KEY_TAKEN`, `ALREADY_MEMBER`, `CANNOT_REMOVE_OWNER` |
+| 413 | `PAYLOAD_TOO_LARGE` (JSON body over 100 kB) |
 | 429 | `RATE_LIMITED` |
 | 500 | `INTERNAL_ERROR` (no stack trace; the request ID is logged) |
 

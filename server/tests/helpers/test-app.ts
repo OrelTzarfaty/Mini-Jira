@@ -2,24 +2,30 @@ import type { Express, Router } from 'express';
 import type { Logger } from 'pino';
 
 import { createApp } from '../../src/app.js';
+import { createAuthCookie } from '../../src/lib/auth-cookie.js';
 import { createLogger } from '../../src/lib/logger.js';
+import { createApiRouter } from '../../src/routes.js';
+import { testPrisma } from './database.js';
 
 export const TEST_CLIENT_ORIGIN = 'http://localhost:5173';
+
+export const testAuthCookie = createAuthCookie({
+  secret: 'test-only-jwt-secret-of-at-least-32-chars',
+  expiresIn: 7 * 24 * 60 * 60,
+  nodeEnv: 'test',
+});
 
 interface TestAppOptions {
   logger?: Logger;
   apiRouter?: Router;
 }
 
+// The real API by default, on the test database. Tests that never query it don't need it running.
 export function createTestApp({
   logger = createLogger('silent'),
-  apiRouter,
+  apiRouter = createApiRouter({ prisma: testPrisma, authCookie: testAuthCookie }),
 }: TestAppOptions = {}): Express {
-  return createApp({
-    logger,
-    clientOrigin: TEST_CLIENT_ORIGIN,
-    ...(apiRouter ? { apiRouter } : {}),
-  });
+  return createApp({ logger, clientOrigin: TEST_CLIENT_ORIGIN, apiRouter });
 }
 
 export interface LogLine {

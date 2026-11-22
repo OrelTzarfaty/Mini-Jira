@@ -16,3 +16,6 @@ blob-report/
 qa-evidence/
 .playwright/
 .playwright-cli/
+
+# The Impeccable design hook's local cache (not committed)
+.impeccable/
