@@ -89,6 +89,20 @@ describe('POST /api/auth/register', () => {
     expect(await testPrisma.user.count()).toBe(0);
   });
 
+  it('AUTH-1: a name with a NUL character gets 400 VALIDATION_ERROR, not a database error', async () => {
+    const response = await register({ ...NEW_USER, name: 'Dana\u0000Levi' });
+
+    expect(response.status).toBe(400);
+    expect(response.body).toEqual({
+      error: {
+        code: 'VALIDATION_ERROR',
+        message: "Name contains characters that aren't allowed",
+        details: [{ field: 'name', message: "Name contains characters that aren't allowed" }],
+      },
+    });
+    expect(await testPrisma.user.count()).toBe(0);
+  });
+
   it('AUTH-1: an unknown field gets 400 and is named in details', async () => {
     const response = await register({ ...NEW_USER, role: 'admin' });
 

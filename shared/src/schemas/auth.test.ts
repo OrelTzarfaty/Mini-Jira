@@ -65,6 +65,32 @@ describe('registerSchema', () => {
     ]);
   });
 
+  it.each([
+    ['a NUL', 'Ana\u0000Levi'],
+    ['a tab', 'Ana\tLevi'],
+    ['a line break', 'Ana\nLevi'],
+    ['an escape', 'Ana\u001bLevi'],
+    ['a DEL', 'Ana\u007fLevi'],
+    ['a C1 control', 'Ana\u0085Levi'],
+    ['only a NUL', '\u0000'],
+  ])('AUTH-1: rejects a name with %s character', (_description, name) => {
+    expect(messagesFor({ ...validInput, name }, 'name')).toEqual([
+      "Name contains characters that aren't allowed",
+    ]);
+  });
+
+  it.each([
+    ['accents and an apostrophe', "Zoë O'Brien-Núñez"],
+    ['Hebrew letters', 'אורה לוי'],
+    ['an emoji with a zero-width joiner', 'Ana \u{1f469}‍\u{1f4bb}'],
+  ])('AUTH-1: accepts a name with %s', (_description, name) => {
+    expect(registerSchema.parse({ ...validInput, name }).name).toBe(name);
+  });
+
+  it('AUTH-1: trims tabs and line breaks around the name instead of rejecting them', () => {
+    expect(registerSchema.parse({ ...validInput, name: '\tAna Levi\n' }).name).toBe('Ana Levi');
+  });
+
   it('AUTH-1: says which fields are missing', () => {
     const input = {};
     expect(messagesFor(input, 'name')).toEqual(['Name is required']);

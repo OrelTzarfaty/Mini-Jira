@@ -7,6 +7,11 @@ export const PASSWORD_MIN_LENGTH = 8;
 // An upper limit stops very long passwords from making Argon2id hashing slow (a cheap DoS).
 export const PASSWORD_MAX_LENGTH = 128;
 
+// Unicode control characters (category Cc): C0 U+0000-U+001F, DEL U+007F and C1 U+0080-U+009F.
+// A name is one line of display text, so none of them belong in it, and PostgreSQL can't
+// store U+0000 in a text column at all (it would fail as a 500 after the password was hashed).
+const CONTROL_CHARACTER = /\p{Cc}/u;
+
 /** A string field that says "<label> is required" when it is missing; other type errors keep zod's message. */
 const requiredString = (label: string): z.ZodString =>
   z.string({
@@ -18,7 +23,11 @@ export const registerSchema = z.strictObject({
   name: requiredString('Name')
     .trim()
     .min(1, 'Name is required')
-    .max(NAME_MAX_LENGTH, `Name must be at most ${NAME_MAX_LENGTH} characters`),
+    .max(NAME_MAX_LENGTH, `Name must be at most ${NAME_MAX_LENGTH} characters`)
+    .refine(
+      (name) => !CONTROL_CHARACTER.test(name),
+      "Name contains characters that aren't allowed",
+    ),
   // Trim and lowercase first, then check the format: zod 4 runs checks in order, so the
   // format check must see the cleaned value (" Ana@Example.COM " → "ana@example.com").
   email: requiredString('Email')
