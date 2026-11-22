@@ -1,0 +1,24 @@
+# Files left out of the Docker build context (the repo root), for the client and API images.
+# Smaller context = faster builds, and no secrets or local build output in an image.
+
+# Dependencies and build output: images install and build their own.
+**/node_modules
+**/dist
+**/*.tsbuildinfo
+server/src/generated
+
+# Secrets: environment files never go into an image.
+**/.env
+**/.env.*
+
+# Git, local tools, and test output
+.git
+.claude
+**/coverage
+qa-evidence
+test-results
+playwright-report
+blob-report
+.playwright
+.playwright-cli
+**/*.log
