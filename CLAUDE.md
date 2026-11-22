@@ -125,7 +125,7 @@ Agents live in `.claude/agents/`:
 
 **Browser checks:** `frontend-developer` and `qa-engineer` use the **Chrome DevTools MCP** (`chrome-devtools`, configured in the user's Claude settings, not in this repo) to check features in a real browser: console and network errors, multi-user scenarios via isolated contexts, phone width, slow/offline network, and Lighthouse accessibility. Only local URLs and seed test accounts. QA screenshots go in `qa-evidence/` (not committed).
 
-**E2E testing (Playwright):** `qa-engineer` writes, runs, and heals the Playwright E2E tests with the **`playwright-cli` skill** (`.claude/skills/playwright-cli`; CLI installed globally via `npm install -g @playwright/cli`), and explores features interactively with the **Playwright MCP** (`playwright`, user settings, runs with `--isolated`). Playwright output folders (`.playwright/`, `.playwright-cli/`, `test-results/`, `playwright-report/`) are not committed.
+**E2E testing (Playwright):** `qa-engineer` writes, runs, and heals the Playwright E2E tests with the **`playwright-cli` skill** (`.claude/skills/playwright-cli`; CLI installed globally via `npm install -g @playwright/cli`), and explores features interactively with the **Playwright MCP** (`playwright`, user settings, runs with `--isolated`). Tests live in `e2e/tests/` and run with `npm run test:e2e` against their own copy of the system (ports 8180 and 5434, in-memory database), so the run never touches development data. Playwright output folders (`.playwright/`, `.playwright-cli/`, `test-results/`, `playwright-report/`, `blob-report/`) are not committed.
 
 ## Design skills
 
@@ -157,8 +157,10 @@ Run from the repo root (Node.js 26 and a running Docker Desktop required):
 | `npm run lint` / `npm run lint:fix` | Check code with ESLint / apply automatic fixes |
 | `npm run format` / `npm run format:check` | Format code with Prettier / check formatting |
 | `npm run typecheck` | Type-check every workspace that has a `typecheck` script |
-| `npm test` | Prepare the code, start the test database, and run all tests |
+| `npm test` | Prepare the code, start the test database, and run all unit and integration tests (not E2E) |
 | `npm run db:test:down` | Stop the test database |
+| `npx playwright install chromium` | Download the browser for the E2E tests (first time, and after a Playwright update) |
+| `npm run test:e2e` | Run the Playwright E2E tests: build and start a separate copy of the whole system (`docker-compose.e2e.yml`, project `minijira-e2e`, app at `http://localhost:8180`, db on port 5434), reset and seed its database, run the tests, then stop it. Report in `e2e/playwright-report/` |
 | `npm run build` | Build every workspace that has a `build` script |
 | `docker compose up --build` | Build and run the whole system (`client`, `api`, `db`) at `http://localhost:8080`, Swagger at `/api/docs`; add `--detach --wait` to run it in the background |
 | `docker compose down` | Stop the whole system (the database volume is kept) |
@@ -167,7 +169,7 @@ Run `npm run build` after changing `shared/`, because other workspaces import it
 
 **shadcn/ui components:** add them from `client/` with `npx shadcn@4.23.0 add <name>` (set `npm_config_save_exact=true` so new packages are pinned, and don't overwrite files we changed). Then run `npm run format` and give each component function a return type (standards §5). The shadcn CSS lives in `client/src/styles/shadcn.css` (inlined with `shadcn eject`), so the `shadcn` package is not a dependency.
 
-**CI:** [.github/workflows/ci.yml](.github/workflows/ci.yml) runs on every PR into `dev` or `main` and on every push to them, in one job named `checks` (keep the name; branch protection uses it): `npm ci` → `npm audit --audit-level=high` → `lint` → `typecheck` → `build` → `format:check` → `npm test` (same Compose test database as locally). Pin every action to a full commit SHA with a version comment, and check workflow changes with `actionlint`.
+**CI:** [.github/workflows/ci.yml](.github/workflows/ci.yml) runs on every PR into `dev` or `main` and on every push to them, in two jobs. `checks` (keep the name; branch protection uses it): `npm ci` → `npm audit --audit-level=high` → `lint` → `typecheck` → `build` → `format:check` → `npm test` (same Compose test database as locally). `e2e`, next to it: `npm ci` → Playwright Chromium → `npm run test:e2e`; when it fails, it uploads the Playwright HTML report (traces, screenshots) as an artifact. Pin every action to a full commit SHA with a version comment, and check workflow changes with `actionlint`.
 
 **Branch protection:** `main` accepts changes only through a pull request, and `checks` (from GitHub Actions) must pass; the rules apply to admins too. `dev` blocks force-push and deletion only, so approved merges are pushed to it directly (see `/mission` step 7).
 
