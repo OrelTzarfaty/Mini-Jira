@@ -482,7 +482,7 @@ AWS is decided; these details are not. Each one changes what the Terraform code 
 
 1. **HTTPS: how does the browser get it?** — Decision: open
    - **Why it matters:** the auth cookie is `secure` in production (§7), so the browser only sends it over HTTPS. HTTPS on an ALB needs a certificate from ACM (AWS Certificate Manager), and ACM only gives certificates for a domain name we control. So "ALB with HTTPS" quietly assumes we own a domain.
-   - **Option 1: buy a custom domain + free ACM certificate on the ALB.** About $10–15 per year for the domain (for example through Route 53); the certificate itself is free. Simple: one entry point (the ALB), and a real address like `minijira.example.com` for the demo. Costs a little money and a yearly renewal.
+   - **Option 1: buy a custom domain + free ACM certificate on the ALB.** About $10–15 per year for the domain (for example through Route 53), plus about $0.50 per month for a Route 53 hosted zone if Route 53 also runs the domain's DNS; the certificate itself is free. Simple: one entry point (the ALB), and a real address like `minijira.example.com` for the demo. Costs a little money and a yearly renewal.
    - **Option 2: CloudFront in front of the ALB.** CloudFront gives a free HTTPS address (`something.cloudfront.net`) with no domain, and it has a free tier. But the ALB itself stays plain HTTP, so it must be locked down so only CloudFront can reach it (for example, the ALB security group allows only CloudFront's managed prefix list). CloudFront must also forward cookies, query strings, and the `Origin` / `Sec-Fetch-Site` headers for `/api/*`, and never cache `/api/*`; otherwise login breaks and the `origin-check` middleware (§7) rejects requests. One more service to set up and understand.
    - **Either way:** `CLIENT_ORIGIN` must be the exact HTTPS address the browser uses.
 
@@ -496,12 +496,12 @@ AWS is decided; these details are not. Each one changes what the Terraform code 
 
 3. **AWS region** — Decision: open
    - **Why it matters:** the region decides how fast the demo feels for the people watching it, and prices differ a little between regions.
-   - **Suggestion (not a decision):** pick a region near the audience and the mentor where every service we use is offered: ECS Fargate, RDS for PostgreSQL 18, ACM (and CloudFront, if detail 1 picks option 2).
+   - **Suggestion (not a decision):** pick a region near the audience and the mentor where every service we use is offered: ECS Fargate, RDS for PostgreSQL 18, and ACM. (CloudFront, if detail 1 picks option 2, is global, so it doesn't limit the choice.)
 
 4. **Networking without a NAT Gateway** — Decision: open
    - **Why it matters:** the cost rules say no NAT Gateway (it costs money every hour). But Fargate tasks still need to reach AWS services: pull images from ECR, read Secrets Manager, and send logs to CloudWatch.
    - **Option 1: tasks in public subnets with a public IP.** Security groups let traffic in only from the ALB, so nothing else can reach the tasks. Cheapest. AWS charges per hour for every public IPv4 address, so it's a small cost, not zero.
-   - **Option 2: tasks in private subnets + VPC interface endpoints** (for ECR, Secrets Manager, CloudWatch Logs). Tasks have no public address at all, but each interface endpoint also costs money per hour.
+   - **Option 2: tasks in private subnets + VPC interface endpoints** (ECR needs two: `ecr.api` and `ecr.dkr`; plus Secrets Manager and CloudWatch Logs, so four in total), plus a free S3 gateway endpoint, because ECR keeps the image layers in S3 and image pulls fail without it. Tasks have no public address at all, but each interface endpoint also costs money per hour.
    - **Either way:** RDS stays in private subnets, reachable only from the API's security group.
 
 **Already answered: RDS supports PostgreSQL 18.** AWS [announced RDS for PostgreSQL major version 18](https://aws.amazon.com/about-aws/whats-new/2025/11/amazon-rds-postgresql-major-version-18) (starting at 18.1) on 2025-11-14, so we keep PostgreSQL 18 everywhere (local Docker, CI, and RDS).
