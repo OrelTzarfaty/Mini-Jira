@@ -97,6 +97,10 @@ export function createOpenApiSpec(): Record<string, unknown> {
             ),
             '403': jsonResponse('A cross-site request (FORBIDDEN)', 'ErrorResponse'),
             '409': jsonResponse('This email is already registered (EMAIL_TAKEN)', 'ErrorResponse'),
+            '413': jsonResponse(
+              'The request body is over 100 kB (PAYLOAD_TOO_LARGE)',
+              'ErrorResponse',
+            ),
             '500': jsonResponse('Unexpected server error', 'ErrorResponse'),
           },
         },

@@ -103,6 +103,16 @@ describe('POST /api/auth/register', () => {
     expect(await testPrisma.user.count()).toBe(0);
   });
 
+  it('AUTH-1: a body over 100 kB gets 413 PAYLOAD_TOO_LARGE and no account', async () => {
+    const response = await register({ ...NEW_USER, name: 'x'.repeat(200 * 1024) });
+
+    expect(response.status).toBe(413);
+    expect(response.body).toEqual({
+      error: { code: 'PAYLOAD_TOO_LARGE', message: 'The request body is too large' },
+    });
+    expect(await testPrisma.user.count()).toBe(0);
+  });
+
   it('AUTH-1: an unknown field gets 400 and is named in details', async () => {
     const response = await register({ ...NEW_USER, role: 'admin' });
 
