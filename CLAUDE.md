@@ -116,8 +116,11 @@ Agents live in `.claude/agents/`:
 **Every mission uses the agents:**
 1. `backend-developer` does all `BE` tasks, and `frontend-developer` does all `FE` tasks.
 2. The pull request is opened into `dev`.
-3. **QA check (required):** `qa-engineer` tests the final commit of **every** pull request and gives a **PASS** or **FAIL** verdict. A pull request that changes only Markdown files gets a **light** check (CI result, a line-by-line content review, and a security review of agent instruction files); every other pull request gets the **full** check.
-4. On **FAIL**, the owning agent fixes the root cause and `qa-engineer` tests again.
+3. **QA check (required):** `qa-engineer` tests the final commit of **every** pull request and gives a **PASS** or **FAIL** verdict. Three levels (the owner's decision, 2026-11-22, to save usage):
+   - **Light:** a pull request that changes only Markdown files. CI result, a line-by-line content review, and a security review of agent instruction files.
+   - **Standard:** most code pull requests. Tests only that pull request's change, with a browser pass only for UI changes.
+   - **Full:** every **5th** code pull request into `dev` (counted with the `qa:standard` / `qa:full` labels), or whenever the owner asks. Tests **the whole app** from a clean `docker compose up`.
+4. On **FAIL**, the owning agent fixes the root cause and `qa-engineer` re-checks **only the fix**. The same applies to a finding fixed after a PASS.
 5. A pull request is merged only after a QA **PASS** on its final commit **and** the project owner's approval.
 
 **Browser checks:** `frontend-developer` and `qa-engineer` use the **Chrome DevTools MCP** (`chrome-devtools`, configured in the user's Claude settings, not in this repo) to check features in a real browser: console and network errors, multi-user scenarios via isolated contexts, phone width, slow/offline network, and Lighthouse accessibility. Only local URLs and seed test accounts. QA screenshots go in `qa-evidence/` (not committed).
