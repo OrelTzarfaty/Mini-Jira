@@ -186,7 +186,7 @@ AC (extra): email stored lowercase · `409 EMAIL_TAKEN` · register logs the use
 - [ ] FE · Register submit: button disabled while saving, server `details[]` mapped to fields, no lost input on error, redirect to My Projects
 - [ ] QA · Integration: success, duplicate email (any letter case), invalid email, short password
 - [ ] QA · Integration: password stored hashed and never returned
-- [ ] QA · E2E: register → lands on My Projects
+- [ ] QA · E2E: register → lands on My Projects — waits on SETUP-9 (the E2E workspace); the owner chose to leave it for later on 2026-11-22. Until then QA checks this flow by hand in a browser, and AUTH-1 stays "In progress" until this test is merged.
 
 ### AUTH-2 · Log in
 Sprint 2 · Size M · Status: To do · Depends on AUTH-1
