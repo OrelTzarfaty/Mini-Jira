@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   EMAIL_MAX_LENGTH,
+  loginSchema,
   NAME_MAX_LENGTH,
   PASSWORD_MAX_LENGTH,
   PASSWORD_MIN_LENGTH,
@@ -12,8 +13,12 @@ import {
 const validInput = { name: 'Ana Levi', email: 'ana@example.com', password: 'correct-horse' };
 
 /** The messages zod reports for a field, so tests check the exact text the user sees. */
-const messagesFor = (input: unknown, field: string): string[] => {
-  const result = registerSchema.safeParse(input);
+const messagesFor = (
+  input: unknown,
+  field: string,
+  schema: typeof registerSchema | typeof loginSchema = registerSchema,
+): string[] => {
+  const result = schema.safeParse(input);
   if (result.success) return [];
 
   return result.error.issues
@@ -132,6 +137,58 @@ describe('registerSchema', () => {
 
   it('AUTH-1: rejects unknown fields', () => {
     expect(registerSchema.safeParse({ ...validInput, role: 'admin' }).success).toBe(false);
+  });
+});
+
+describe('loginSchema', () => {
+  const validLogin = { email: 'ana@example.com', password: 'correct-horse' };
+  const loginMessagesFor = (input: unknown, field: string): string[] =>
+    messagesFor(input, field, loginSchema);
+
+  it('AUTH-2: accepts a valid email and password', () => {
+    expect(loginSchema.parse(validLogin)).toEqual(validLogin);
+  });
+
+  it('AUTH-2: trims and lowercases the email', () => {
+    expect(loginSchema.parse({ ...validLogin, email: ' Ana@Example.COM ' }).email).toBe(
+      'ana@example.com',
+    );
+  });
+
+  it('AUTH-2: rejects an invalid email', () => {
+    expect(loginMessagesFor({ ...validLogin, email: 'ana.example.com' }, 'email')).toEqual([
+      'Enter a valid email address',
+    ]);
+  });
+
+  it('AUTH-2: says which fields are missing', () => {
+    expect(loginMessagesFor({}, 'email')).toEqual(['Email is required']);
+    expect(loginMessagesFor({}, 'password')).toEqual(['Password is required']);
+  });
+
+  it('AUTH-2: says an empty password is required', () => {
+    expect(loginMessagesFor({ ...validLogin, password: '' }, 'password')).toEqual([
+      'Password is required',
+    ]);
+  });
+
+  it('AUTH-2: accepts a 1-character password (no password policy at login)', () => {
+    expect(loginSchema.parse({ ...validLogin, password: 'a' }).password).toBe('a');
+  });
+
+  it('AUTH-2: rejects a 129-character password', () => {
+    expect(loginMessagesFor({ ...validLogin, password: 'a'.repeat(129) }, 'password')).toEqual([
+      'Password must be at most 128 characters',
+    ]);
+  });
+
+  it('AUTH-2: keeps spaces in the password', () => {
+    const password = '  spaced password  ';
+    expect(loginSchema.parse({ ...validLogin, password }).password).toBe(password);
+  });
+
+  it('AUTH-2: rejects unknown fields', () => {
+    expect(loginSchema.safeParse({ ...validLogin, name: 'Ana Levi' }).success).toBe(false);
   });
 });
 
