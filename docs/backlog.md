@@ -175,7 +175,7 @@ Sprint 2 · Size S · **Status: Done** — merged into `dev` in [#63](https://gi
 ## E2 · Authentication — Sprint 2
 
 ### AUTH-1 · Register
-Sprint 2 · Size M · Status: In progress — merged into `dev` in [#72](https://github.com/OrelTzarfaty/Mini-Jira/pull/72) except the E2E test · Depends on SETUP-4, SETUP-5
+Sprint 2 · Size M · **Status: Done** — merged into `dev` in [#72](https://github.com/OrelTzarfaty/Mini-Jira/pull/72); E2E test (and the E2E stack's `JWT_SECRET`) in the PR for branch `feat/AUTH-1-register-e2e` · Depends on SETUP-4, SETUP-5
 AC (extra): email stored lowercase · `409 EMAIL_TAKEN` · register logs the user in and lands on My Projects.
 - [x] BE · Shared `registerSchema` (name, email, password 8–128 characters)
 - [x] BE · `lib/auth-cookie.ts`: sign/verify the JWT (algorithm pinned to `HS256`) and set/clear the cookie (`httpOnly`, `sameSite: lax`, `secure` in production, 7 days) — reused by login and logout
@@ -186,7 +186,7 @@ AC (extra): email stored lowercase · `409 EMAIL_TAKEN` · register logs the use
 - [x] FE · Register submit: button disabled while saving, server `details[]` mapped to fields, no lost input on error, redirect to My Projects
 - [x] QA · Integration: success, duplicate email (any letter case), invalid email, short password
 - [x] QA · Integration: password stored hashed and never returned
-- [ ] QA · E2E: register → lands on My Projects — waits on SETUP-9 (the E2E workspace); the owner chose to leave it for later on 2026-11-22. Until then QA checks this flow by hand in a browser, and AUTH-1 stays "In progress" until this test is merged.
+- [x] QA · E2E: register → lands on My Projects
 
 ### AUTH-2 · Log in
 Sprint 2 · Size M · Status: To do · Depends on AUTH-1
