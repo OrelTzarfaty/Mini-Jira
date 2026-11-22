@@ -152,11 +152,11 @@ Sprint 2 · Size S · **Status: Done** — merged into `dev` in [#59](https://gi
 - [x] You · Make CI required for merging into `main`
 
 ### SETUP-9 · E2E workspace
-Sprint 2 · Size M · Status: In progress · Depends on SETUP-7
-- [ ] QA · Playwright config in `e2e/`, running against `docker compose`
-- [ ] QA · Seed/reset the database before the E2E run
-- [ ] QA · First smoke test: the app loads and the login page renders
-- [ ] QA · Add the E2E job to CI
+Sprint 2 · Size M · **Status: Done** — merged into `dev` in [#73](https://github.com/OrelTzarfaty/Mini-Jira/pull/73) · Depends on SETUP-7
+- [x] QA · Playwright config in `e2e/`, running against `docker compose`
+- [x] QA · Seed/reset the database before the E2E run
+- [x] QA · First smoke test: the app loads and the login page renders
+- [x] QA · Add the E2E job to CI
 - (Login fixtures per role come in AUTH-2, once login exists.)
 
 ### SETUP-10 · Mission command
@@ -175,18 +175,18 @@ Sprint 2 · Size S · **Status: Done** — merged into `dev` in [#63](https://gi
 ## E2 · Authentication — Sprint 2
 
 ### AUTH-1 · Register
-Sprint 2 · Size M · Status: In progress · Depends on SETUP-4, SETUP-5
+Sprint 2 · Size M · **Status: Done** — merged into `dev` in [#72](https://github.com/OrelTzarfaty/Mini-Jira/pull/72); E2E test (and the E2E stack's `JWT_SECRET`) in [#75](https://github.com/OrelTzarfaty/Mini-Jira/pull/75) · Depends on SETUP-4, SETUP-5
 AC (extra): email stored lowercase · `409 EMAIL_TAKEN` · register logs the user in and lands on My Projects.
-- [ ] BE · Shared `registerSchema` (name, email, password 8–128 characters)
-- [ ] BE · `lib/auth-cookie.ts`: sign/verify the JWT (algorithm pinned to `HS256`) and set/clear the cookie (`httpOnly`, `sameSite: lax`, `secure` in production, 7 days) — reused by login and logout
-- [ ] BE · Register service: lowercase email, unique check (`409 EMAIL_TAKEN`), **Argon2id** hash
-- [ ] BE · `POST /api/auth/register` route + controller: set the auth cookie, return the user (never the hash); Swagger docs
-- [ ] FE · Landing page `/`: hero photo with white fade, headline, "Log in" / "Get started" (wireframe 01)
-- [ ] FE · Register popup (wireframe 01; `/register` opens the landing page with it open): fields, React Hook Form + zod, inline errors
-- [ ] FE · Register submit: button disabled while saving, server `details[]` mapped to fields, no lost input on error, redirect to My Projects
-- [ ] QA · Integration: success, duplicate email (any letter case), invalid email, short password
-- [ ] QA · Integration: password stored hashed and never returned
-- [ ] QA · E2E: register → lands on My Projects — waits on SETUP-9 (the E2E workspace); the owner chose to leave it for later on 2026-11-22. Until then QA checks this flow by hand in a browser, and AUTH-1 stays "In progress" until this test is merged.
+- [x] BE · Shared `registerSchema` (name, email, password 8–128 characters)
+- [x] BE · `lib/auth-cookie.ts`: sign/verify the JWT (algorithm pinned to `HS256`) and set/clear the cookie (`httpOnly`, `sameSite: lax`, `secure` in production, 7 days) — reused by login and logout
+- [x] BE · Register service: lowercase email, unique check (`409 EMAIL_TAKEN`), **Argon2id** hash
+- [x] BE · `POST /api/auth/register` route + controller: set the auth cookie, return the user (never the hash); Swagger docs
+- [x] FE · Landing page `/`: hero photo with white fade, headline, "Log in" / "Get started" (wireframe 01)
+- [x] FE · Register popup (wireframe 01; `/register` opens the landing page with it open): fields, React Hook Form + zod, inline errors
+- [x] FE · Register submit: button disabled while saving, server `details[]` mapped to fields, no lost input on error, redirect to My Projects
+- [x] QA · Integration: success, duplicate email (any letter case), invalid email, short password
+- [x] QA · Integration: password stored hashed and never returned
+- [x] QA · E2E: register → lands on My Projects
 
 ### AUTH-2 · Log in
 Sprint 2 · Size M · Status: To do · Depends on AUTH-1

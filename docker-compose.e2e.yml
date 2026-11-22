@@ -1,7 +1,8 @@
 # A separate copy of the whole system for the Playwright E2E tests (e2e/). It is always used on
 # top of docker-compose.yml, under its own project name:
 #   docker compose -p minijira-e2e -f docker-compose.yml -f docker-compose.e2e.yml up --build --detach --wait
-# e2e/support/e2e-stack.ts runs it and supplies the POSTGRES_* values, so no .env is needed.
+# e2e/support/e2e-stack.ts runs it and supplies the POSTGRES_* values and a fake JWT_SECRET, so no
+# .env is needed.
 # The E2E run deletes all data, so this copy never shares a database, volume, or port with the
 # development system (8080, 5432) or the test database (5433).
 name: minijira-e2e

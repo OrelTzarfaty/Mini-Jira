@@ -9,9 +9,12 @@ export const E2E_BASE_URL = 'http://localhost:8180';
 
 const REPO_ROOT = fileURLToPath(new URL('../../', import.meta.url));
 
-// Throwaway values for the in-memory E2E database only. They satisfy the ${POSTGRES_*}
+// Throwaway values for the E2E system only. They satisfy the ${POSTGRES_*} and ${JWT_SECRET}
 // settings in docker-compose.yml, so the run needs no .env file (CI has none).
 const E2E_DATABASE = 'minijira_e2e';
+// Signs the login cookies of the throwaway E2E users only. Public on purpose, never a real
+// secret; at least 32 characters, like the API requires (server/src/config/env.ts).
+const E2E_JWT_SECRET = 'e2e-only-fake-jwt-secret-not-for-any-real-system';
 const E2E_DATABASE_URL = `postgresql://${E2E_DATABASE}:${E2E_DATABASE}@127.0.0.1:5434/${E2E_DATABASE}`;
 
 const COMPOSE_ARGS = [
@@ -29,6 +32,7 @@ const stackEnv: NodeJS.ProcessEnv = {
   POSTGRES_USER: E2E_DATABASE,
   POSTGRES_PASSWORD: E2E_DATABASE,
   POSTGRES_DB: E2E_DATABASE,
+  JWT_SECRET: E2E_JWT_SECRET,
 };
 
 function compose(...args: string[]): void {
