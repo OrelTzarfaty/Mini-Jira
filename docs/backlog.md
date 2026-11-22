@@ -131,13 +131,13 @@ Sprint 2 · Size L · **Status: Done** — merged into `dev` in [#61](https://gi
 - [x] FE · Vitest + React Testing Library + MSW setup with one example test
 
 ### SETUP-6 · Design system
-Sprint 2 · Size S · Status: In progress — branch `feat/SETUP-6-design-system`; visual direction approved by the owner on 2026-11-21 · Depends on SETUP-5, DOC-3
-- [ ] FE · Run `/impeccable init` to create `PRODUCT.md` and `DESIGN.md`
-- [ ] FE · Use the Taste skill to choose typography, colors, and spacing → Tailwind tokens (base already decided: **light theme, white main color, navy accent** — see `docs/wireframes/01-landing-and-login.md`)
+Sprint 2 · Size S · **Status: Done** — merged into `dev` in [#67](https://github.com/OrelTzarfaty/Mini-Jira/pull/67); visual direction approved by the owner on 2026-11-21 · Depends on SETUP-5, DOC-3
+- [x] FE · Run `/impeccable init` to create `PRODUCT.md` and `DESIGN.md`
+- [x] FE · Use the Taste skill to choose typography, colors, and spacing → Tailwind tokens (base already decided: **light theme, white main color, navy accent** — see `docs/wireframes/01-landing-and-login.md`)
 - [x] You · Approve the visual direction
 
 ### SETUP-7 · Docker Compose
-Sprint 2 · Size M · Status: To do · Depends on SETUP-3, SETUP-4, SETUP-5
+Sprint 2 · Size M · Status: In progress — branch `chore/SETUP-7-docker-compose` · Depends on SETUP-3, SETUP-4, SETUP-5
 - [ ] BE · API Dockerfile; runs `prisma migrate deploy` on start
 - [ ] FE · Client Dockerfile: build the SPA and serve it with nginx
 - [ ] FE · nginx config: proxy `/api` → `api`, fall back to `index.html` for SPA routes
@@ -165,7 +165,7 @@ Sprint 2 · Size S · **Status: Done** — merged into `dev` in [#57](https://gi
 - [x] QA · Review the command against the project rules
 
 ### SETUP-11 · QA levels
-Sprint 2 · Size S · **Status: Done** — merged into `dev` in [#63](https://github.com/OrelTzarfaty/Mini-Jira/pull/63) · Depends on SETUP-10
+Sprint 2 · Size S · **Status: Done** — merged into `dev` in [#63](https://github.com/OrelTzarfaty/Mini-Jira/pull/63); lean agents and QA in [#68](https://github.com/OrelTzarfaty/Mini-Jira/pull/68) · Depends on SETUP-10
 - [x] Claude · Light QA for pull requests that change only Markdown files, full QA for all others (`qa-engineer`, `/mission`, `CLAUDE.md`, engineering standards §11)
 - [x] QA · Review the change against the project rules
 
