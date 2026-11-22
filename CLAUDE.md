@@ -28,7 +28,7 @@ A lightweight team task board: projects, members, tickets, a drag-and-drop board
 | Repo layout | **npm workspaces**: `shared/`, `server/`, `client/`, `e2e/` · GitHub: [OrelTzarfaty/Mini-Jira](https://github.com/OrelTzarfaty/Mini-Jira) | Decided |
 | Code quality | **TypeScript 6.0** (typescript-eslint doesn't support 7 yet), ESLint, Prettier | Decided |
 | Infra | Docker Compose (client, API, DB), GitHub Actions CI (lint, test, build) | Decided — Compose in SETUP-7, CI in SETUP-8 |
-| Deployment target | **AWS**: ECS Fargate (client + API) + RDS PostgreSQL 18, Terraform in `infra/`, deploys from GitHub Actions via OIDC; strict cost rules ([architecture §13](docs/architecture.md#13-deployment-aws)) | Decided 2026-11-22; built in week 8 (SHIP-1) |
+| Deployment target | **AWS**: ECS Fargate (client + API) + RDS PostgreSQL 18, Terraform in `infra/`, deploys from GitHub Actions via OIDC; strict cost rules ([architecture §13](docs/architecture.md#13-deployment-aws)); open details (HTTPS, /api routing, region, networking) in architecture §13 | Decided 2026-11-22; built in week 8 (SHIP-1) |
 
 **Open decisions are the user's to make.** Don't pick one silently — propose options with trade-offs and ask. When a decision is made, move it to "Decided" here.
 

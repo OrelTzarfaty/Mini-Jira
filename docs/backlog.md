@@ -70,6 +70,7 @@ Sprint 1 · Size S · Status: To do
 - [ ] You · Review backlog, architecture, wireframes, and design doc with the mentor
 - [ ] You · Confirm with the mentor that React replaces Angular
 - [ ] You · Confirm the optional ticket **Estimate** field (time tracking is out of scope in the requirements); if not approved, remove its tasks below
+- [ ] You · Tell the mentor the deployment target (AWS, architecture §13) was chosen early; the build stays in week 8
 - [ ] You · Apply the feedback (update architecture.md, this backlog, and CLAUDE.md)
 
 ---
@@ -508,7 +509,8 @@ Sprint 7 · Size S · Status: To do
 Sprint 8 · Size L · Status: In progress
 - [x] You · Choose the deployment target (architecture §11 #7) and update architecture.md + CLAUDE.md — AWS, 2026-11-22 (architecture §13)
 - [ ] You · Create the AWS account, choose the Free plan, and create the Budgets alarms at $1 and $5 (first step, before anything else)
-- [ ] BE · Write Terraform in `infra/`: ECR, ECS Fargate, ALB (HTTPS), RDS PostgreSQL 18, Secrets Manager, CloudWatch; smallest sizes, no NAT Gateway; plus a step-by-step guide explaining what each part creates, why, and what it costs (agents don't run it)
+- [ ] You · Decide the open deployment details (architecture §13: HTTPS, /api routing, region, networking) before the Terraform task
+- [ ] BE · Write Terraform in `infra/`: ECR, ECS Fargate, ALB (+ HTTPS per §13), RDS PostgreSQL 18, Secrets Manager, CloudWatch; smallest sizes, no NAT Gateway; plus a step-by-step guide explaining what each part creates, why, and what it costs (agents don't run it)
 - [ ] BE · Prepare the API deploy: secrets in Secrets Manager, migrations on start; add it to the guide
 - [ ] FE · Prepare the client deploy (nginx image on ECS Fargate); add it to the guide
 - [ ] BE · Write the GitHub Actions deploy workflow with OIDC (no stored AWS keys) and the guide for the IAM/OIDC role

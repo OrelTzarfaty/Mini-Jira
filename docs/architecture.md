@@ -438,7 +438,7 @@ Coding rules for this architecture: [engineering-standards.md](engineering-stand
 Decided by the project owner on 2026-11-22. Built in week 8 (SHIP-1); nothing exists in AWS before that.
 
 ```
-browser ──HTTPS──▶ Application Load Balancer
+browser ──HTTPS*──▶ Application Load Balancer
                         │
                         ▼
                  client task (ECS Fargate, nginx)
@@ -449,8 +449,10 @@ browser ──HTTPS──▶ Application Load Balancer
                             RDS for PostgreSQL 18
 ```
 
+\* How the browser gets HTTPS (open detail 1) and how `/api` reaches the API task (open detail 2) are still open; see "Open details" below.
+
 - **Compute:** the client (nginx) image and the API image run on **ECS Fargate**; images live in **ECR**.
-- **Entry:** an **Application Load Balancer** with HTTPS sits in front of the client task.
+- **Entry:** an **Application Load Balancer** sits in front of the app; the browser uses HTTPS (how: open detail 1).
 - **Database:** **RDS for PostgreSQL 18**.
 - **Secrets:** `JWT_SECRET` and the database URL are kept in **Secrets Manager**. **Logs:** **CloudWatch**.
 - **Infrastructure as code:** **Terraform** in a new `infra/` folder. `terraform apply` creates everything, `terraform destroy` removes everything.
@@ -469,7 +471,39 @@ browser ──HTTPS──▶ Application Load Balancer
 - **Agents** don't run AWS or Terraform commands that change anything. They prepare the code (Terraform in `infra/`, the deploy workflow), explain each step in simple English (what it creates, why, what it costs), and give the owner a step-by-step guide to follow.
 
 **Why:**
-- **One origin kept:** nginx still serves the SPA and forwards `/api`, exactly like Docker Compose, so the cookie and CSRF setup (§7) work the same with no CORS changes.
+- **One origin kept:** nginx still serves the SPA and forwards `/api`, exactly like Docker Compose, so the cookie and CSRF setup (§7) work the same with no CORS changes. On AWS, how `/api` reaches the API is open detail 2; all its options keep one origin.
 - **Managed database:** RDS handles backups and patching, which keeps the data safer than running PostgreSQL in a container.
 - **Terraform:** the whole system is written as code, so the owner can turn it all off with one command and stop paying, then bring it back the same way.
 - **OIDC:** GitHub gets short-lived access for each deploy, so there is no long-lived AWS key that could leak.
+
+### Open details (the owner decides before the SHIP-1 Terraform task)
+
+AWS is decided; these details are not. Each one changes what the Terraform code creates, so the owner picks an option for each before the Terraform task in SHIP-1 starts. Agents list the options here and don't choose.
+
+1. **HTTPS: how does the browser get it?** — Decision: open
+   - **Why it matters:** the auth cookie is `secure` in production (§7), so the browser only sends it over HTTPS. HTTPS on an ALB needs a certificate from ACM (AWS Certificate Manager), and ACM only gives certificates for a domain name we control. So "ALB with HTTPS" quietly assumes we own a domain.
+   - **Option 1: buy a custom domain + free ACM certificate on the ALB.** About $10–15 per year for the domain (for example through Route 53), plus about $0.50 per month for a Route 53 hosted zone if Route 53 also runs the domain's DNS; the certificate itself is free. Simple: one entry point (the ALB), and a real address like `minijira.example.com` for the demo. Costs a little money and a yearly renewal.
+   - **Option 2: CloudFront in front of the ALB.** CloudFront gives a free HTTPS address (`something.cloudfront.net`) with no domain, and it has a free tier. But the ALB itself stays plain HTTP, so it must be locked down so only CloudFront can reach it (for example, the ALB security group allows only CloudFront's managed prefix list). CloudFront must also forward cookies, query strings, and the `Origin` / `Sec-Fetch-Site` headers for `/api/*`, and never cache `/api/*`; otherwise login breaks and the `origin-check` middleware (§7) rejects requests. One more service to set up and understand.
+   - **Either way:** `CLIENT_ORIGIN` must be the exact HTTPS address the browser uses.
+
+2. **How does `/api` reach the API task?** — Decision: open
+   - **Why it matters:** the diagram above shows nginx in the client task forwarding `/api`. In Docker Compose, nginx finds the API by the service name `api`; on ECS that name doesn't exist by default.
+   - **Option 1: ALB path routing.** The ALB sends `/api/*` to the API service's target group and everything else to the client service. Simple and the standard AWS way; the browser still sees one address. nginx's `/api` forwarding is simply not used in AWS.
+   - **Option 2: keep nginx forwarding, give the API a name with ECS Service Connect** (or Cloud Map service discovery). Closest to Docker Compose, but more setup.
+   - **Option 3: both containers in one task.** nginx forwards to `localhost:3000`. Fewest parts, but the client and the API always scale and deploy together.
+   - **All three keep the one-origin design** (§7), so no CORS changes.
+   - **Note for any option:** the API trusts exactly one proxy in front of it (`TRUSTED_PROXY_HOPS = 1` in `server/src/app.ts`, written for nginx). The real number of proxies on AWS depends on details 1 and 2 (for example ALB → nginx → API is two). If it doesn't match, the per-IP login limit (§7) sees the wrong IP, so the Terraform task must check it.
+
+3. **AWS region** — Decision: open
+   - **Why it matters:** the region decides how fast the demo feels for the people watching it, and prices differ a little between regions.
+   - **Suggestion (not a decision):** pick a region near the audience and the mentor where every service we use is offered: ECS Fargate, RDS for PostgreSQL 18, and ACM. (CloudFront, if detail 1 picks option 2, is global, so it doesn't limit the choice.)
+
+4. **Networking without a NAT Gateway** — Decision: open
+   - **Why it matters:** the cost rules say no NAT Gateway (it costs money every hour). But Fargate tasks still need to reach AWS services: pull images from ECR, read Secrets Manager, and send logs to CloudWatch.
+   - **Option 1: tasks in public subnets with a public IP.** Security groups let traffic in only from the ALB, so nothing else can reach the tasks. Cheapest. AWS charges per hour for every public IPv4 address, so it's a small cost, not zero.
+   - **Option 2: tasks in private subnets + VPC interface endpoints** (ECR needs two: `ecr.api` and `ecr.dkr`; plus Secrets Manager and CloudWatch Logs, so four in total), plus a free S3 gateway endpoint, because ECR keeps the image layers in S3 and image pulls fail without it. Tasks have no public address at all, but each interface endpoint also costs money per hour.
+   - **Either way:** RDS stays in private subnets, reachable only from the API's security group.
+
+**Already answered: RDS supports PostgreSQL 18.** AWS [announced RDS for PostgreSQL major version 18](https://aws.amazon.com/about-aws/whats-new/2025/11/amazon-rds-postgresql-major-version-18) (starting at 18.1) on 2025-11-14, so we keep PostgreSQL 18 everywhere (local Docker, CI, and RDS).
+
+**Tell the mentor at the review (backlog DOC-5):** the original default §11 #7, confirmed on 2026-11-17, was "Deployment target is chosen in week 8", but the owner chose AWS early (2026-11-22). Only the choice moved; the build itself is still in week 8.
