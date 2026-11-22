@@ -1,3 +1,6 @@
+# The whole system: "docker compose up --build" serves the app at http://localhost:8080.
+# For local development, "npm run db:up" starts only the db service.
+
 services:
   db:
     image: postgres:18.7-alpine3.24
@@ -15,6 +18,39 @@ services:
       interval: 5s
       timeout: 3s
       retries: 10
+
+  # The REST API. It applies database migrations on start, and its health check is in the image.
+  # No published port: the browser reaches it only through nginx in the client service.
+  api:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+    restart: unless-stopped
+    # Set here on purpose, not read from .env: the .env values are for local development.
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      # The address the browser uses (the client service). The CSRF origin check compares
+      # the Origin header with it, so change both together.
+      CLIENT_ORIGIN: http://localhost:8080
+      # The password must be URL-safe (letters, digits, - . _ ~), because it is part of this URL.
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # nginx: serves the React app and forwards /api to the api service.
+  client:
+    build:
+      context: .
+      dockerfile: client/Dockerfile
+    restart: unless-stopped
+    ports:
+      - '127.0.0.1:8080:8080'
+    depends_on:
+      api:
+        condition: service_healthy
 
 volumes:
   db-data:

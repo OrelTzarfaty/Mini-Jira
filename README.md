@@ -47,23 +47,36 @@ npm run dev --workspace @mini-jira/client
 
 Open `http://localhost:5173`. The web app forwards `/api` requests to the API, so keep both running.
 
+### Run the whole system with Docker
+
+To run the production build of everything (web app, API, and database) in Docker:
+
+```bash
+cp .env.example .env
+docker compose up --build
+```
+
+Open `http://localhost:8080`. The API documentation is at [`/api/docs`](http://localhost:8080/api/docs). The API applies database changes when it starts. To add the demo accounts, run `npm ci` (once) and `npm run db:seed` in a second terminal after the app has started. Stop everything with `docker compose down`.
+
 ## Commands
 
-| Command                                     | What it does                             |
-| ------------------------------------------- | ---------------------------------------- |
-| `npm start`                                 | Builds and runs the production API       |
-| `npm run dev --workspace @mini-jira/client` | Runs the web app with live reload        |
-| `npm run db:up`                             | Starts the development database          |
-| `npm run db:down`                           | Stops the development database           |
-| `npm run db:migrate`                        | Applies database changes                 |
-| `npm run db:seed`                           | Adds the demo accounts                   |
-| `npm run lint`                              | Checks the code for problems             |
-| `npm run lint:fix`                          | Fixes the problems that can be automated |
-| `npm run format`                            | Formats the code                         |
-| `npm run format:check`                      | Checks the code formatting               |
-| `npm run typecheck`                         | Checks TypeScript types                  |
-| `npm test`                                  | Runs the tests                           |
-| `npm run build`                             | Builds every workspace                   |
+| Command                                     | What it does                                                |
+| ------------------------------------------- | ----------------------------------------------------------- |
+| `npm start`                                 | Builds and runs the production API                          |
+| `npm run dev --workspace @mini-jira/client` | Runs the web app with live reload                           |
+| `npm run db:up`                             | Starts the development database                             |
+| `npm run db:down`                           | Stops the database and the other Docker services            |
+| `npm run db:migrate`                        | Applies database changes                                    |
+| `npm run db:seed`                           | Adds the demo accounts                                      |
+| `npm run lint`                              | Checks the code for problems                                |
+| `npm run lint:fix`                          | Fixes the problems that can be automated                    |
+| `npm run format`                            | Formats the code                                            |
+| `npm run format:check`                      | Checks the code formatting                                  |
+| `npm run typecheck`                         | Checks TypeScript types                                     |
+| `npm test`                                  | Runs the tests                                              |
+| `npm run build`                             | Builds every workspace                                      |
+| `docker compose up --build`                 | Builds and runs the whole system at `http://localhost:8080` |
+| `docker compose down`                       | Stops the whole system (the data is kept)                   |
 
 ## Continuous integration
 
