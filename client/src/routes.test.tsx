@@ -6,7 +6,6 @@ import { renderRoute } from '@/test/render-route';
 
 describe('routes', () => {
   it.each([
-    ['/', 'Welcome to Mini-Jira'],
     ['/login', 'Log in'],
     ['/register', 'Create your account'],
     ['/projects', 'My Projects'],
@@ -33,7 +32,10 @@ describe('routes', () => {
     await userEvent.click(screen.getByRole('link', { name: 'Go to the home page' }));
 
     expect(
-      await screen.findByRole('heading', { level: 1, name: 'Welcome to Mini-Jira' }),
+      await screen.findByRole('heading', {
+        level: 1,
+        name: "Plan, track and ship your team's work.",
+      }),
     ).toBeInTheDocument();
   });
 });

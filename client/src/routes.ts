@@ -19,6 +19,9 @@ export const routes: RouteObject[] = [
   {
     ErrorBoundary: RootErrorBoundary,
     children: [
+      // The landing page draws its own top bar, full-screen photo, and footer (wireframe 01),
+      // so it sits outside PublicLayout. A crash in it falls back to RootErrorBoundary.
+      { path: '/', Component: LandingPage },
       {
         Component: PublicLayout,
         children: [
@@ -26,7 +29,6 @@ export const routes: RouteObject[] = [
             // Errors inside a page show up inside the layout, which keeps working.
             ErrorBoundary: RouteErrorBoundary,
             children: [
-              { path: '/', Component: LandingPage },
               { path: '/login', Component: LoginPage },
               { path: '/register', Component: RegisterPage },
               { path: '*', Component: NotFoundPage },
