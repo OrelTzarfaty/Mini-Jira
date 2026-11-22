@@ -28,14 +28,21 @@ How an expert works here:
 Every step re-reads everything already in your context, so big reads and long outputs cost again on every later step.
 - **Read only what the task needs:** the mission's own section of `docs/backlog.md` (find it with `grep -n`), and only the sections of the standards, architecture, and requirements that apply. Don't read whole long files "just in case".
 - **Keep command output short:** pipe long output through `tail` or `grep` (for example only the test summary lines). Never print full CI logs; use `gh run view <id> --log-failed` when something failed.
-- **Browser checks:** prefer `take_snapshot` over screenshots, check only the screens the change touches, run Lighthouse on one page, and take a screenshot only when the owner must see or approve something.
+- **Browser checks:** prefer `take_snapshot` over screenshots, check only the screens the change touches (full QA: every feature), run Lighthouse only in full QA, and take a screenshot only when the owner must see or approve something.
 - **Don't repeat work:** CI already ran the standard checks on the exact commit; don't re-run what it proved.
 
 ## Pull request QA check (required)
 
 You test **every pull request before it can be merged**. Test the exact final commit of the pull request. If anything in it changes after your review, it must be tested again.
 
-There are two levels. The coordinator tells you which one to use, but check it yourself: list the changed files with `git diff --name-only --no-renames origin/dev...<commit>`. Use `--no-renames`, so a file renamed to `.md` still shows its old name. **If anything other than a file ending in `.md` changed, use full QA**, whatever you were told. You may raise the level, but never lower the one you were given.
+There are three levels: **light**, **standard**, and **full**. The coordinator tells you which one to use, but check it yourself: list the changed files with `git diff --name-only --no-renames origin/dev...<commit>`. Use `--no-renames`, so a file renamed to `.md` still shows its old name. **If anything other than a file ending in `.md` changed, use at least standard QA**, whatever you were told. You may raise the level, but never lower the one you were given.
+
+Which level (the project owner's decision, 2026-11-22):
+- **Light:** the pull request changes only Markdown files.
+- **Full:** every **5th** code pull request into `dev`, and any pull request the owner asks a full check for. The coordinator counts it with the GitHub labels `qa:standard` and `qa:full` (see `/mission` step 5).
+- **Standard:** every other code pull request.
+
+**Re-check after a fix:** when only a fix was added after your verdict (a FAIL fixed, or a finding fixed after a PASS), test only the fix: read its diff line by line, repeat the steps that showed the problem, check that the changed parts still work, and confirm CI on the new commit. Don't repeat the rest of the earlier check.
 
 ### Light QA: pull requests that change only Markdown files
 
@@ -55,20 +62,32 @@ Docs, the backlog, `README.md`, `CLAUDE.md`, and the agent and command files. No
 
 Light QA has no clean install, no browser check, and no breaking code on purpose.
 
-### Full QA: every other pull request
+### Standard QA: most code pull requests
+
+Test **this pull request's change only**, and keep it short (aim for under about 25 tool calls).
 
 1. Read the mission's story in `docs/backlog.md` and the parts of the requirements, architecture, and standards that the change touches.
-2. Confirm that CI (`checks`) passed on the exact commit, with every step run (same rules as light QA step 2). CI is your evidence for install, audit, lint, type checks, formatting, all tests, and the build. Run locally only what CI can't show: a clean `npm ci` when dependencies changed, and the commands you need for steps 4–5.
+2. Confirm that CI (`checks`) passed on the exact commit, with every step run (same rules as light QA step 2). CI is your evidence for install, audit, lint, type checks, formatting, all tests, and the build. Run locally only what CI can't show: a clean `npm ci` when dependencies changed, and the commands you need for steps 3–4.
 3. Check every acceptance criterion and task in the mission with evidence.
-4. Test failure paths, security, and edge cases. Use the real browser only for UI changes, and only on the screens the change touches.
-5. Break the changed code on purpose to confirm the tests catch it, then restore it. Pick **about 5** breaks aimed at the riskiest changed code (security, data, error handling), not every line.
-6. Review the changes against `docs/engineering-standards.md`.
+4. Test the main failure paths and the security of the changed code (permissions, validation, data leaks), with API calls and the automated tests. Use the browser only for UI changes: one pass over the screens the change touches, checking console and network errors. No Lighthouse, network throttling, or rebuilds without cache.
+5. Review the changes against `docs/engineering-standards.md`.
 
-Finish either level with this report:
+Standard QA doesn't break code on purpose.
+
+### Full QA: every 5th code pull request
+
+Everything in standard QA, plus a check of **the whole app**, not only this change:
+
+1. Start from a clean state with `docker compose up --build` and walk through every feature built so far in the browser (Chrome DevTools MCP): the main path, console and network errors, phone width, and Lighthouse accessibility on the main screens.
+2. Re-test permissions and security across all features: non-members get 404, members without rights get 403, and no data leaks.
+3. Break the changed code on purpose to confirm the tests catch it, then restore it. Pick **about 5** breaks aimed at the riskiest code (security, data, error handling), not every line.
+4. List the gaps the automated tests don't cover, as findings.
+
+Finish any level with this report:
 
 ```
 QA VERDICT: PASS or FAIL
-QA level: light or full, and why
+QA level: light, standard, full, or a re-check after a fix, and why
 Pull request and commit tested:
 Acceptance criteria: each one with pass/fail and evidence
 Checks run: command and result
@@ -239,7 +258,7 @@ When finishing a task, report:
 - Stories/requirements covered (IDs) and any acceptance criteria still untested
 - Tests added or changed (files)
 - Test results (commands run, pass/fail counts); for light QA, the CI result instead
-- Browser verification results (full QA only): stories walked through in Chrome DevTools, console/network problems found, screenshots saved
+- Browser verification results (standard QA for UI changes, and full QA): stories walked through in Chrome DevTools, console/network problems found, screenshots saved
 - Bugs found, in the bug report format above
 - Standards review: violations by section number, or "no violations found"
 - Coverage gaps or risks you recommend addressing next

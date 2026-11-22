@@ -137,13 +137,13 @@ Sprint 2 · Size S · **Status: Done** — merged into `dev` in [#67](https://gi
 - [x] You · Approve the visual direction
 
 ### SETUP-7 · Docker Compose
-Sprint 2 · Size M · Status: In progress — branch `chore/SETUP-7-docker-compose` · Depends on SETUP-3, SETUP-4, SETUP-5
-- [ ] BE · API Dockerfile; runs `prisma migrate deploy` on start
-- [ ] FE · Client Dockerfile: build the SPA and serve it with nginx
-- [ ] FE · nginx config: proxy `/api` → `api`, fall back to `index.html` for SPA routes
-- [ ] BE · `docker-compose.yml` with `client`, `api`, `db`
-- [ ] BE · `.env.example` with every environment variable
-- [ ] QA · Verify `docker compose up` from a clean state: app loads, `/api/health` OK, `/api/docs` reachable
+Sprint 2 · Size M · **Status: Done** — merged into `dev` in [#70](https://github.com/OrelTzarfaty/Mini-Jira/pull/70) · Depends on SETUP-3, SETUP-4, SETUP-5
+- [x] BE · API Dockerfile; runs `prisma migrate deploy` on start
+- [x] FE · Client Dockerfile: build the SPA and serve it with nginx
+- [x] FE · nginx config: proxy `/api` → `api`, fall back to `index.html` for SPA routes
+- [x] BE · `docker-compose.yml` with `client`, `api`, `db`
+- [x] BE · `.env.example` with every environment variable
+- [x] QA · Verify `docker compose up` from a clean state: app loads, `/api/health` OK, `/api/docs` reachable
 
 ### SETUP-8 · CI
 Sprint 2 · Size S · **Status: Done** — merged into `dev` in [#59](https://github.com/OrelTzarfaty/Mini-Jira/pull/59) · Depends on SETUP-1
@@ -165,7 +165,7 @@ Sprint 2 · Size S · **Status: Done** — merged into `dev` in [#57](https://gi
 - [x] QA · Review the command against the project rules
 
 ### SETUP-11 · QA levels
-Sprint 2 · Size S · **Status: Done** — merged into `dev` in [#63](https://github.com/OrelTzarfaty/Mini-Jira/pull/63); lean agents and QA in [#68](https://github.com/OrelTzarfaty/Mini-Jira/pull/68) · Depends on SETUP-10
+Sprint 2 · Size S · **Status: Done** — merged into `dev` in [#63](https://github.com/OrelTzarfaty/Mini-Jira/pull/63); lean agents and QA in [#68](https://github.com/OrelTzarfaty/Mini-Jira/pull/68); three QA levels (light, standard, and a full check of the whole app every 5th code PR) decided by the owner on 2026-11-22, in progress on branch `chore/SETUP-11-qa-every-5th-pr` · Depends on SETUP-10
 - [x] Claude · Light QA for pull requests that change only Markdown files, full QA for all others (`qa-engineer`, `/mission`, `CLAUDE.md`, engineering standards §11)
 - [x] QA · Review the change against the project rules
 
