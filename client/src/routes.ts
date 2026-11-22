@@ -21,7 +21,12 @@ export const routes: RouteObject[] = [
     children: [
       // The landing page draws its own top bar, full-screen photo, and footer (wireframe 01),
       // so it sits outside PublicLayout. A crash in it falls back to RootErrorBoundary.
-      { path: '/', Component: LandingPage },
+      // /register is its child: the page stays mounted under the popup (AUTH-1).
+      {
+        path: '/',
+        Component: LandingPage,
+        children: [{ path: 'register', Component: RegisterPage }],
+      },
       {
         Component: PublicLayout,
         children: [
@@ -30,7 +35,6 @@ export const routes: RouteObject[] = [
             ErrorBoundary: RouteErrorBoundary,
             children: [
               { path: '/login', Component: LoginPage },
-              { path: '/register', Component: RegisterPage },
               { path: '*', Component: NotFoundPage },
             ],
           },

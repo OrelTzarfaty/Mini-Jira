@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react';
-import { Link } from 'react-router';
+import { Link, useOutlet } from 'react-router';
 
 import { DocumentTitle } from '@/components/document-title';
 import { Button } from '@/components/ui/button';
@@ -46,11 +46,16 @@ function LandingTopBar(): ReactElement {
  * screen behind the text, with a white fade on the left so the dark text stays readable. On
  * narrower screens the photo sits on top, cropped to the person and the monitor, and the text
  * sits below it on plain white.
+ *
+ * /register renders its popup in the Outlet, over this page (wireframe 01 C).
  */
 export function LandingPage(): ReactElement {
+  const popup = useOutlet();
+
   return (
     <div className="flex min-h-svh flex-col">
-      <DocumentTitle title="Welcome" />
+      {/* An open popup names the tab itself. */}
+      {popup === null && <DocumentTitle title="Welcome" />}
       <LandingTopBar />
       <main id="main-content" className="relative flex flex-1 flex-col lg:justify-center">
         {/* Decoration only (wireframe 01 A): the headline carries the meaning, so alt is empty.
@@ -83,6 +88,7 @@ export function LandingPage(): ReactElement {
       <footer className="relative border-t bg-background px-4 py-3 text-sm text-muted-foreground sm:px-6">
         © Mini-Jira · student project
       </footer>
+      {popup}
     </div>
   );
 }

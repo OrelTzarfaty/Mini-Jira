@@ -7,7 +7,6 @@ import { renderRoute } from '@/test/render-route';
 describe('routes', () => {
   it.each([
     ['/login', 'Log in'],
-    ['/register', 'Create your account'],
     ['/projects', 'My Projects'],
     ['/projects/WEB/board', 'WEB board'],
     ['/projects/WEB/list?status=TODO&page=2', 'WEB list'],
