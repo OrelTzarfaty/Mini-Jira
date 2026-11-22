@@ -24,10 +24,10 @@ A lightweight team task board: projects, members, tickets, a drag-and-drop board
 | DB access library | **Prisma 7** (schema, migrations, typed queries) | Decided — temporary npm `overrides` entry in the root `package.json` pins `effect` (used by `@prisma/config`) to 3.22.5 because of GHSA-7589-6fvf-x4pw; remove it once Prisma ships a fixed `@prisma/config` |
 | Auth session | **JWT in an HTTP-only cookie** (`SameSite=Lax`) + `origin-check` middleware against CSRF | Decided |
 | Password hashing | **Argon2id** | Decided |
-| Styling | **Tailwind CSS + shadcn/ui** (Radix primitives) | Decided |
+| Styling | **Tailwind CSS + shadcn/ui** (Radix primitives); light-theme tokens and the self-hosted **Instrument Sans** font, recorded in [DESIGN.md](DESIGN.md) | Decided; visual direction approved by the owner on 2026-11-21 (SETUP-6) |
 | Repo layout | **npm workspaces**: `shared/`, `server/`, `client/`, `e2e/` · GitHub: [OrelTzarfaty/Mini-Jira](https://github.com/OrelTzarfaty/Mini-Jira) | Decided |
 | Code quality | **TypeScript 6.0** (typescript-eslint doesn't support 7 yet), ESLint, Prettier | Decided |
-| Infra | Docker Compose (client, API, DB), GitHub Actions CI (lint, test, build) | Required |
+| Infra | Docker Compose (client, API, DB), GitHub Actions CI (lint, test, build) | Decided — Compose in SETUP-7, CI in SETUP-8 |
 | Deployment target | e.g. Render / Railway / Fly.io | **Open** (week 8) |
 
 **Open decisions are the user's to make.** Don't pick one silently — propose options with trade-offs and ask. When a decision is made, move it to "Decided" here.
@@ -66,6 +66,8 @@ Confirmed defaults (architecture §11, confirmed 2026-11-17):
 **Pending the mentor's OK:** an optional ticket **Estimate** (`estimateMinutes`, shown as `30m` / `4h` / `2d`, 1d = 8h; no time-spent logging). The requirements list "time tracking" as out of scope, so it's confirmed or dropped at the week-1 review (backlog DOC-5).
 
 **Screen designs:** [docs/wireframes/](docs/wireframes/) — follow them when building UI.
+
+**Visual system:** [DESIGN.md](DESIGN.md) (colors, type, spacing, focus ring, component rules) is the visual source of truth next to the wireframes; [PRODUCT.md](PRODUCT.md) is the product context the design skills read. Tokens live in `client/src/styles/index.css`, and `design-tokens.test.ts` guards their contrast.
 
 ## API
 
@@ -124,7 +126,7 @@ Agents live in `.claude/agents/`:
 
 ## Design skills
 
-Installed locally in `.claude/skills/` (about 40 MB, not committed to git): `design-taste-frontend` (visual direction; installed without its hook), `impeccable` (app UI design and review), `emil-design-eng` (interaction polish). An Impeccable design-check hook runs after file edits (`.claude/settings.json`).
+Installed locally in `.claude/skills/` (about 40 MB, not committed to git): `design-taste-frontend` (visual direction; installed without its hook), `impeccable` (app UI design and review), `emil-design-eng` (interaction polish). An Impeccable design-check hook runs after file edits (`.claude/settings.json`). Impeccable reads `PRODUCT.md` and `DESIGN.md` from the repo root.
 
 ## Working rules
 
@@ -143,7 +145,7 @@ Run from the repo root (Node.js 26 and a running Docker Desktop required):
 | `/mission <STORY-ID>` (type it in Claude Code, not a terminal) | Run a whole mission with the agents, from branch to QA-tested pull request |
 | `npm ci` | Install dependencies from the lockfile |
 | `cp .env.example .env` | Create local settings (first time only) |
-| `npm run db:up` / `npm run db:down` | Start / stop the development database |
+| `npm run db:up` / `npm run db:down` | Start the development database / stop every `docker-compose.yml` service (also `api` and `client` if they run) |
 | `npm run db:migrate` | Apply migrations, or create one after changing `schema.prisma` |
 | `npm run db:seed` | Add the demo accounts (password documented in `server/prisma/seed.ts`) |
 | `npm run dev --workspace @mini-jira/server` | Run the API at `http://localhost:3000` and restart it on changes |
@@ -155,6 +157,8 @@ Run from the repo root (Node.js 26 and a running Docker Desktop required):
 | `npm test` | Prepare the code, start the test database, and run all tests |
 | `npm run db:test:down` | Stop the test database |
 | `npm run build` | Build every workspace that has a `build` script |
+| `docker compose up --build` | Build and run the whole system (`client`, `api`, `db`) at `http://localhost:8080`, Swagger at `/api/docs`; add `--detach --wait` to run it in the background |
+| `docker compose down` | Stop the whole system (the database volume is kept) |
 
 Run `npm run build` after changing `shared/`, because other workspaces import its built files.
 
@@ -164,7 +168,7 @@ Run `npm run build` after changing `shared/`, because other workspaces import it
 
 **Branch protection:** `main` accepts changes only through a pull request, and `checks` (from GitHub Actions) must pass; the rules apply to admins too. `dev` blocks force-push and deletion only, so approved merges are pushed to it directly (see `/mission` step 7).
 
-Add how to run the full system (`docker compose up`) once SETUP-7 is done.
+**Full system (Docker):** after `cp .env.example .env`, `docker compose up --build` builds the images (`server/Dockerfile`, `client/Dockerfile`, build context = repo root) and serves the app at `http://localhost:8080`. nginx in `client` forwards `/api` to `api`, whose port isn't published. The `api` container runs `prisma migrate deploy` on start (so `prisma` is a server **dependency**, not a devDependency) and takes its settings from `docker-compose.yml`, not from the dev values in `.env`; only `POSTGRES_*` and `LOG_LEVEL` come from `.env`. It uses the same `db` service and volume as local development, so `npm run db:seed` (run on your computer) adds the demo data to it, and `npm run dev` can run at the same time.
 
 ## Keeping this file up to date
 

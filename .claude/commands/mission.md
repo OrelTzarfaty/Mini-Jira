@@ -50,7 +50,7 @@ Stop and explain the problem if:
 
 ## 3. Build the mission
 
-Work through the mission's tasks in dependency order. Give each agent:
+Work through the mission's tasks in dependency order. Keep briefs short: point agents to the exact backlog section and files instead of pasting long background. Give each agent:
 
 - the story ID, its acceptance criteria, and its exact tasks
 - the branch name and the files or wireframes to follow
@@ -60,7 +60,7 @@ After each agent finishes, check its report and the commits before starting the 
 
 ## 4. Open the pull request
 
-1. Run a clean `npm ci`, then `npm run lint`, `npm run typecheck`, `npm test`, `npm run build`, and `npm run format:check`.
+1. Confirm that the last agent's report shows a clean `npm ci`, `npm run lint`, `npm run typecheck`, `npm test`, `npm run build`, and `npm run format:check` all passing on the final commit. Don't run them again yourself: CI runs them on the pull request, and QA checks the CI result. Run them yourself only if the report is unclear or the agent couldn't run them.
 2. **If a check fails**, send the failure to the agent that owns that code, have it fix the root cause, and run all the checks again.
 3. Make sure `CLAUDE.md`, the API docs, and `docs/backlog.md` are up to date.
 4. Push with `git push -u origin HEAD`.
