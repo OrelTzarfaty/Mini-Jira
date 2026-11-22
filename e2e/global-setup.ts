@@ -1,6 +1,10 @@
-import { startStack } from './support/e2e-stack.js';
+import { seedDatabase, startFreshStack } from './support/e2e-stack.js';
 
-/** Runs once before all tests: builds and starts the E2E system. */
+/**
+ * Runs once before all tests: a fresh E2E system with an empty database (the reset), then the
+ * demo accounts (the seed). Every run starts from the same known data.
+ */
 export default function globalSetup(): void {
-  startStack();
+  startFreshStack();
+  seedDatabase();
 }
