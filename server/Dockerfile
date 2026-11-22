@@ -24,7 +24,8 @@ COPY server/ server/
 RUN npm run build --workspace @mini-jira/shared \
  && npm run build --workspace @mini-jira/server
 
-# Stage 3: run. Production packages only (no TypeScript, test tools, or source code).
+# Stage 3: run. Production packages only (no test tools or source code). TypeScript is still
+# installed, because @prisma/client and prisma list it as a peer dependency, but nothing compiles here.
 # The Prisma CLI is a production dependency, because the container applies migrations on start.
 # Its install script downloads the schema engine for Alpine (musl), and argon2 ships a musl build.
 FROM base AS runtime
@@ -53,7 +54,9 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=30s --start-interval=2s -
 
 # Apply pending migrations, then start the API. "exec" replaces the shell with Node, so Node gets
 # SIGTERM from "docker stop" directly and shuts down gracefully (no npm in between).
-# The shell is the first process while migrations run, and Linux gives that process no default
-# SIGTERM action, so without the trap a stop at that moment would be ignored until Docker kills
-# the container. With it, the shell lets the running migration finish, then exits.
+# Run the image with an init process (docker-compose.yml sets "init: true"): it forwards the stop
+# signal, and Node is not the first process, so a stop before Node sets up its handler still ends it.
+# The init process signals only the shell, not the migration it runs. Without the trap, the shell
+# would die at once and the migration would be killed halfway; with it, the shell lets the running
+# migration finish, then exits without starting the API.
 CMD ["/bin/sh", "-c", "trap 'exit 143' TERM; prisma migrate deploy && exec node dist/server.js"]

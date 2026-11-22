@@ -26,6 +26,9 @@ services:
       context: .
       dockerfile: server/Dockerfile
     restart: unless-stopped
+    # Runs a small init process (tini) first. It passes "docker stop" on to the API, and Node is
+    # then not the first process, so a stop during start-up is never ignored (no forced kill).
+    init: true
     # Set here on purpose: the matching .env values are for local development. Only LOG_LEVEL
     # and the POSTGRES_* values come from .env.
     environment:
