@@ -16,9 +16,9 @@ server/src/generated
 .claude
 **/coverage
 qa-evidence
-test-results
-playwright-report
-blob-report
-.playwright
-.playwright-cli
+**/test-results
+**/playwright-report
+**/blob-report
+**/.playwright
+**/.playwright-cli
 **/*.log
