@@ -26,7 +26,8 @@ services:
       context: .
       dockerfile: server/Dockerfile
     restart: unless-stopped
-    # Set here on purpose, not read from .env: the .env values are for local development.
+    # Set here on purpose: the matching .env values are for local development. Only LOG_LEVEL
+    # and the POSTGRES_* values come from .env.
     environment:
       NODE_ENV: production
       PORT: 3000
