@@ -28,7 +28,7 @@ A lightweight team task board: projects, members, tickets, a drag-and-drop board
 | Repo layout | **npm workspaces**: `shared/`, `server/`, `client/`, `e2e/` · GitHub: [OrelTzarfaty/Mini-Jira](https://github.com/OrelTzarfaty/Mini-Jira) | Decided |
 | Code quality | **TypeScript 6.0** (typescript-eslint doesn't support 7 yet), ESLint, Prettier | Decided |
 | Infra | Docker Compose (client, API, DB), GitHub Actions CI (lint, test, build) | Decided — Compose in SETUP-7, CI in SETUP-8 |
-| Deployment target | e.g. Render / Railway / Fly.io | **Open** (week 8) |
+| Deployment target | **AWS**: ECS Fargate (client + API) + RDS PostgreSQL 18, Terraform in `infra/`, deploys from GitHub Actions via OIDC; strict cost rules ([architecture §13](docs/architecture.md#13-deployment-aws)) | Decided 2026-11-22; built in week 8 (SHIP-1) |
 
 **Open decisions are the user's to make.** Don't pick one silently — propose options with trade-offs and ask. When a decision is made, move it to "Decided" here.
 
@@ -59,7 +59,7 @@ Confirmed defaults (architecture §11, confirmed 2026-11-17):
 - Register logs the user in.
 - Board returns up to 50 cards per column, with "load more" per column.
 - Auth cookie lasts 7 days, no refresh token.
-- Deployment target: chosen in week 8.
+- Deployment target: AWS (decided 2026-11-22, built in week 8). The owner does every AWS action himself (account, budgets, IAM/OIDC, `terraform apply`/`destroy`); agents only prepare code and step-by-step guides, never run changing AWS/Terraform commands.
 - Failed logins are limited per email + IP and per IP.
 - Every drag has a click/tap alternative: card `⋯` menu with Move to, Move up, Move down.
 
