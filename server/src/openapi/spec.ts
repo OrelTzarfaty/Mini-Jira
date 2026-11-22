@@ -112,7 +112,7 @@ export function createOpenApiSpec(): Record<string, unknown> {
           operationId: 'login',
           summary: 'Log in with email and password (sets the auth cookie)',
           description:
-            'AUTH-2. The email is trimmed and lowercased like at register. The password (1-128 characters, not trimmed) is compared with the stored Argon2id hash. An unknown email and a wrong password get the same 401, and take about the same time. Unknown fields are rejected. Browsers must send the request from the web app (same origin), or it gets 403.',
+            'AUTH-2. The email is trimmed and lowercased like at register. The password (1-128 characters, not trimmed) is compared with the stored Argon2id hash. An unknown email and a wrong password get the same 401, and take about the same time. Failed logins are rate-limited (429). Unknown fields are rejected. Browsers must send the request from the web app (same origin), or it gets 403.',
           requestBody: jsonRequestBody('LoginRequest'),
           responses: {
             '200': {
@@ -132,6 +132,18 @@ export function createOpenApiSpec(): Record<string, unknown> {
               'The request body is over 100 kB (PAYLOAD_TOO_LARGE)',
               'ErrorResponse',
             ),
+            '429': {
+              ...jsonResponse(
+                'Too many failed logins (RATE_LIMITED): 5 per email + IP in 15 minutes, or 100 per IP in a day. Blocked even with the right password until the wait is over. Only failed logins (401) count',
+                'ErrorResponse',
+              ),
+              headers: {
+                'Retry-After': {
+                  description: 'Seconds to wait before trying again',
+                  schema: { type: 'integer', minimum: 0 },
+                },
+              },
+            },
             '500': jsonResponse('Unexpected server error', 'ErrorResponse'),
           },
         },
