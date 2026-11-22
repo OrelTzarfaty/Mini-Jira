@@ -29,8 +29,8 @@ services:
     # Runs a small init process (tini) first. It passes "docker stop" on to the API, and Node is
     # then not the first process, so a stop during start-up is never ignored (no forced kill).
     init: true
-    # Set here on purpose: the matching .env values are for local development. Only LOG_LEVEL
-    # and the POSTGRES_* values come from .env.
+    # Set here on purpose: the matching .env values are for local development. Only LOG_LEVEL,
+    # JWT_SECRET and the POSTGRES_* values come from .env.
     environment:
       NODE_ENV: production
       PORT: 3000
@@ -40,6 +40,9 @@ services:
       CLIENT_ORIGIN: http://localhost:8080
       # The password must be URL-safe (letters, digits, - . _ ~), because it is part of this URL.
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      # Signs the login cookie. Never write a real secret in this file.
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in .env}
+      JWT_EXPIRES_IN: 7d
     depends_on:
       db:
         condition: service_healthy
