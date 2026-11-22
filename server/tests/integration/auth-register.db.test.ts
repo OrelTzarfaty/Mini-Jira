@@ -4,6 +4,7 @@ import {
   PASSWORD_MIN_LENGTH,
   publicUserSchema,
 } from '@mini-jira/shared';
+import argon2 from 'argon2';
 import request from 'supertest';
 import { afterAll, beforeEach, describe, expect, it } from 'vitest';
 
@@ -249,5 +250,76 @@ describe('POST /api/auth/register', () => {
         expect(await testPrisma.user.count()).toBe(1);
       },
     );
+  });
+
+  // QA (AUTH-1): the password is stored only as an Argon2id hash and never sent back.
+  describe('password storage', () => {
+    async function storedPasswordHash(email = NEW_USER.email): Promise<string> {
+      const { passwordHash } = await testPrisma.user.findUniqueOrThrow({ where: { email } });
+
+      return passwordHash;
+    }
+
+    /** The JSON payload of the session JWT (readable by anyone holding the cookie). */
+    function readTokenPayload(response: request.Response): Record<string, unknown> {
+      const payload = (readAuthCookie(response) ?? '').split('.')[1] ?? '';
+
+      return JSON.parse(Buffer.from(payload, 'base64url').toString('utf8')) as Record<
+        string,
+        unknown
+      >;
+    }
+
+    it('AUTH-1: the stored password is an Argon2id hash that verifies only the right password', async () => {
+      await register(NEW_USER).expect(201);
+
+      const passwordHash = await storedPasswordHash();
+      expect(passwordHash).toMatch(/^\$argon2id\$v=19\$m=\d+,t=\d+,p=\d+\$[^$]+\$[^$]+$/);
+      expect(passwordHash).not.toContain(NEW_USER.password);
+      expect(await argon2.verify(passwordHash, NEW_USER.password)).toBe(true);
+      expect(await argon2.verify(passwordHash, `${NEW_USER.password}!`)).toBe(false);
+    });
+
+    it('AUTH-1: two users with the same password get different (salted) hashes', async () => {
+      await register(NEW_USER).expect(201);
+      await register({ ...NEW_USER, email: 'noa@minijira.test' }).expect(201);
+
+      expect(await storedPasswordHash()).not.toBe(await storedPasswordHash('noa@minijira.test'));
+    });
+
+    it('AUTH-1: neither the 201 response nor the session token contains the password or the hash', async () => {
+      const response = await register(NEW_USER);
+
+      expect(response.status).toBe(201);
+      const passwordHash = await storedPasswordHash();
+      const sent = `${response.text} ${JSON.stringify(response.headers)}`;
+      expect(sent).not.toContain(NEW_USER.password);
+      expect(sent).not.toContain(passwordHash);
+      expect(sent).not.toContain('passwordHash');
+      expect(Object.keys(readTokenPayload(response)).sort()).toEqual(['exp', 'iat', 'sub']);
+    });
+
+    it('AUTH-1: a 409 for a taken email contains neither password nor hash', async () => {
+      await register(NEW_USER).expect(201);
+      const passwordHash = await storedPasswordHash();
+
+      const response = await register(NEW_USER);
+
+      expect(response.status).toBe(409);
+      expect(response.text).not.toContain(NEW_USER.password);
+      expect(response.text).not.toContain(passwordHash);
+      expect(response.text).not.toContain('passwordHash');
+    });
+
+    it.each([
+      ['too short', 'secret7'],
+      ['too long', 'p'.repeat(PASSWORD_MAX_LENGTH + 1)],
+    ])('AUTH-1: a 400 for a %s password does not echo the password', async (_case, password) => {
+      const response = await register({ ...NEW_USER, password });
+
+      expect(response.status).toBe(400);
+      expect(detailFields(response)).toEqual(['password']);
+      expect(response.text).not.toContain(password);
+    });
   });
 });
