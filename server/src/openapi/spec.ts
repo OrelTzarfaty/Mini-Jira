@@ -1,6 +1,7 @@
 import {
   errorResponseSchema,
   healthResponseSchema,
+  loginSchema,
   publicUserSchema,
   registerSchema,
 } from '@mini-jira/shared';
@@ -105,11 +106,42 @@ export function createOpenApiSpec(): Record<string, unknown> {
           },
         },
       },
+      '/auth/login': {
+        post: {
+          tags: ['Auth'],
+          operationId: 'login',
+          summary: 'Log in with email and password (sets the auth cookie)',
+          description:
+            'AUTH-2. The email is trimmed and lowercased like at register. The password (1-128 characters, not trimmed) is compared with the stored Argon2id hash. An unknown email and a wrong password get the same 401, and take about the same time. Unknown fields are rejected. Browsers must send the request from the web app (same origin), or it gets 403.',
+          requestBody: jsonRequestBody('LoginRequest'),
+          responses: {
+            '200': {
+              ...jsonResponse('The user is logged in', 'PublicUser'),
+              headers: SET_AUTH_COOKIE_HEADER,
+            },
+            '400': jsonResponse(
+              'Invalid input (VALIDATION_ERROR), with one entry in details[] per field',
+              'ErrorResponse',
+            ),
+            '401': jsonResponse(
+              'The email or the password is wrong (INVALID_CREDENTIALS); the answer never says which',
+              'ErrorResponse',
+            ),
+            '403': jsonResponse('A cross-site request (FORBIDDEN)', 'ErrorResponse'),
+            '413': jsonResponse(
+              'The request body is over 100 kB (PAYLOAD_TOO_LARGE)',
+              'ErrorResponse',
+            ),
+            '500': jsonResponse('Unexpected server error', 'ErrorResponse'),
+          },
+        },
+      },
     },
     components: {
       schemas: {
         ErrorResponse: toComponentSchema(errorResponseSchema),
         HealthResponse: toComponentSchema(healthResponseSchema),
+        LoginRequest: toComponentSchema(loginSchema, 'input'),
         PublicUser: toComponentSchema(publicUserSchema),
         RegisterRequest: toComponentSchema(registerSchema, 'input'),
       },

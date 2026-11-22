@@ -1,4 +1,4 @@
-import { registerSchema } from '@mini-jira/shared';
+import { loginSchema, registerSchema } from '@mini-jira/shared';
 import { Router } from 'express';
 
 import type { PrismaClient } from '../../generated/prisma/client.js';
@@ -18,6 +18,7 @@ export function createAuthRouter({ prisma, authCookie }: AuthRouterOptions): Rou
 
   // The app-wide origin check already blocks cross-site POSTs before they reach this route.
   router.post('/auth/register', validateBody(registerSchema), controller.register);
+  router.post('/auth/login', validateBody(loginSchema), controller.login);
 
   return router;
 }

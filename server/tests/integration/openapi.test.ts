@@ -48,6 +48,19 @@ describe('GET /api/openapi.json', () => {
     ]);
   });
 
+  it('AUTH-2: documents the login endpoint with its responses', async () => {
+    const spec = await getSpec();
+
+    expect(Object.keys(spec.paths['/auth/login']?.post?.responses ?? {})).toEqual([
+      '200',
+      '400',
+      '401',
+      '403',
+      '413',
+      '500',
+    ]);
+  });
+
   it('SETUP-3: builds the error schema from the shared error codes', async () => {
     const spec = await getSpec();
 

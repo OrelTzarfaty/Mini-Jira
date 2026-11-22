@@ -1,10 +1,10 @@
 import { ErrorCode } from '@mini-jira/shared';
-import type { PublicUser, RegisterInput } from '@mini-jira/shared';
+import type { LoginInput, PublicUser, RegisterInput } from '@mini-jira/shared';
 
 import { Prisma } from '../../generated/prisma/client.js';
 import type { PrismaClient } from '../../generated/prisma/client.js';
-import { ConflictError } from '../../lib/errors.js';
-import { hashPassword } from '../../lib/password.js';
+import { ConflictError, InvalidCredentialsError } from '../../lib/errors.js';
+import { hashPassword, verifyDummyPassword, verifyPassword } from '../../lib/password.js';
 
 // Prisma's code for a unique constraint violation.
 const UNIQUE_VIOLATION = 'P2002';
@@ -14,6 +14,8 @@ const PUBLIC_USER_FIELDS = { id: true, name: true, email: true } as const;
 
 export interface AuthService {
   register(input: RegisterInput): Promise<PublicUser>;
+  /** Returns the user when the email and password match; otherwise throws 401. */
+  login(input: LoginInput): Promise<PublicUser>;
 }
 
 const emailTaken = (): ConflictError =>
@@ -50,6 +52,28 @@ export function createAuthService(prisma: PrismaClient): AuthService {
         }
         throw error;
       }
+    },
+
+    // AUTH-2: the schema already trimmed and lowercased the email, like at register.
+    async login({ email, password }) {
+      const user = await prisma.user.findUnique({
+        where: { email },
+        select: { ...PUBLIC_USER_FIELDS, passwordHash: true },
+      });
+
+      if (!user) {
+        // Still runs a full Argon2id verify, so an unknown email takes as long as a wrong
+        // password and the response time doesn't reveal whether the account exists.
+        await verifyDummyPassword(password);
+        throw new InvalidCredentialsError();
+      }
+
+      if (!(await verifyPassword(user.passwordHash, password))) {
+        throw new InvalidCredentialsError();
+      }
+
+      // Only the public fields leave the service; the hash stays here.
+      return { id: user.id, name: user.name, email: user.email };
     },
   };
 }
