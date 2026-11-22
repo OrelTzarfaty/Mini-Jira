@@ -88,6 +88,7 @@ Endpoints so far (full details in Swagger at `/api/docs`):
 | `GET` | `/api/health` | Check that the API is running |
 | `GET` | `/api/openapi.json` | The OpenAPI description of the API |
 | `GET` | `/api/docs` | Swagger UI |
+| `POST` | `/api/auth/register` | Create an account and log in (sets the auth cookie) |
 
 ## Features
 

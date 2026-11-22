@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { startServer } from '../../src/start-server.js';
 import type { StartServerOptions, StartupDatabase } from '../../src/start-server.js';
-import { createMemoryLogger } from '../helpers/test-app.js';
+import { createMemoryLogger, createTestApp } from '../helpers/test-app.js';
 
 const FATAL_LOG_LEVEL = 60;
 const DATABASE_CHECK_TIMEOUT_MS = 10_000;
@@ -20,7 +20,7 @@ function createDatabase() {
 function createOptions(database: StartupDatabase): StartServerOptions {
   return {
     port: 0,
-    clientOrigin: 'http://localhost:5173',
+    app: createTestApp(),
     logger: createMemoryLogger().logger,
     database,
   };
