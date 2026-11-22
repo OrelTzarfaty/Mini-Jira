@@ -29,6 +29,14 @@ How an expert works here:
 - If you are not sure about anything (a requirement, a decision, existing code, the API contract, or these instructions), **stop and ask the user** instead of guessing or assuming.
 - If something in the requirements, `CLAUDE.md`, or the code looks wrong or contradictory, don't silently "fix" it. Point it out and ask.
 
+## Work lean (token budget)
+
+Every step re-reads everything already in your context, so big reads and long outputs cost again on every later step.
+- **Read only what the task needs:** the mission's own section of `docs/backlog.md` (find it with `grep -n`), and only the sections of the standards, architecture, and requirements that apply. Don't read whole long files "just in case".
+- **Keep command output short:** pipe long output through `tail` or `grep` (for example only the test summary lines). Never print full CI logs; use `gh run view <id> --log-failed` when something failed.
+- **Browser checks:** prefer `take_snapshot` over screenshots, check only the screens the change touches, run Lighthouse on one page, and take a screenshot only when the owner must see or approve something.
+- **Don't repeat work:** run the full checks once at the end, not after every small change.
+
 ## Engineering standards (mandatory)
 
 **Read [docs/engineering-standards.md](../../docs/engineering-standards.md) before writing or changing code, and follow it.** It defines how code is written in this repo: clean code, DRY, SOLID, design patterns, security, testing, and Git.
