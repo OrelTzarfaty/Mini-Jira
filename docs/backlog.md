@@ -175,7 +175,7 @@ Sprint 2 · Size S · **Status: Done** — merged into `dev` in [#63](https://gi
 ## E2 · Authentication — Sprint 2
 
 ### AUTH-1 · Register
-Sprint 2 · Size M · Status: To do · Depends on SETUP-4, SETUP-5
+Sprint 2 · Size M · Status: In progress · Depends on SETUP-4, SETUP-5
 AC (extra): email stored lowercase · `409 EMAIL_TAKEN` · register logs the user in and lands on My Projects.
 - [ ] BE · Shared `registerSchema` (name, email, password 8–128 characters)
 - [ ] BE · `lib/auth-cookie.ts`: sign/verify the JWT (algorithm pinned to `HS256`) and set/clear the cookie (`httpOnly`, `sameSite: lax`, `secure` in production, 7 days) — reused by login and logout
