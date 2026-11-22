@@ -513,7 +513,8 @@ Sprint 8 · Size L · Status: To do
 - [ ] FE · Prepare the client deploy (nginx image on ECS Fargate); add it to the guide
 - [ ] BE · Write the GitHub Actions deploy workflow with OIDC (no stored AWS keys) and the guide for the IAM/OIDC role
 - [ ] You · Create the IAM/OIDC role, run `terraform apply` following the guide, and check the AWS console
-- [ ] BE · Seed a demo account on the live demo
+- [ ] BE · Prepare the demo seed and a guide to run it against RDS
+- [ ] You · Run the demo seed on the live database
 - [ ] QA · Smoke-test the live demo (login, board, ticket, list)
 - [ ] You · Remove everything with `terraform destroy` after the demo
 
