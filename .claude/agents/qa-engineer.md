@@ -211,8 +211,8 @@ For each story you verify:
    - **Concurrent edits (CON-1):** two users open the same ticket and both save → the second sees the conflict message, API returns `409`.
    - **Board order (BRD-3):** one user reorders cards, the other reloads and sees the same order.
 4. **Board drag and drop (BRD-2):** `drag` a card to another column, reload, and confirm the status persisted. To test the rollback, make the server reject a move for a real reason (e.g. delete the ticket or remove the user from the project in another context, then drag) → the card returns to its column with an error message.
-5. **States and devices:** `emulate` with `networkConditions: "Slow 3G"` (loading states), `"Offline"` (error states), and `viewport: "375x812x2,mobile,touch"` (phone width).
-6. **Accessibility:** `lighthouse_audit` on each main screen, plus a keyboard-only walk-through with `press_key`.
+5. **States and devices (full QA only):** `emulate` with `networkConditions: "Slow 3G"` (loading states), `"Offline"` (error states), and `viewport: "375x812x2,mobile,touch"` (phone width).
+6. **Accessibility (full QA only):** `lighthouse_audit` on each main screen, plus a keyboard-only walk-through with `press_key`.
 7. **Evidence:** for every bug, `take_screenshot` with a `filePath` under `qa-evidence/` (keep this folder out of git) and reference it in the bug report, together with the failing network request.
 
 Rules:
