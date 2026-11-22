@@ -110,31 +110,31 @@ Sprint 2 · Size M · **Status: Done** — merged into `dev` in [#53](https://gi
 - [x] QA · Integration tests: cross-site `POST` → 403, same-origin `POST` is allowed
 
 ### SETUP-4 · Database
-Sprint 2 · Size M · **Status: Done** — merged into `dev` in [#55](https://github.com/OrelTzarfaty/Mini-Jira/pull/55) and [#58](https://github.com/OrelTzarfaty/Mini-Jira/pull/58) · Depends on SETUP-3
+Sprint 2 · Size M · **Status: Done** — merged into `dev` in [#55](https://github.com/OrelTzarfaty/Mini-Jira/pull/55) and [#58](https://github.com/OrelTzarfaty/Mini-Jira/pull/58); `effect` security pin in [#65](https://github.com/OrelTzarfaty/Mini-Jira/pull/65) · Depends on SETUP-3
 - [x] BE · Prisma setup + PostgreSQL container for development
 - [x] BE · Separate test database + helper that resets it per test file
 - [x] BE · First migration: `User` table (each later epic adds its own tables)
 - [x] BE · `prisma/seed.ts` skeleton with demo users (test passwords only, documented in the seed file)
 
 ### SETUP-5 · Client skeleton
-Sprint 2 · Size L · Status: In progress — branch `feat/SETUP-5-client-skeleton` · Depends on SETUP-2
-- [ ] FE · Vite + React + TypeScript in `client/`; Vite proxy `/api` → API
-- [ ] FE · Tailwind CSS setup
-- [ ] FE · shadcn/ui init + first components (Button, Input, Dialog)
-- [ ] FE · Router with all routes from architecture §5.2 as placeholder pages (the login guard comes in AUTH-4)
-- [ ] FE · TanStack Query provider
-- [ ] FE · `api/client.ts`: fetch wrapper with `credentials: 'include'` and error-format parsing
-- [ ] FE · `api/client.ts`: on 401, redirect to `/login`
-- [ ] FE · App shell: top navigation and page layout
-- [ ] FE · State components: EmptyState, ErrorState, PageSkeleton
-- [ ] FE · ConfirmDialog and Avatar (initials) components
-- [ ] FE · Vitest + React Testing Library + MSW setup with one example test
+Sprint 2 · Size L · **Status: Done** — merged into `dev` in [#61](https://github.com/OrelTzarfaty/Mini-Jira/pull/61) · Depends on SETUP-2
+- [x] FE · Vite + React + TypeScript in `client/`; Vite proxy `/api` → API
+- [x] FE · Tailwind CSS setup
+- [x] FE · shadcn/ui init + first components (Button, Input, Dialog)
+- [x] FE · Router with all routes from architecture §5.2 as placeholder pages (the login guard comes in AUTH-4)
+- [x] FE · TanStack Query provider
+- [x] FE · `api/client.ts`: fetch wrapper with `credentials: 'include'` and error-format parsing
+- [x] FE · `api/client.ts`: on 401, redirect to `/login`
+- [x] FE · App shell: top navigation and page layout
+- [x] FE · State components: EmptyState, ErrorState, PageSkeleton
+- [x] FE · ConfirmDialog and Avatar (initials) components
+- [x] FE · Vitest + React Testing Library + MSW setup with one example test
 
 ### SETUP-6 · Design system
-Sprint 2 · Size S · Status: To do · Depends on SETUP-5, DOC-3
+Sprint 2 · Size S · Status: In progress — branch `feat/SETUP-6-design-system`; visual direction approved by the owner on 2026-11-21 · Depends on SETUP-5, DOC-3
 - [ ] FE · Run `/impeccable init` to create `PRODUCT.md` and `DESIGN.md`
 - [ ] FE · Use the Taste skill to choose typography, colors, and spacing → Tailwind tokens (base already decided: **light theme, white main color, navy accent** — see `docs/wireframes/01-landing-and-login.md`)
-- [ ] You · Approve the visual direction
+- [x] You · Approve the visual direction
 
 ### SETUP-7 · Docker Compose
 Sprint 2 · Size M · Status: To do · Depends on SETUP-3, SETUP-4, SETUP-5
@@ -165,9 +165,9 @@ Sprint 2 · Size S · **Status: Done** — merged into `dev` in [#57](https://gi
 - [x] QA · Review the command against the project rules
 
 ### SETUP-11 · QA levels
-Sprint 2 · Size S · Status: In progress — branch `chore/SETUP-11-qa-levels` · Depends on SETUP-10
-- [ ] Claude · Light QA for pull requests that change only Markdown files, full QA for all others (`qa-engineer`, `/mission`, `CLAUDE.md`, engineering standards §11)
-- [ ] QA · Review the change against the project rules
+Sprint 2 · Size S · **Status: Done** — merged into `dev` in [#63](https://github.com/OrelTzarfaty/Mini-Jira/pull/63) · Depends on SETUP-10
+- [x] Claude · Light QA for pull requests that change only Markdown files, full QA for all others (`qa-engineer`, `/mission`, `CLAUDE.md`, engineering standards §11)
+- [x] QA · Review the change against the project rules
 
 ---
 

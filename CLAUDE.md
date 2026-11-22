@@ -24,7 +24,7 @@ A lightweight team task board: projects, members, tickets, a drag-and-drop board
 | DB access library | **Prisma 7** (schema, migrations, typed queries) | Decided — temporary npm `overrides` entry in the root `package.json` pins `effect` (used by `@prisma/config`) to 3.22.5 because of GHSA-7589-6fvf-x4pw; remove it once Prisma ships a fixed `@prisma/config` |
 | Auth session | **JWT in an HTTP-only cookie** (`SameSite=Lax`) + `origin-check` middleware against CSRF | Decided |
 | Password hashing | **Argon2id** | Decided |
-| Styling | **Tailwind CSS + shadcn/ui** (Radix primitives) | Decided |
+| Styling | **Tailwind CSS + shadcn/ui** (Radix primitives); light-theme tokens and the self-hosted **Instrument Sans** font, recorded in [DESIGN.md](DESIGN.md) | Decided; visual direction approved by the owner on 2026-11-21 (SETUP-6) |
 | Repo layout | **npm workspaces**: `shared/`, `server/`, `client/`, `e2e/` · GitHub: [OrelTzarfaty/Mini-Jira](https://github.com/OrelTzarfaty/Mini-Jira) | Decided |
 | Code quality | **TypeScript 6.0** (typescript-eslint doesn't support 7 yet), ESLint, Prettier | Decided |
 | Infra | Docker Compose (client, API, DB), GitHub Actions CI (lint, test, build) | Required |
@@ -66,6 +66,8 @@ Confirmed defaults (architecture §11, confirmed 2026-11-17):
 **Pending the mentor's OK:** an optional ticket **Estimate** (`estimateMinutes`, shown as `30m` / `4h` / `2d`, 1d = 8h; no time-spent logging). The requirements list "time tracking" as out of scope, so it's confirmed or dropped at the week-1 review (backlog DOC-5).
 
 **Screen designs:** [docs/wireframes/](docs/wireframes/) — follow them when building UI.
+
+**Visual system:** [DESIGN.md](DESIGN.md) (colors, type, spacing, focus ring, component rules) is the visual source of truth next to the wireframes; [PRODUCT.md](PRODUCT.md) is the product context the design skills read. Tokens live in `client/src/styles/index.css`, and `design-tokens.test.ts` guards their contrast.
 
 ## API
 
@@ -124,7 +126,7 @@ Agents live in `.claude/agents/`:
 
 ## Design skills
 
-Installed locally in `.claude/skills/` (about 40 MB, not committed to git): `design-taste-frontend` (visual direction; installed without its hook), `impeccable` (app UI design and review), `emil-design-eng` (interaction polish). An Impeccable design-check hook runs after file edits (`.claude/settings.json`).
+Installed locally in `.claude/skills/` (about 40 MB, not committed to git): `design-taste-frontend` (visual direction; installed without its hook), `impeccable` (app UI design and review), `emil-design-eng` (interaction polish). An Impeccable design-check hook runs after file edits (`.claude/settings.json`). Impeccable reads `PRODUCT.md` and `DESIGN.md` from the repo root.
 
 ## Working rules
 

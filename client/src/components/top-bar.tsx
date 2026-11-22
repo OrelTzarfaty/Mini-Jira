@@ -11,8 +11,10 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 
-// NavLink marks the link to the current page with aria-current="page"; the style follows it.
-const CURRENT_PAGE_CLASSES = 'aria-[current=page]:bg-muted aria-[current=page]:font-semibold';
+// NavLink marks the link to the current page with aria-current="page". The style follows it: a
+// navy underline, like the active tab in wireframes 03 and 07, so it never relies on color alone.
+const CURRENT_PAGE_CLASSES =
+  'aria-[current=page]:underline aria-[current=page]:decoration-primary aria-[current=page]:decoration-2 aria-[current=page]:underline-offset-8';
 
 /**
  * On phones the links that don't fit move into a menu (wireframe 02 H).
@@ -52,8 +54,10 @@ export function TopBar(): ReactElement {
       <div className="flex h-14 items-center gap-2 px-4 sm:gap-4 sm:px-6">
         <Link
           to="/projects"
-          className="inline-flex h-8 items-center rounded-md px-1 font-semibold outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+          className="inline-flex h-8 items-center gap-2 rounded-md px-1 font-semibold"
         >
+          {/* The logo mark is the same file as the favicon. The link text names it. */}
+          <img src="/favicon.svg" alt="" className="size-6" />
           Mini-Jira
         </Link>
         <nav aria-label="Main">
