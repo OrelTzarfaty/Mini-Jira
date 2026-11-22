@@ -39,10 +39,15 @@ describe('registerSchema', () => {
   it.each([
     ['without an @', 'ana.example.com'],
     ['without a domain', 'ana@'],
-    ['empty', ''],
-    ['only spaces', '   '],
   ])('AUTH-1: rejects an email %s', (_description, email) => {
     expect(messagesFor({ ...validInput, email }, 'email')).toEqual(['Enter a valid email address']);
+  });
+
+  it.each([
+    ['empty', ''],
+    ['only spaces', '   '],
+  ])('AUTH-1: says an email that is %s is required', (_description, email) => {
+    expect(messagesFor({ ...validInput, email }, 'email')).toEqual(['Email is required']);
   });
 
   it('AUTH-1: rejects an email longer than the limit', () => {

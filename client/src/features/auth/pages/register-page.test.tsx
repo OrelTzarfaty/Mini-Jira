@@ -84,9 +84,7 @@ describe('Register popup', () => {
     });
     expect(name).toHaveAttribute('aria-invalid', 'true');
     expect(name).toHaveFocus();
-    expect(within(popup).getByLabelText('Email')).toHaveAccessibleDescription(
-      'Enter a valid email address',
-    );
+    expect(within(popup).getByLabelText('Email')).toHaveAccessibleDescription('Email is required');
     expect(within(popup).getByLabelText('Password')).toHaveAccessibleDescription(
       'At least 8 characters Password must be at least 8 characters',
     );

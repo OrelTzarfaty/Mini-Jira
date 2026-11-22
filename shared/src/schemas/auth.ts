@@ -33,6 +33,7 @@ export const registerSchema = z.strictObject({
   email: requiredString('Email')
     .trim()
     .toLowerCase()
+    .min(1, 'Email is required')
     .max(EMAIL_MAX_LENGTH, `Email must be at most ${EMAIL_MAX_LENGTH} characters`)
     .pipe(z.email('Enter a valid email address')),
   // Not trimmed: spaces are valid password characters.
