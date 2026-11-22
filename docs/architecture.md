@@ -506,4 +506,4 @@ AWS is decided; these details are not. Each one changes what the Terraform code 
 
 **Already answered: RDS supports PostgreSQL 18.** AWS [announced RDS for PostgreSQL major version 18](https://aws.amazon.com/about-aws/whats-new/2025/11/amazon-rds-postgresql-major-version-18) (starting at 18.1) on 2025-11-14, so we keep PostgreSQL 18 everywhere (local Docker, CI, and RDS).
 
-**Tell the mentor at the review (backlog DOC-5):** the mentor confirmed "deployment target chosen in week 8", but the owner chose AWS early (2026-11-22). Only the choice moved; the build itself is still in week 8.
+**Tell the mentor at the review (backlog DOC-5):** the original default §11 #7, confirmed on 2026-11-17, was "Deployment target is chosen in week 8", but the owner chose AWS early (2026-11-22). Only the choice moved; the build itself is still in week 8.
