@@ -152,7 +152,7 @@ Sprint 2 · Size S · **Status: Done** — merged into `dev` in [#59](https://gi
 - [x] You · Make CI required for merging into `main`
 
 ### SETUP-9 · E2E workspace
-Sprint 2 · Size M · Status: To do · Depends on SETUP-7
+Sprint 2 · Size M · Status: In progress · Depends on SETUP-7
 - [ ] QA · Playwright config in `e2e/`, running against `docker compose`
 - [ ] QA · Seed/reset the database before the E2E run
 - [ ] QA · First smoke test: the app loads and the login page renders
