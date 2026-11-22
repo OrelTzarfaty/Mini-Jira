@@ -175,7 +175,7 @@ Sprint 2 · Size S · **Status: Done** — merged into `dev` in [#63](https://gi
 ## E2 · Authentication — Sprint 2
 
 ### AUTH-1 · Register
-Sprint 2 · Size M · **Status: Done** — merged into `dev` in [#72](https://github.com/OrelTzarfaty/Mini-Jira/pull/72); E2E test (and the E2E stack's `JWT_SECRET`) in the PR for branch `feat/AUTH-1-register-e2e` · Depends on SETUP-4, SETUP-5
+Sprint 2 · Size M · **Status: Done** — merged into `dev` in [#72](https://github.com/OrelTzarfaty/Mini-Jira/pull/72); E2E test (and the E2E stack's `JWT_SECRET`) in [#75](https://github.com/OrelTzarfaty/Mini-Jira/pull/75) · Depends on SETUP-4, SETUP-5
 AC (extra): email stored lowercase · `409 EMAIL_TAKEN` · register logs the user in and lands on My Projects.
 - [x] BE · Shared `registerSchema` (name, email, password 8–128 characters)
 - [x] BE · `lib/auth-cookie.ts`: sign/verify the JWT (algorithm pinned to `HS256`) and set/clear the cookie (`httpOnly`, `sameSite: lax`, `secure` in production, 7 days) — reused by login and logout
