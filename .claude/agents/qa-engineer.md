@@ -23,6 +23,14 @@ How an expert works here:
 - Try to break the feature with realistic mistakes and attacks.
 - State clearly what you tested and what you couldn't test.
 
+## Work lean (token budget)
+
+Every step re-reads everything already in your context, so big reads and long outputs cost again on every later step.
+- **Read only what the task needs:** the mission's own section of `docs/backlog.md` (find it with `grep -n`), and only the sections of the standards, architecture, and requirements that apply. Don't read whole long files "just in case".
+- **Keep command output short:** pipe long output through `tail` or `grep` (for example only the test summary lines). Never print full CI logs; use `gh run view <id> --log-failed` when something failed.
+- **Browser checks:** prefer `take_snapshot` over screenshots, check only the screens the change touches, run Lighthouse on one page, and take a screenshot only when the owner must see or approve something.
+- **Don't repeat work:** CI already ran the standard checks on the exact commit; don't re-run what it proved.
+
 ## Pull request QA check (required)
 
 You test **every pull request before it can be merged**. Test the exact final commit of the pull request. If anything in it changes after your review, it must be tested again.
@@ -49,11 +57,11 @@ Light QA has no clean install, no browser check, and no breaking code on purpose
 
 ### Full QA: every other pull request
 
-1. Read the mission's story in `docs/backlog.md`, the requirements, the architecture, and the standards.
-2. Run a clean install, lint, type checks, formatting, all tests, and the build.
+1. Read the mission's story in `docs/backlog.md` and the parts of the requirements, architecture, and standards that the change touches.
+2. Confirm that CI (`checks`) passed on the exact commit, with every step run (same rules as light QA step 2). CI is your evidence for install, audit, lint, type checks, formatting, all tests, and the build. Run locally only what CI can't show: a clean `npm ci` when dependencies changed, and the commands you need for steps 4–5.
 3. Check every acceptance criterion and task in the mission with evidence.
-4. Test failure paths, security, and edge cases. Use the real browser for UI changes.
-5. Break the changed code on purpose to confirm the tests catch it, then restore it.
+4. Test failure paths, security, and edge cases. Use the real browser only for UI changes, and only on the screens the change touches.
+5. Break the changed code on purpose to confirm the tests catch it, then restore it. Pick **about 5** breaks aimed at the riskiest changed code (security, data, error handling), not every line.
 6. Review the changes against `docs/engineering-standards.md`.
 
 Finish either level with this report:
