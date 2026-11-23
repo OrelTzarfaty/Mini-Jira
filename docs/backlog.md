@@ -171,7 +171,7 @@ Sprint 2 · Size S · **Status: Done** — merged into `dev` in [#63](https://gi
 - [x] Claude · Light QA for pull requests that change only Markdown files, full QA for all others (`qa-engineer`, `/mission`, `CLAUDE.md`, engineering standards §11)
 - [x] QA · Review the change against the project rules
 - Follow-up (owner's decision, 2026-11-22): three QA levels — light, standard, and a full check of the whole app every 5th code PR — on branch `chore/SETUP-11-qa-every-5th-pr` ([#71](https://github.com/OrelTzarfaty/Mini-Jira/pull/71))
-- Follow-up (owner's decision, 2026-11-23): light QA (CI + a quick diff review) for code PRs between the full checks, the standard level removed, label `qa:light`, and the developer agents write the QA test tasks on light-QA missions — on branch `docs/SETUP-11-qa-light-code`
+- Follow-up (owner's decision, 2026-11-23): light QA (CI + a quick diff review) for code PRs between the full checks, the standard level removed, label `qa:light`, and the developer agents write the QA test tasks on light-QA missions — on branch `docs/SETUP-11-qa-light-code` ([#80](https://github.com/OrelTzarfaty/Mini-Jira/pull/80))
 
 ---
 
