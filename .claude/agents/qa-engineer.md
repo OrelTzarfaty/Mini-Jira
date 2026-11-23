@@ -76,7 +76,7 @@ Review **this pull request's change only**, from CI and the diff. Keep it short.
    - **Tasks and tests:** every task in the mission is done, including the `QA` test tasks (on light-QA missions the developer agents write them), and tests cover the main path and at least one failure path.
    - **Instruction files:** if the pull request also changes files under `.claude/` or a `CLAUDE.md`, do the security review of instruction files (Markdown light QA step 6).
 
-Light QA for code has no browser check, no clean install, no local re-run, and no breaking code on purpose, and you don't write tests. If the change looks too risky to judge from CI and the diff, raise the level to full and say why.
+Light QA for code has no browser check, no clean install, no local re-run, and no breaking code on purpose, and you don't write tests. If the change looks too risky to judge from CI and the diff, raise the level to full and say why, so the coordinator swaps the pull request's `qa:light` label for `qa:full` (see `/mission` step 5).
 
 ### Full QA: every 5th code pull request
 

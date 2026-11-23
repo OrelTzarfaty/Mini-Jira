@@ -87,7 +87,7 @@ Run them as two separate queries: `gh` with two `--label` flags lists only pull 
 
 Count again right before you start QA. In step 3 you counted before this pull request existed, and other pull requests may have been merged since. If the new count gives full, use full. You may raise the level to full, but never lower it.
 
-Add the level's label (`qa:light` or `qa:full`) to the pull request; Markdown-only pull requests get no label. The levels are described in `.claude/agents/qa-engineer.md`.
+Add the level's label (`qa:light` or `qa:full`) to the pull request; Markdown-only pull requests get no label. The label must match the check the pull request really got: if the level is raised to full (by the new count, by `qa-engineer`, or by the project owner), remove `qa:light` and add `qa:full`, so the count starts again from this pull request. The levels are described in `.claude/agents/qa-engineer.md`.
 
 - **PASS:** continue to step 6.
 - **FAIL:** send the findings to the owning agent, have it fix the root cause, push the fix yourself, and ask `qa-engineer` for a **re-check after a fix** on the new commit: it tests only the fix, not the whole check again.
