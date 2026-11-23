@@ -10,7 +10,7 @@ You are the coordinator. The agents do the work, and the project owner makes the
 
 ## Rules
 
-- `BE` tasks go to `backend-developer`, `FE` tasks to `frontend-developer`, and `QA` tasks to `qa-engineer`. A task with several owners, such as `You + BE + FE`, is split: agents do their parts, and the `You` part is reported to the project owner. Don't write application code yourself.
+- `BE` tasks go to `backend-developer`, `FE` tasks to `frontend-developer`, and `QA` tasks to `qa-engineer`. One exception: on a code mission with a **light** QA check, the `QA` tasks that write tests go to the developer agent instead: API/integration tests to `backend-developer`, E2E tests to `frontend-developer`. `QA` test tasks go to `qa-engineer` only when the mission gets a **full** QA check. Step 5 explains how to find the level. A task with several owners, such as `You + BE + FE`, is split: agents do their parts, and the `You` part is reported to the project owner. Don't write application code yourself.
 - Only one agent changes the branch at a time. Agents commit but never push. You push.
 - Never do a task owned by `You`, and never tick a `You` task unless the project owner says it's done.
 - **Never force-push** any branch, and never push to `main` or `dev` except for an approved merge in step 7.
@@ -50,6 +50,8 @@ Stop and explain the problem if:
 
 ## 3. Build the mission
 
+Before building, decide the expected QA level with the rules in step 5, because it decides who writes the `QA` test tasks (see **Rules**). Tell the developer agents when they must write those tests.
+
 Work through the mission's tasks in dependency order. Keep briefs short: point agents to the exact backlog section and files instead of pasting long background. Give each agent:
 
 - the story ID, its acceptance criteria, and its exact tasks
@@ -70,11 +72,22 @@ After each agent finishes, check its report and the commits before starting the 
 
 Start `qa-engineer` with the pull request link, the exact final commit, the mission's story ID, and the QA level:
 
-- **light** if the pull request changes only Markdown (`.md`) files
-- **full** if this is the 5th code pull request: at least 4 merged pull requests into `dev` have the `qa:standard` label since the most recently merged one with `qa:full`. Also full when the project owner asks for it.
-- **standard** for every other pull request
+- **light** if the pull request changes only Markdown (`.md`) files. It gets no label and doesn't count.
+- **full** if this is the 5th code pull request: at least 4 merged pull requests into `dev` labelled `qa:light` **or** `qa:standard` were merged after the most recently merged one labelled `qa:full`. Also full when the project owner asks for it. Label: `qa:full`.
+- **light** for every other code pull request. Label: `qa:light`.
 
-Check the changed files with `git diff --name-only --no-renames origin/dev...<final-commit>`. Without `--no-renames`, a file renamed to `.md` hides its old name. To count, find the merge time of the most recently merged `qa:full` pull request (`gh pr list --base dev --state merged --label qa:full --json mergedAt --jq 'max_by(.mergedAt).mergedAt'`; the list is sorted by creation date, not merge date, so don't use `--limit 1`), then count the `qa:standard` pull requests merged after it (`gh pr list --base dev --state merged --label qa:standard --search "merged:><time>" --json number`). Add the level's label (`qa:standard` or `qa:full`) to the pull request; light pull requests get no label and don't count. The levels are described in `.claude/agents/qa-engineer.md`.
+`qa:standard` is the label of the old standard level, which was removed on 2026-11-23. It stays in the count, so pull requests that already have it still count.
+
+Check the changed files with `git diff --name-only --no-renames origin/dev...<final-commit>`. Without `--no-renames`, a file renamed to `.md` hides its old name. To count, find the merge time of the most recently merged `qa:full` pull request (`gh pr list --base dev --state merged --label qa:full --json mergedAt --jq 'max_by(.mergedAt).mergedAt'`; the list is sorted by creation date, not merge date, so don't use `--limit 1`). Then count the pull requests merged after it, once for each label, and add the two numbers:
+
+- `gh pr list --base dev --state merged --label qa:light --search "merged:><time>" --json number`
+- `gh pr list --base dev --state merged --label qa:standard --search "merged:><time>" --json number`
+
+Run them as two separate queries: `gh` with two `--label` flags lists only pull requests that have **both** labels.
+
+Count again right before you start QA. In step 3 you counted before this pull request existed, and other pull requests may have been merged since. If the new count gives full, use full. You may raise the level to full, but never lower it.
+
+Add the level's label (`qa:light` or `qa:full`) to the pull request; Markdown-only pull requests get no label. The levels are described in `.claude/agents/qa-engineer.md`.
 
 - **PASS:** continue to step 6.
 - **FAIL:** send the findings to the owning agent, have it fix the root cause, push the fix yourself, and ask `qa-engineer` for a **re-check after a fix** on the new commit: it tests only the fix, not the whole check again.
@@ -91,7 +104,7 @@ Before you report, confirm both of these, or go back to step 5:
 Update the pull request description if it no longer matches the work. Then tell the project owner, in simple English:
 
 - the pull request link
-- the QA verdict, its level (light, standard, or full, plus any re-check after a fix), and the commit it tested
+- the QA verdict, its level (light or full, plus any re-check after a fix), and the commit it tested
 - the CI result
 - what was built
 - every open QA finding, including Medium and Low ones
