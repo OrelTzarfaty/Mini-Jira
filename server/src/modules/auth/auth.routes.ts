@@ -34,6 +34,8 @@ export function createAuthRouter({
     validateBody(loginSchema),
     controller.login,
   );
+  // AUTH-3: public on purpose (no requireAuth), so logging out never fails with 401.
+  router.post('/auth/logout', controller.logout);
 
   return router;
 }

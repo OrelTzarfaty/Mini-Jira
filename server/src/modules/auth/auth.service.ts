@@ -1,6 +1,8 @@
 import { ErrorCode } from '@mini-jira/shared';
 import type { LoginInput, PublicUser, RegisterInput } from '@mini-jira/shared';
 
+import { z } from 'zod';
+
 import { Prisma } from '../../generated/prisma/client.js';
 import type { PrismaClient } from '../../generated/prisma/client.js';
 import { ConflictError, InvalidCredentialsError } from '../../lib/errors.js';
@@ -11,11 +13,16 @@ const UNIQUE_VIOLATION = 'P2002';
 
 // Only the fields a client may see; passwordHash never leaves this service.
 const PUBLIC_USER_FIELDS = { id: true, name: true, email: true } as const;
+// The shape of a user ID. The id column is a PostgreSQL uuid, which rejects any other string
+// with a database error (Prisma P2007) instead of "not found".
+const USER_ID_SCHEMA = z.guid();
 
 export interface AuthService {
   register(input: RegisterInput): Promise<PublicUser>;
   /** Returns the user when the email and password match; otherwise throws 401. */
   login(input: LoginInput): Promise<PublicUser>;
+  /** Whether a user with this ID still exists (a session token may outlive its user). */
+  userExists(userId: string): Promise<boolean>;
 }
 
 const emailTaken = (): ConflictError =>
@@ -74,6 +81,18 @@ export function createAuthService(prisma: PrismaClient): AuthService {
 
       // Only the public fields leave the service; the hash stays here.
       return { id: user.id, name: user.name, email: user.email };
+    },
+
+    // AUTH-3: one primary-key lookup per protected request; only the ID is read.
+    async userExists(userId) {
+      // Only tokens we signed get here, and they hold real IDs; this is a fail-closed guard.
+      if (!USER_ID_SCHEMA.safeParse(userId).success) {
+        return false;
+      }
+
+      const user = await prisma.user.findUnique({ where: { id: userId }, select: { id: true } });
+
+      return user !== null;
     },
   };
 }

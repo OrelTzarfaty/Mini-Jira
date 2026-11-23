@@ -12,6 +12,7 @@ type LoginHandler = RequestHandler<Record<string, string>, PublicUser, LoginInpu
 export interface AuthController {
   register: RegisterHandler;
   login: LoginHandler;
+  logout: RequestHandler;
 }
 
 export function createAuthController(
@@ -35,6 +36,18 @@ export function createAuthController(
       await authCookie.set(res, user.id);
       req.log.info({ userId: user.id }, 'User logged in');
       res.status(200).json(user);
+    },
+
+    // AUTH-3: always clears the cookie and answers 204, even without a valid session, so a
+    // user whose token already expired can still get rid of it. The token is read only to
+    // log who logged out; it can't be revoked (architecture §7).
+    async logout(req, res) {
+      const userId = await authCookie.readUserId(req);
+      authCookie.clear(res);
+      if (userId) {
+        req.log.info({ userId }, 'User logged out');
+      }
+      res.status(204).end();
     },
   };
 }

@@ -1,4 +1,4 @@
-import type { CookieOptions, Response } from 'express';
+import type { CookieOptions, Request, Response } from 'express';
 import { errors, jwtVerify, SignJWT } from 'jose';
 
 import type { Env } from '../config/env.js';
@@ -22,6 +22,8 @@ export interface AuthCookie {
   sign(userId: string): Promise<string>;
   /** Returns the user ID of a valid, unexpired token, or `undefined` for any invalid token. */
   verify(token: string): Promise<string | undefined>;
+  /** Returns the user ID from the request's auth cookie, or `undefined` if it is missing or invalid. */
+  readUserId(req: Pick<Request, 'cookies'>): Promise<string | undefined>;
   /** Signs a token for the user and sets it as the auth cookie (logs the user in). */
   set(res: Pick<Response, 'cookie'>, userId: string): Promise<void>;
   /** Removes the auth cookie (logs the user out). */
@@ -70,6 +72,12 @@ export function createAuthCookie({ secret, expiresIn, nodeEnv }: AuthCookieConfi
   return {
     sign,
     verify,
+    readUserId(req) {
+      // cookie-parser turns a "j:{...}" cookie into an object, so the value may not be a string.
+      const token: unknown = req.cookies[AUTH_COOKIE_NAME];
+
+      return typeof token === 'string' ? verify(token) : Promise.resolve(undefined);
+    },
     async set(res, userId) {
       // Same lifetime as the token, so the browser drops the cookie when the token expires.
       res.cookie(AUTH_COOKIE_NAME, await sign(userId), {
