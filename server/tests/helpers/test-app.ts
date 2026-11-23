@@ -9,8 +9,11 @@ import { testPrisma } from './database.js';
 
 export const TEST_CLIENT_ORIGIN = 'http://localhost:5173';
 
+/** The secret of `testAuthCookie`, for tests that forge their own tokens. */
+export const TEST_JWT_SECRET = 'test-only-jwt-secret-of-at-least-32-chars';
+
 export const testAuthCookie = createAuthCookie({
-  secret: 'test-only-jwt-secret-of-at-least-32-chars',
+  secret: TEST_JWT_SECRET,
   expiresIn: 7 * 24 * 60 * 60,
   nodeEnv: 'test',
 });
