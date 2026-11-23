@@ -144,6 +144,18 @@ describe('requireAuth', () => {
     expect(handlerCalls()).toBe(0);
   });
 
+  // The API reads the session from the cookie only, so a stolen token pasted into a header
+  // (as many APIs accept) must not work without the cookie.
+  it('AUTH-3: a valid token in an Authorization header, without the cookie, gets 401', async () => {
+    const token = await testAuthCookie.sign(USER_ID);
+
+    const response = await request(app).get('/api/private').set('Authorization', `Bearer ${token}`);
+
+    expect(response.status).toBe(401);
+    expect(response.body).toEqual(UNAUTHENTICATED_BODY);
+    expect(handlerCalls()).toBe(0);
+  });
+
   it.each([
     ['an empty cookie', async (): Promise<string> => Promise.resolve('')],
     ['a value that is not a JWT', async (): Promise<string> => Promise.resolve('not-a-token')],
@@ -171,6 +183,25 @@ describe('requireAuth', () => {
           .setProtectedHeader({ alg: 'HS256' })
           .setSubject(USER_ID)
           .setExpirationTime(nowInSeconds() - 1)
+          .sign(secretKey),
+    ],
+    // Signed with the real secret, so only the checks on the claims can stop these three.
+    [
+      'a correctly signed token that never expires (no exp)',
+      async (): Promise<string> =>
+        new SignJWT().setProtectedHeader({ alg: 'HS256' }).setSubject(USER_ID).sign(secretKey),
+    ],
+    [
+      'a correctly signed token with no user (no sub)',
+      async (): Promise<string> =>
+        new SignJWT().setProtectedHeader({ alg: 'HS256' }).setExpirationTime('1h').sign(secretKey),
+    ],
+    [
+      'a correctly signed token whose user is a number, not a string',
+      async (): Promise<string> =>
+        new SignJWT({ sub: 42 as unknown as string })
+          .setProtectedHeader({ alg: 'HS256' })
+          .setExpirationTime('1h')
           .sign(secretKey),
     ],
     [
