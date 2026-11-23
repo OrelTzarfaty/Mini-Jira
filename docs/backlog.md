@@ -205,7 +205,7 @@ Sprint 2 · Size S · Status: In progress · Depends on AUTH-2
 - [ ] BE · `requireAuth` middleware → `401 UNAUTHENTICATED`
 - [ ] BE · `POST /api/auth/logout` clears the cookie
 - [ ] FE · "Log out" in the user menu; clear the query cache; redirect to the landing page
-- [ ] QA · After logout, protected pages redirect to login; API calls without the cookie return 401
+- [ ] QA · API calls without the cookie return 401; E2E: Log out → landing page, cookie cleared
 
 ### AUTH-4 · Session survives refresh
 Sprint 2 · Size S · Status: To do · Depends on AUTH-3
@@ -213,6 +213,7 @@ Sprint 2 · Size S · Status: To do · Depends on AUTH-3
 - [ ] FE · `useMe` query loaded on app start
 - [ ] FE · `ProtectedRoute`: loading state, then the page or a redirect to `/login`
 - [ ] QA · E2E: refresh keeps the user logged in; an invalid or expired token sends them to login
+- [ ] QA · E2E: after logout, protected pages redirect to login (moved from AUTH-3 by the owner on 2026-11-23, because the guard is built here)
 
 ---
 
