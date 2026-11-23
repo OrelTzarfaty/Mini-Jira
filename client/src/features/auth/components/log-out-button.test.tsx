@@ -5,6 +5,7 @@ import { http, HttpResponse } from 'msw';
 import { describe, expect, it } from 'vitest';
 
 import { createQueryClient } from '@/api/query-client';
+import { ME_QUERY_KEY } from '@/api/query-keys';
 import { routes } from '@/routes';
 import { renderRoute } from '@/test/render-route';
 import { server } from '@/test/server';
@@ -61,7 +62,13 @@ describe('Log out', () => {
     expect(router.state.location.pathname).toBe('/');
     // replace: Back must not return to a page of the ended session.
     expect(router.state.historyAction).toBe('REPLACE');
-    expect(queryClient.getQueryCache().getAll()).toHaveLength(0);
+    expect(queryClient.getQueryData(CACHED_QUERY_KEY)).toBeUndefined();
+    // The only thing cached afterwards is the landing page's own fresh answer: nobody is
+    // logged in (AUTH-4), not the old user.
+    await waitFor(() => {
+      expect(queryClient.getQueryData(ME_QUERY_KEY)).toBeNull();
+    });
+    expect(queryClient.getQueryCache().getAll()).toHaveLength(1);
   });
 
   it('AUTH-3: shows that it is working and ignores more clicks while logging out', async () => {

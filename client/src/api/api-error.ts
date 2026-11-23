@@ -1,4 +1,5 @@
-import type { ErrorCode, ErrorDetail } from '@mini-jira/shared';
+import { ErrorCode } from '@mini-jira/shared';
+import type { ErrorDetail } from '@mini-jira/shared';
 
 /** Problems the client finds itself. The API's own codes are ErrorCode in @mini-jira/shared. */
 export const ClientErrorCode = {
@@ -33,4 +34,12 @@ export class ApiError extends Error {
     this.code = code;
     this.details = details;
   }
+}
+
+/**
+ * Whether the API said the session is missing or has ended (401 UNAUTHENTICATED, AUTH-4).
+ * A wrong password at login is a different code (INVALID_CREDENTIALS), so it never counts.
+ */
+export function isUnauthenticatedError(error: unknown): boolean {
+  return error instanceof ApiError && error.code === ErrorCode.UNAUTHENTICATED;
 }
