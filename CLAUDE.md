@@ -90,6 +90,7 @@ Endpoints so far (full details in Swagger at `/api/docs`):
 | `GET` | `/api/docs` | Swagger UI |
 | `POST` | `/api/auth/register` | Create an account and log in (sets the auth cookie) |
 | `POST` | `/api/auth/login` | Log in (sets the auth cookie); generic `401 INVALID_CREDENTIALS`, failed logins limited per email + IP and per IP (`429 RATE_LIMITED`) |
+| `POST` | `/api/auth/logout` | Log out: always `204` and clears the auth cookie (public, so a missing or expired session never gets `401`) |
 
 ## Features
 

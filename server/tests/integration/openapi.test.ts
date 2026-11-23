@@ -62,6 +62,16 @@ describe('GET /api/openapi.json', () => {
     ]);
   });
 
+  it('AUTH-3: documents the logout endpoint with its responses', async () => {
+    const spec = await getSpec();
+
+    expect(Object.keys(spec.paths['/auth/logout']?.post?.responses ?? {})).toEqual([
+      '204',
+      '403',
+      '500',
+    ]);
+  });
+
   it('SETUP-3: builds the error schema from the shared error codes', async () => {
     const spec = await getSpec();
 
