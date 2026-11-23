@@ -54,9 +54,13 @@ function createAppWithPrivateRoute(
 ): ReturnType<typeof createTestApp> {
   const apiRouter = Router();
   apiRouter.use(createApiRouter({ prisma: testPrisma, authCookie }));
-  apiRouter.get('/private', createRequireAuth(authCookie), (_req, res) => {
-    res.json({ ok: true });
-  });
+  apiRouter.get(
+    '/private',
+    createRequireAuth(authCookie, createAuthService(testPrisma)),
+    (_req, res) => {
+      res.json({ ok: true });
+    },
+  );
 
   return createTestApp({ apiRouter });
 }
