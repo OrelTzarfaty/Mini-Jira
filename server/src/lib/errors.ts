@@ -1,4 +1,9 @@
-import { ERROR_HTTP_STATUS, ErrorCode, INVALID_CREDENTIALS_MESSAGE } from '@mini-jira/shared';
+import {
+  ERROR_HTTP_STATUS,
+  ErrorCode,
+  INVALID_CREDENTIALS_MESSAGE,
+  UNAUTHENTICATED_MESSAGE,
+} from '@mini-jira/shared';
 import type { ErrorDetail } from '@mini-jira/shared';
 
 export class AppError extends Error {
@@ -27,6 +32,13 @@ export class ValidationError extends AppError {
 export class InvalidCredentialsError extends AppError {
   constructor() {
     super(ErrorCode.INVALID_CREDENTIALS, INVALID_CREDENTIALS_MESSAGE);
+  }
+}
+
+// AUTH-3: no valid session cookie (missing, tampered or expired); the client sends the user to log in.
+export class UnauthenticatedError extends AppError {
+  constructor() {
+    super(ErrorCode.UNAUTHENTICATED, UNAUTHENTICATED_MESSAGE);
   }
 }
 

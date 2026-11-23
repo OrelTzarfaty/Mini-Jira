@@ -54,6 +54,16 @@ const SET_AUTH_COOKIE_HEADER = {
   },
 };
 
+const CLEAR_AUTH_COOKIE_HEADER = {
+  'Set-Cookie': {
+    description: `Removes the login cookie \`${AUTH_COOKIE_NAME}\`: an empty value that expired in 1970, with the same flags it was set with (HttpOnly, SameSite=Lax, Path=/, and Secure in production).`,
+    schema: {
+      type: 'string',
+      example: `${AUTH_COOKIE_NAME}=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=Lax`,
+    },
+  },
+};
+
 export function createOpenApiSpec(): Record<string, unknown> {
   return {
     openapi: '3.1.0',
@@ -144,6 +154,23 @@ export function createOpenApiSpec(): Record<string, unknown> {
                 },
               },
             },
+            '500': jsonResponse('Unexpected server error', 'ErrorResponse'),
+          },
+        },
+      },
+      '/auth/logout': {
+        post: {
+          tags: ['Auth'],
+          operationId: 'logout',
+          summary: 'Log out (clears the auth cookie)',
+          description:
+            'AUTH-3. Send no request body. Always clears the auth cookie and answers 204, also when the cookie is missing, expired or invalid, so logging out never fails with 401. The token itself stays valid until it expires (a JWT cannot be revoked), but the browser no longer has it. Browsers must send the request from the web app (same origin), or it gets 403 and the cookie is kept.',
+          responses: {
+            '204': {
+              description: 'The user is logged out (no response body)',
+              headers: CLEAR_AUTH_COOKIE_HEADER,
+            },
+            '403': jsonResponse('A cross-site request (FORBIDDEN)', 'ErrorResponse'),
             '500': jsonResponse('Unexpected server error', 'ErrorResponse'),
           },
         },

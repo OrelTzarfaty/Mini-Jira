@@ -192,7 +192,7 @@ AC (extra): email stored lowercase · `409 EMAIL_TAKEN` · register logs the use
 - [x] QA · E2E: register → lands on My Projects
 
 ### AUTH-2 · Log in
-Sprint 2 · Size M · **Status: In review** — [#78](https://github.com/OrelTzarfaty/Mini-Jira/pull/78) · Depends on AUTH-1
+Sprint 2 · Size M · **Status: Done** — merged into `dev` in [#78](https://github.com/OrelTzarfaty/Mini-Jira/pull/78) (`fb1c517`) · Depends on AUTH-1
 AC (extra): one generic `401 INVALID_CREDENTIALS` for unknown email and wrong password · rate-limited (`429`).
 - [x] BE · `POST /api/auth/login`: verify the password, set the auth cookie (helper from AUTH-1), generic 401 on failure; an unknown email still runs a hash
 - [x] BE · Login rate limits (`429 RATE_LIMITED`): failed attempts per email + IP (5 per 15 minutes) and per IP (100 per day)
@@ -203,11 +203,11 @@ AC (extra): one generic `401 INVALID_CREDENTIALS` for unknown email and wrong pa
 - [x] QA · E2E: login → My Projects
 
 ### AUTH-3 · Log out
-Sprint 2 · Size S · Status: To do · Depends on AUTH-2
-- [ ] BE · `requireAuth` middleware → `401 UNAUTHENTICATED`
-- [ ] BE · `POST /api/auth/logout` clears the cookie
-- [ ] FE · "Log out" in the user menu; clear the query cache; redirect to the landing page
-- [ ] QA · After logout, protected pages redirect to login; API calls without the cookie return 401
+Sprint 2 · Size S · **Status: In review** — [#79](https://github.com/OrelTzarfaty/Mini-Jira/pull/79) · Depends on AUTH-2
+- [x] BE · `requireAuth` middleware → `401 UNAUTHENTICATED`
+- [x] BE · `POST /api/auth/logout` clears the cookie
+- [x] FE · "Log out" in the user menu; clear the query cache; redirect to the landing page
+- [x] QA · API calls without the cookie return 401; E2E: Log out → landing page, cookie cleared
 
 ### AUTH-4 · Session survives refresh
 Sprint 2 · Size S · Status: To do · Depends on AUTH-3
@@ -215,6 +215,7 @@ Sprint 2 · Size S · Status: To do · Depends on AUTH-3
 - [ ] FE · `useMe` query loaded on app start
 - [ ] FE · `ProtectedRoute`: loading state, then the page or a redirect to `/login`
 - [ ] QA · E2E: refresh keeps the user logged in; an invalid or expired token sends them to login
+- [ ] QA · E2E: after logout, protected pages redirect to login (moved from AUTH-3 by the owner on 2026-11-23, because the guard is built here)
 
 ---
 

@@ -90,6 +90,7 @@ Endpoints so far (full details in Swagger at `/api/docs`):
 | `GET` | `/api/docs` | Swagger UI |
 | `POST` | `/api/auth/register` | Create an account and log in (sets the auth cookie) |
 | `POST` | `/api/auth/login` | Log in (sets the auth cookie); generic `401 INVALID_CREDENTIALS`, failed logins limited per email + IP and per IP (`429 RATE_LIMITED`) |
+| `POST` | `/api/auth/logout` | Log out: always `204` and clears the auth cookie (public, so a missing or expired session never gets `401`) |
 
 ## Features
 
@@ -97,7 +98,7 @@ Summary only — task-level status lives in [docs/backlog.md](docs/backlog.md).
 
 | Area | IDs | Priority | Status |
 |---|---|---|---|
-| Authentication | AUTH-1..4 | P0 | In progress — AUTH-1 (register) done; AUTH-2 (log in) built, in review; AUTH-3..4 not started |
+| Authentication | AUTH-1..4 | P0 | In progress — AUTH-1 (register) and AUTH-2 (log in) done; AUTH-3 (log out) built, in review; AUTH-4 not started |
 | Projects & members | PRJ-1..6 | P0 | Not started |
 | Tickets | TKT-1..5 | P0 | Not started |
 | Board | BRD-1..4 | P0 | Not started |

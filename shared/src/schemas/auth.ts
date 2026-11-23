@@ -72,6 +72,8 @@ export type LoginInput = z.output<typeof loginSchema>;
 // AUTH-2: one generic message for an unknown email and a wrong password (never say which).
 export const INVALID_CREDENTIALS_MESSAGE = 'Email or password is incorrect';
 export const LOGIN_RATE_LIMITED_MESSAGE = 'Too many failed login attempts. Try again later.';
+// AUTH-3: one message for a missing, invalid or expired session cookie (never say which).
+export const UNAUTHENTICATED_MESSAGE = 'You are not logged in';
 
 // What the API returns for a user. A plain (stripping) object on purpose: parsing a full
 // user row through it drops `passwordHash` and any other field, so the hash never leaks.
