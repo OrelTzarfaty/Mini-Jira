@@ -201,7 +201,7 @@ AC (extra): one generic `401 INVALID_CREDENTIALS` for unknown email and wrong pa
 - [x] QA · E2E: login → My Projects
 
 ### AUTH-3 · Log out
-Sprint 2 · Size S · Status: To do · Depends on AUTH-2
+Sprint 2 · Size S · Status: In progress · Depends on AUTH-2
 - [ ] BE · `requireAuth` middleware → `401 UNAUTHENTICATED`
 - [ ] BE · `POST /api/auth/logout` clears the cookie
 - [ ] FE · "Log out" in the user menu; clear the query cache; redirect to the landing page
