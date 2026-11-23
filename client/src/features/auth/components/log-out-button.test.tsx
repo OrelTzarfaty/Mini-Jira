@@ -5,8 +5,10 @@ import { http, HttpResponse } from 'msw';
 import { describe, expect, it } from 'vitest';
 
 import { createQueryClient } from '@/api/query-client';
+import { ME_QUERY_KEY } from '@/api/query-keys';
 import { routes } from '@/routes';
 import { renderRoute } from '@/test/render-route';
+import { mockLoggedIn, mockLoggedOut } from '@/test/session';
 import { server } from '@/test/server';
 
 const LOGOUT_URL = '/api/auth/logout';
@@ -15,14 +17,21 @@ const LANDING_HEADING = "Plan, track and ship your team's work.";
 // Stands for any server data the old session left in the cache.
 const CACHED_QUERY_KEY = ['projects'];
 
-/** Counts the logout requests, so a test can check the API was really called. */
+/**
+ * Counts the logout requests, so a test can check the API was really called. A successful
+ * logout clears the cookie, so from then on GET /api/auth/me answers 401, like the real API.
+ */
 function respondToLogout(response: () => Response | Promise<Response>): { count: () => number } {
   let requestCount = 0;
   server.use(
-    http.post(LOGOUT_URL, () => {
+    http.post(LOGOUT_URL, async () => {
       requestCount += 1;
+      const answer = await response();
+      if (answer.ok) {
+        mockLoggedOut();
+      }
 
-      return response();
+      return answer;
     }),
   );
 
@@ -34,10 +43,12 @@ async function renderLoggedInApp(): Promise<{
   router: ReturnType<typeof renderRoute>;
   queryClient: ReturnType<typeof createQueryClient>;
 }> {
+  mockLoggedIn();
   const queryClient = createQueryClient();
   queryClient.setQueryData(CACHED_QUERY_KEY, [{ key: 'WEB' }]);
   const router = renderRoute('/projects', routes, { queryClient });
-  await screen.findByRole('main');
+  // The top bar appears once the user is known (AUTH-4).
+  await screen.findByRole('banner');
 
   return { router, queryClient };
 }
@@ -61,7 +72,13 @@ describe('Log out', () => {
     expect(router.state.location.pathname).toBe('/');
     // replace: Back must not return to a page of the ended session.
     expect(router.state.historyAction).toBe('REPLACE');
-    expect(queryClient.getQueryCache().getAll()).toHaveLength(0);
+    expect(queryClient.getQueryData(CACHED_QUERY_KEY)).toBeUndefined();
+    // The only thing cached afterwards is the landing page's own fresh answer: nobody is
+    // logged in (AUTH-4), not the old user.
+    await waitFor(() => {
+      expect(queryClient.getQueryData(ME_QUERY_KEY)).toBeNull();
+    });
+    expect(queryClient.getQueryCache().getAll()).toHaveLength(1);
   });
 
   it('AUTH-3: shows that it is working and ignores more clicks while logging out', async () => {

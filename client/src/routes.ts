@@ -4,6 +4,7 @@ import { AppShell } from '@/components/app-shell';
 import { NotFoundPage } from '@/components/not-found-page';
 import { PublicLayout } from '@/components/public-layout';
 import { RootErrorBoundary, RouteErrorBoundary } from '@/components/route-error-boundary';
+import { ProtectedRoute } from '@/features/auth/components/protected-route';
 import { LandingPage } from '@/features/auth/pages/landing-page';
 import { LoginPage } from '@/features/auth/pages/login-page';
 import { RegisterPage } from '@/features/auth/pages/register-page';
@@ -14,7 +15,7 @@ import { MyProjectsPage } from '@/features/projects/pages/my-projects-page';
 import { ProjectSettingsPage } from '@/features/projects/pages/project-settings-page';
 import { TicketPage } from '@/features/tickets/pages/ticket-page';
 
-// Every screen's URL (docs/architecture.md §5.2). The login guard comes in AUTH-4.
+// Every screen's URL (docs/architecture.md §5.2).
 export const routes: RouteObject[] = [
   {
     ErrorBoundary: RootErrorBoundary,
@@ -41,17 +42,23 @@ export const routes: RouteObject[] = [
         ],
       },
       {
-        Component: AppShell,
+        // Every screen after login: a visitor goes to /login (AUTH-4).
+        Component: ProtectedRoute,
         children: [
           {
-            ErrorBoundary: RouteErrorBoundary,
+            Component: AppShell,
             children: [
-              { path: '/projects', Component: MyProjectsPage },
-              { path: '/projects/:projectKey/board', Component: BoardPage },
-              { path: '/projects/:projectKey/list', Component: ListPage },
-              { path: '/projects/:projectKey/tickets/:ticketKey', Component: TicketPage },
-              { path: '/projects/:projectKey/settings', Component: ProjectSettingsPage },
-              { path: '/my-work', Component: MyWorkPage },
+              {
+                ErrorBoundary: RouteErrorBoundary,
+                children: [
+                  { path: '/projects', Component: MyProjectsPage },
+                  { path: '/projects/:projectKey/board', Component: BoardPage },
+                  { path: '/projects/:projectKey/list', Component: ListPage },
+                  { path: '/projects/:projectKey/tickets/:ticketKey', Component: TicketPage },
+                  { path: '/projects/:projectKey/settings', Component: ProjectSettingsPage },
+                  { path: '/my-work', Component: MyWorkPage },
+                ],
+              },
             ],
           },
         ],

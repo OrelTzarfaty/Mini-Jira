@@ -1,25 +1,12 @@
 import type { BrowserContext, Locator, Page } from '@playwright/test';
 
-import { AUTH_COOKIE_NAME, registerThroughApi } from '../support/auth-api.js';
+import { AUTH_COOKIE_NAME, logInAsNewUser } from '../support/auth-api.js';
 import { expect, test } from '../support/fixtures.js';
 
 // AUTH-3 (wireframe 02 F and H): a logged-in user logs out from the user menu (the ☰ menu on
-// phones), the browser drops the session cookie, and the landing page opens.
-// After logout, protected pages redirecting to login is checked in AUTH-4 (the guard is built
-// there; the owner's decision of 2026-11-23).
-
-/**
- * Logs the context in as a new account with its own session (register logs the user in).
- * - Not the shared worker session of the fixtures (`loginAs`): a test that logs out must never
- *   end a session that other tests use.
- * - Not a fresh login of a seed account: the login rate limiter counts each login while it is
- *   in flight, so several parallel logins of one account can get 429 even with the right
- *   password, and the test would be flaky.
- */
-async function logInFresh(context: BrowserContext): Promise<void> {
-  const { session } = await registerThroughApi();
-  await context.addCookies(session.cookies);
-}
+// phones), the browser drops the session cookie, and the landing page opens. Afterwards the
+// protected pages send them to the login popup (AUTH-4, where the guard is built; the owner's
+// decision of 2026-11-23). Each test logs in as its own new account (logInAsNewUser).
 
 /** Whether the browser still holds the session cookie (it is HTTP-only, so only the context sees it). */
 async function hasSessionCookie(context: BrowserContext): Promise<boolean> {
@@ -50,7 +37,7 @@ test.describe('Log out (AUTH-3)', () => {
     page,
     context,
   }) => {
-    await logInFresh(context);
+    await logInAsNewUser(context);
     await page.goto('/projects');
     expect(await hasSessionCookie(context)).toBe(true);
     await page.getByRole('button', { name: 'Account menu' }).click();
@@ -71,7 +58,7 @@ test.describe('Log out (AUTH-3)', () => {
       page,
       context,
     }) => {
-      await logInFresh(context);
+      await logInAsNewUser(context);
       await page.goto('/projects');
       // On phones the account menu moves into the ☰ menu (wireframe 02 H).
       await expect(page.getByRole('button', { name: 'Account menu' })).toBeHidden();
@@ -85,5 +72,25 @@ test.describe('Log out (AUTH-3)', () => {
       await expect(menu).toBeHidden();
       expect(await hasSessionCookie(context)).toBe(false);
     });
+  });
+});
+
+test.describe('After logout (AUTH-4)', () => {
+  test('AUTH-4: protected pages send the logged-out user to the login popup', async ({
+    page,
+    context,
+  }) => {
+    await logInAsNewUser(context);
+    await page.goto('/projects');
+    await page.getByRole('button', { name: 'Account menu' }).click();
+    await logOutFrom(page, page.getByRole('dialog', { name: 'Account menu' }));
+    await expectLandingPage(page);
+
+    for (const path of ['/projects', '/projects/WEB/board', '/my-work']) {
+      await page.goto(path);
+      await expect(page).toHaveURL('/login');
+      await expect(page.getByRole('dialog', { name: 'Log in to Mini-Jira' })).toBeVisible();
+      await expect(page.getByRole('navigation', { name: 'Main' })).toBeHidden();
+    }
   });
 });

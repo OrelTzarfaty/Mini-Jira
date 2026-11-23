@@ -85,3 +85,18 @@ export async function registerThroughApi(): Promise<Credentials & { session: Sto
 
   return { ...credentials, session };
 }
+
+/**
+ * Logs the browser context in as a new account with its own session (register logs the user in).
+ * - Not the shared worker session of the fixtures (`loginAs`): a test that logs out or breaks
+ *   its cookie must never end a session that other tests use.
+ * - Not a fresh login of a seed account: the login rate limiter counts each login while it is
+ *   in flight, so several parallel logins of one account can get 429 even with the right
+ *   password, and the test would be flaky.
+ */
+export async function logInAsNewUser(context: BrowserContext): Promise<Credentials> {
+  const { session, ...credentials } = await registerThroughApi();
+  await context.addCookies(session.cookies);
+
+  return credentials;
+}

@@ -14,7 +14,7 @@ const REPO_ROOT = fileURLToPath(new URL('../../', import.meta.url));
 const E2E_DATABASE = 'minijira_e2e';
 // Signs the login cookies of the throwaway E2E users only. Public on purpose, never a real
 // secret; at least 32 characters, like the API requires (server/src/config/env.ts).
-const E2E_JWT_SECRET = 'e2e-only-fake-jwt-secret-not-for-any-real-system';
+export const E2E_JWT_SECRET = 'e2e-only-fake-jwt-secret-not-for-any-real-system';
 const E2E_DATABASE_URL = `postgresql://${E2E_DATABASE}:${E2E_DATABASE}@127.0.0.1:5434/${E2E_DATABASE}`;
 
 const COMPOSE_ARGS = [

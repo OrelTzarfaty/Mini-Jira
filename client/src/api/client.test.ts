@@ -1,7 +1,6 @@
 import { ErrorCode, healthResponseSchema } from '@mini-jira/shared';
 import { http, HttpResponse } from 'msw';
 import { describe, expect, it, vi } from 'vitest';
-import type { Mock } from 'vitest';
 import { z } from 'zod';
 
 import { ApiError, ClientErrorCode, NO_RESPONSE_STATUS } from './api-error';
@@ -158,15 +157,11 @@ describe('apiRequest', () => {
 });
 
 describe('apiRequest when the session is missing or expired (401)', () => {
-  // jsdom can't load another page, so the test records where the app asked the browser to go.
-  function stubCurrentPage(pathname: string): Mock<(url: string) => void> {
+  it('AUTH-4: throws the 401 as an ApiError and never reloads the page itself', async () => {
+    // ProtectedRoute does the redirect (query-client.ts), so the cache and any typed input
+    // survive; a full page load would lose both.
     const replace = vi.fn<(url: string) => void>();
-    vi.stubGlobal('location', { ...window.location, pathname, replace });
-
-    return replace;
-  }
-
-  function respondUnauthenticated(): void {
+    vi.stubGlobal('location', { ...window.location, pathname: '/projects/WEB/board', replace });
     server.use(
       http.get('/api/projects', () =>
         HttpResponse.json(
@@ -175,53 +170,10 @@ describe('apiRequest when the session is missing or expired (401)', () => {
         ),
       ),
     );
-  }
-
-  it('SETUP-5: sends the user from a protected page to /login', async () => {
-    const replace = stubCurrentPage('/projects/WEB/board');
-    respondUnauthenticated();
 
     const error = await catchApiError(apiRequest('/projects', { schema: z.unknown() }));
 
-    expect(replace).toHaveBeenCalledExactlyOnceWith('/login');
     expect(error).toMatchObject({ status: 401, code: ErrorCode.UNAUTHENTICATED });
-  });
-
-  it.each(['/', '/login', '/register'])(
-    'SETUP-5: stays on the public page %s, where a 401 is expected',
-    async (pathname) => {
-      const replace = stubCurrentPage(pathname);
-      respondUnauthenticated();
-
-      const error = await catchApiError(apiRequest('/projects', { schema: z.unknown() }));
-
-      expect(replace).not.toHaveBeenCalled();
-      expect(error).toMatchObject({ status: 401 });
-    },
-  );
-
-  it('SETUP-5: also redirects when the 401 response is not in the API error format', async () => {
-    const replace = stubCurrentPage('/my-work');
-    server.use(http.get('/api/projects', () => new HttpResponse('Unauthorized', { status: 401 })));
-
-    await catchApiError(apiRequest('/projects', { schema: z.unknown() }));
-
-    expect(replace).toHaveBeenCalledExactlyOnceWith('/login');
-  });
-
-  it('SETUP-5: other errors, such as 403, never redirect', async () => {
-    const replace = stubCurrentPage('/projects/WEB/settings');
-    server.use(
-      http.get('/api/projects', () =>
-        HttpResponse.json(
-          { error: { code: ErrorCode.FORBIDDEN, message: 'Only the owner can do this' } },
-          { status: 403 },
-        ),
-      ),
-    );
-
-    await catchApiError(apiRequest('/projects', { schema: z.unknown() }));
-
     expect(replace).not.toHaveBeenCalled();
   });
 });
