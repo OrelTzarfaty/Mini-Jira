@@ -190,7 +190,7 @@ AC (extra): email stored lowercase · `409 EMAIL_TAKEN` · register logs the use
 - [x] QA · E2E: register → lands on My Projects
 
 ### AUTH-2 · Log in
-Sprint 2 · Size M · **Status: In progress** — branch `feat/AUTH-2-login` · Depends on AUTH-1
+Sprint 2 · Size M · **Status: In review** — [#78](https://github.com/OrelTzarfaty/Mini-Jira/pull/78) · Depends on AUTH-1
 AC (extra): one generic `401 INVALID_CREDENTIALS` for unknown email and wrong password · rate-limited (`429`).
 - [x] BE · `POST /api/auth/login`: verify the password, set the auth cookie (helper from AUTH-1), generic 401 on failure; an unknown email still runs a hash
 - [x] BE · Login rate limits (`429 RATE_LIMITED`): failed attempts per email + IP (5 per 15 minutes) and per IP (100 per day)
