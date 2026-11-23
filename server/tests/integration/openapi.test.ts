@@ -72,6 +72,16 @@ describe('GET /api/openapi.json', () => {
     ]);
   });
 
+  it('AUTH-4: documents the current-user endpoint with its responses', async () => {
+    const spec = await getSpec();
+
+    expect(Object.keys(spec.paths['/auth/me']?.get?.responses ?? {})).toEqual([
+      '200',
+      '401',
+      '500',
+    ]);
+  });
+
   it('SETUP-3: builds the error schema from the shared error codes', async () => {
     const spec = await getSpec();
 
