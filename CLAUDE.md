@@ -98,7 +98,7 @@ Summary only — task-level status lives in [docs/backlog.md](docs/backlog.md).
 
 | Area | IDs | Priority | Status |
 |---|---|---|---|
-| Authentication | AUTH-1..4 | P0 | In progress — AUTH-1 (register) done; AUTH-2 (log in) built, in review; AUTH-3..4 not started |
+| Authentication | AUTH-1..4 | P0 | In progress — AUTH-1 (register) and AUTH-2 (log in) done; AUTH-3 (log out) built, in review; AUTH-4 not started |
 | Projects & members | PRJ-1..6 | P0 | Not started |
 | Tickets | TKT-1..5 | P0 | Not started |
 | Board | BRD-1..4 | P0 | Not started |
