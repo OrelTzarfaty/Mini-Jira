@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 
 // Proves that the whole system runs: nginx serves the React app and forwards /api to the API.
-// A placeholder for the real journeys; the login test grows with AUTH-2.
+// The real journeys live in their own specs (auth-register, auth-login).
 test.describe('Smoke', () => {
   test('SETUP-9: the API health check answers through nginx', async ({ request }) => {
     const response = await request.get('/api/health');
@@ -21,7 +21,8 @@ test.describe('Smoke', () => {
 
     await page.goto('/login');
 
-    await expect(page.getByRole('heading', { level: 1, name: 'Log in' })).toBeVisible();
+    // AUTH-2: /login is the landing page with the Log in popup open (wireframe 01 B).
+    await expect(page.getByRole('dialog', { name: 'Log in to Mini-Jira' })).toBeVisible();
     await expect(page).toHaveTitle(/Log in/);
     expect(consoleErrors).toEqual([]);
   });
