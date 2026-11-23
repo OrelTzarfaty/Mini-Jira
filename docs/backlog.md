@@ -70,6 +70,7 @@ Sprint 1 · Size S · Status: To do
 - [ ] You · Review backlog, architecture, wireframes, and design doc with the mentor
 - [ ] You · Confirm with the mentor that React replaces Angular
 - [ ] You · Confirm the optional ticket **Estimate** field (time tracking is out of scope in the requirements); if not approved, remove its tasks below
+- [ ] You · Tell the mentor the deployment target (AWS, architecture §13) was chosen early; the build stays in week 8
 - [ ] You · Apply the feedback (update architecture.md, this backlog, and CLAUDE.md)
 
 ---
@@ -137,13 +138,13 @@ Sprint 2 · Size S · **Status: Done** — merged into `dev` in [#67](https://gi
 - [x] You · Approve the visual direction
 
 ### SETUP-7 · Docker Compose
-Sprint 2 · Size M · Status: In progress — branch `chore/SETUP-7-docker-compose` · Depends on SETUP-3, SETUP-4, SETUP-5
-- [ ] BE · API Dockerfile; runs `prisma migrate deploy` on start
-- [ ] FE · Client Dockerfile: build the SPA and serve it with nginx
-- [ ] FE · nginx config: proxy `/api` → `api`, fall back to `index.html` for SPA routes
-- [ ] BE · `docker-compose.yml` with `client`, `api`, `db`
-- [ ] BE · `.env.example` with every environment variable
-- [ ] QA · Verify `docker compose up` from a clean state: app loads, `/api/health` OK, `/api/docs` reachable
+Sprint 2 · Size M · **Status: Done** — merged into `dev` in [#70](https://github.com/OrelTzarfaty/Mini-Jira/pull/70) · Depends on SETUP-3, SETUP-4, SETUP-5
+- [x] BE · API Dockerfile; runs `prisma migrate deploy` on start
+- [x] FE · Client Dockerfile: build the SPA and serve it with nginx
+- [x] FE · nginx config: proxy `/api` → `api`, fall back to `index.html` for SPA routes
+- [x] BE · `docker-compose.yml` with `client`, `api`, `db`
+- [x] BE · `.env.example` with every environment variable
+- [x] QA · Verify `docker compose up` from a clean state: app loads, `/api/health` OK, `/api/docs` reachable
 
 ### SETUP-8 · CI
 Sprint 2 · Size S · **Status: Done** — merged into `dev` in [#59](https://github.com/OrelTzarfaty/Mini-Jira/pull/59) · Depends on SETUP-1
@@ -152,11 +153,11 @@ Sprint 2 · Size S · **Status: Done** — merged into `dev` in [#59](https://gi
 - [x] You · Make CI required for merging into `main`
 
 ### SETUP-9 · E2E workspace
-Sprint 2 · Size M · Status: To do · Depends on SETUP-7
-- [ ] QA · Playwright config in `e2e/`, running against `docker compose`
-- [ ] QA · Seed/reset the database before the E2E run
-- [ ] QA · First smoke test: the app loads and the login page renders
-- [ ] QA · Add the E2E job to CI
+Sprint 2 · Size M · **Status: Done** — merged into `dev` in [#73](https://github.com/OrelTzarfaty/Mini-Jira/pull/73) · Depends on SETUP-7
+- [x] QA · Playwright config in `e2e/`, running against `docker compose`
+- [x] QA · Seed/reset the database before the E2E run
+- [x] QA · First smoke test: the app loads and the login page renders
+- [x] QA · Add the E2E job to CI
 - (Login fixtures per role come in AUTH-2, once login exists.)
 
 ### SETUP-10 · Mission command
@@ -168,24 +169,25 @@ Sprint 2 · Size S · **Status: Done** — merged into `dev` in [#57](https://gi
 Sprint 2 · Size S · **Status: Done** — merged into `dev` in [#63](https://github.com/OrelTzarfaty/Mini-Jira/pull/63); lean agents and QA in [#68](https://github.com/OrelTzarfaty/Mini-Jira/pull/68) · Depends on SETUP-10
 - [x] Claude · Light QA for pull requests that change only Markdown files, full QA for all others (`qa-engineer`, `/mission`, `CLAUDE.md`, engineering standards §11)
 - [x] QA · Review the change against the project rules
+- Follow-up (owner's decision, 2026-11-22): three QA levels — light, standard, and a full check of the whole app every 5th code PR — on branch `chore/SETUP-11-qa-every-5th-pr` ([#71](https://github.com/OrelTzarfaty/Mini-Jira/pull/71))
 
 ---
 
 ## E2 · Authentication — Sprint 2
 
 ### AUTH-1 · Register
-Sprint 2 · Size M · Status: To do · Depends on SETUP-4, SETUP-5
+Sprint 2 · Size M · **Status: Done** — merged into `dev` in [#72](https://github.com/OrelTzarfaty/Mini-Jira/pull/72); E2E test (and the E2E stack's `JWT_SECRET`) in [#75](https://github.com/OrelTzarfaty/Mini-Jira/pull/75) · Depends on SETUP-4, SETUP-5
 AC (extra): email stored lowercase · `409 EMAIL_TAKEN` · register logs the user in and lands on My Projects.
-- [ ] BE · Shared `registerSchema` (name, email, password 8–128 characters)
-- [ ] BE · `lib/auth-cookie.ts`: sign/verify the JWT (algorithm pinned to `HS256`) and set/clear the cookie (`httpOnly`, `sameSite: lax`, `secure` in production, 7 days) — reused by login and logout
-- [ ] BE · Register service: lowercase email, unique check (`409 EMAIL_TAKEN`), **Argon2id** hash
-- [ ] BE · `POST /api/auth/register` route + controller: set the auth cookie, return the user (never the hash); Swagger docs
-- [ ] FE · Landing page `/`: hero photo with white fade, headline, "Log in" / "Get started" (wireframe 01)
-- [ ] FE · Register popup (wireframe 01; `/register` opens the landing page with it open): fields, React Hook Form + zod, inline errors
-- [ ] FE · Register submit: button disabled while saving, server `details[]` mapped to fields, no lost input on error, redirect to My Projects
-- [ ] QA · Integration: success, duplicate email (any letter case), invalid email, short password
-- [ ] QA · Integration: password stored hashed and never returned
-- [ ] QA · E2E: register → lands on My Projects
+- [x] BE · Shared `registerSchema` (name, email, password 8–128 characters)
+- [x] BE · `lib/auth-cookie.ts`: sign/verify the JWT (algorithm pinned to `HS256`) and set/clear the cookie (`httpOnly`, `sameSite: lax`, `secure` in production, 7 days) — reused by login and logout
+- [x] BE · Register service: lowercase email, unique check (`409 EMAIL_TAKEN`), **Argon2id** hash
+- [x] BE · `POST /api/auth/register` route + controller: set the auth cookie, return the user (never the hash); Swagger docs
+- [x] FE · Landing page `/`: hero photo with white fade, headline, "Log in" / "Get started" (wireframe 01)
+- [x] FE · Register popup (wireframe 01; `/register` opens the landing page with it open): fields, React Hook Form + zod, inline errors
+- [x] FE · Register submit: button disabled while saving, server `details[]` mapped to fields, no lost input on error, redirect to My Projects
+- [x] QA · Integration: success, duplicate email (any letter case), invalid email, short password
+- [x] QA · Integration: password stored hashed and never returned
+- [x] QA · E2E: register → lands on My Projects
 
 ### AUTH-2 · Log in
 Sprint 2 · Size M · Status: To do · Depends on AUTH-1
@@ -504,13 +506,19 @@ Sprint 7 · Size S · Status: To do
 ## E11 · Ship — Sprint 8
 
 ### SHIP-1 · Deploy
-Sprint 8 · Size L · Status: To do
-- [ ] You · Choose the deployment target (architecture §11 #7) and update architecture.md + CLAUDE.md
-- [ ] BE · Deploy the database
-- [ ] BE · Deploy the API: env vars, run migrations
-- [ ] FE · Deploy the client
-- [ ] BE · Seed a demo account on the live demo
+Sprint 8 · Size L · Status: In progress
+- [x] You · Choose the deployment target (architecture §11 #7) and update architecture.md + CLAUDE.md — AWS, 2026-11-22 (architecture §13)
+- [ ] You · Create the AWS account, choose the Free plan, and create the Budgets alarms at $1 and $5 (first step, before anything else)
+- [ ] You · Decide the open deployment details (architecture §13: HTTPS, /api routing, region, networking) before the Terraform task
+- [ ] BE · Write Terraform in `infra/`: ECR, ECS Fargate, ALB (+ HTTPS per §13), RDS PostgreSQL 18, Secrets Manager, CloudWatch; smallest sizes, no NAT Gateway; plus a step-by-step guide explaining what each part creates, why, and what it costs (agents don't run it)
+- [ ] BE · Prepare the API deploy: secrets in Secrets Manager, migrations on start; add it to the guide
+- [ ] FE · Prepare the client deploy (nginx image on ECS Fargate); add it to the guide
+- [ ] BE · Write the GitHub Actions deploy workflow with OIDC (no stored AWS keys) and the guide for the IAM/OIDC role
+- [ ] You · Create the IAM/OIDC role, run `terraform apply` following the guide, and check the AWS console
+- [ ] BE · Prepare the demo seed and a guide to run it against RDS
+- [ ] You · Run the demo seed on the live database
 - [ ] QA · Smoke-test the live demo (login, board, ticket, list)
+- [ ] You · Remove everything with `terraform destroy` after the demo
 
 ### SHIP-2 · README
 Sprint 8 · Size S · Status: To do

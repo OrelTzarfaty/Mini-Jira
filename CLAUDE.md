@@ -28,7 +28,7 @@ A lightweight team task board: projects, members, tickets, a drag-and-drop board
 | Repo layout | **npm workspaces**: `shared/`, `server/`, `client/`, `e2e/` · GitHub: [OrelTzarfaty/Mini-Jira](https://github.com/OrelTzarfaty/Mini-Jira) | Decided |
 | Code quality | **TypeScript 6.0** (typescript-eslint doesn't support 7 yet), ESLint, Prettier | Decided |
 | Infra | Docker Compose (client, API, DB), GitHub Actions CI (lint, test, build) | Decided — Compose in SETUP-7, CI in SETUP-8 |
-| Deployment target | e.g. Render / Railway / Fly.io | **Open** (week 8) |
+| Deployment target | **AWS**: ECS Fargate (client + API) + RDS PostgreSQL 18, Terraform in `infra/`, deploys from GitHub Actions via OIDC; strict cost rules ([architecture §13](docs/architecture.md#13-deployment-aws)); open details (HTTPS, /api routing, region, networking) in architecture §13 | Decided 2026-11-22; built in week 8 (SHIP-1) |
 
 **Open decisions are the user's to make.** Don't pick one silently — propose options with trade-offs and ask. When a decision is made, move it to "Decided" here.
 
@@ -59,7 +59,7 @@ Confirmed defaults (architecture §11, confirmed 2026-11-17):
 - Register logs the user in.
 - Board returns up to 50 cards per column, with "load more" per column.
 - Auth cookie lasts 7 days, no refresh token.
-- Deployment target: chosen in week 8.
+- Deployment target: AWS (decided 2026-11-22, built in week 8). The owner does every AWS action himself (account, budgets, IAM/OIDC, `terraform apply`/`destroy`); agents only prepare code and step-by-step guides, never run changing AWS/Terraform commands.
 - Failed logins are limited per email + IP and per IP.
 - Every drag has a click/tap alternative: card `⋯` menu with Move to, Move up, Move down.
 
@@ -88,6 +88,7 @@ Endpoints so far (full details in Swagger at `/api/docs`):
 | `GET` | `/api/health` | Check that the API is running |
 | `GET` | `/api/openapi.json` | The OpenAPI description of the API |
 | `GET` | `/api/docs` | Swagger UI |
+| `POST` | `/api/auth/register` | Create an account and log in (sets the auth cookie) |
 
 ## Features
 
@@ -95,7 +96,7 @@ Summary only — task-level status lives in [docs/backlog.md](docs/backlog.md).
 
 | Area | IDs | Priority | Status |
 |---|---|---|---|
-| Authentication | AUTH-1..4 | P0 | Not started |
+| Authentication | AUTH-1..4 | P0 | In progress — AUTH-1 (register) done; AUTH-2..4 not started |
 | Projects & members | PRJ-1..6 | P0 | Not started |
 | Tickets | TKT-1..5 | P0 | Not started |
 | Board | BRD-1..4 | P0 | Not started |
@@ -116,13 +117,16 @@ Agents live in `.claude/agents/`:
 **Every mission uses the agents:**
 1. `backend-developer` does all `BE` tasks, and `frontend-developer` does all `FE` tasks.
 2. The pull request is opened into `dev`.
-3. **QA check (required):** `qa-engineer` tests the final commit of **every** pull request and gives a **PASS** or **FAIL** verdict. A pull request that changes only Markdown files gets a **light** check (CI result, a line-by-line content review, and a security review of agent instruction files); every other pull request gets the **full** check.
-4. On **FAIL**, the owning agent fixes the root cause and `qa-engineer` tests again.
+3. **QA check (required):** `qa-engineer` tests the final commit of **every** pull request and gives a **PASS** or **FAIL** verdict. Three levels (the owner's decision, 2026-11-22, to save usage):
+   - **Light:** a pull request that changes only Markdown files. CI result, a line-by-line content review, and a security review of agent instruction files.
+   - **Standard:** most code pull requests. Tests only that pull request's change, with a browser pass only for UI changes.
+   - **Full:** every **5th** code pull request into `dev` (counted with the `qa:standard` / `qa:full` labels), or whenever the owner asks. Tests **the whole app** from a clean `docker compose up`.
+4. On **FAIL**, the owning agent fixes the root cause and `qa-engineer` re-checks **only the fix**. The same applies to a finding fixed after a PASS.
 5. A pull request is merged only after a QA **PASS** on its final commit **and** the project owner's approval.
 
 **Browser checks:** `frontend-developer` and `qa-engineer` use the **Chrome DevTools MCP** (`chrome-devtools`, configured in the user's Claude settings, not in this repo) to check features in a real browser: console and network errors, multi-user scenarios via isolated contexts, phone width, slow/offline network, and Lighthouse accessibility. Only local URLs and seed test accounts. QA screenshots go in `qa-evidence/` (not committed).
 
-**E2E testing (Playwright):** `qa-engineer` writes, runs, and heals the Playwright E2E tests with the **`playwright-cli` skill** (`.claude/skills/playwright-cli`; CLI installed globally via `npm install -g @playwright/cli`), and explores features interactively with the **Playwright MCP** (`playwright`, user settings, runs with `--isolated`). Playwright output folders (`.playwright/`, `.playwright-cli/`, `test-results/`, `playwright-report/`) are not committed.
+**E2E testing (Playwright):** `qa-engineer` writes, runs, and heals the Playwright E2E tests with the **`playwright-cli` skill** (`.claude/skills/playwright-cli`; CLI installed globally via `npm install -g @playwright/cli`), and explores features interactively with the **Playwright MCP** (`playwright`, user settings, runs with `--isolated`). Tests live in `e2e/tests/` and run with `npm run test:e2e` against their own copy of the system (ports 8180 and 5434, in-memory database), so the run never touches development data. Playwright output folders (`.playwright/`, `.playwright-cli/`, `test-results/`, `playwright-report/`, `blob-report/`) are not committed.
 
 ## Design skills
 
@@ -154,8 +158,10 @@ Run from the repo root (Node.js 26 and a running Docker Desktop required):
 | `npm run lint` / `npm run lint:fix` | Check code with ESLint / apply automatic fixes |
 | `npm run format` / `npm run format:check` | Format code with Prettier / check formatting |
 | `npm run typecheck` | Type-check every workspace that has a `typecheck` script |
-| `npm test` | Prepare the code, start the test database, and run all tests |
+| `npm test` | Prepare the code, start the test database, and run all unit and integration tests (not E2E) |
 | `npm run db:test:down` | Stop the test database |
+| `npx playwright install chromium` | Download the browser for the E2E tests (first time, and after a Playwright update) |
+| `npm run test:e2e` | Run the Playwright E2E tests: build and start a separate copy of the whole system (`docker-compose.e2e.yml`, project `minijira-e2e`, app at `http://localhost:8180`, db on port 5434), reset and seed its database, run the tests, then stop it. Report in `e2e/playwright-report/` |
 | `npm run build` | Build every workspace that has a `build` script |
 | `docker compose up --build` | Build and run the whole system (`client`, `api`, `db`) at `http://localhost:8080`, Swagger at `/api/docs`; add `--detach --wait` to run it in the background |
 | `docker compose down` | Stop the whole system (the database volume is kept) |
@@ -164,11 +170,11 @@ Run `npm run build` after changing `shared/`, because other workspaces import it
 
 **shadcn/ui components:** add them from `client/` with `npx shadcn@4.23.0 add <name>` (set `npm_config_save_exact=true` so new packages are pinned, and don't overwrite files we changed). Then run `npm run format` and give each component function a return type (standards §5). The shadcn CSS lives in `client/src/styles/shadcn.css` (inlined with `shadcn eject`), so the `shadcn` package is not a dependency.
 
-**CI:** [.github/workflows/ci.yml](.github/workflows/ci.yml) runs on every PR into `dev` or `main` and on every push to them, in one job named `checks` (keep the name; branch protection uses it): `npm ci` → `npm audit --audit-level=high` → `lint` → `typecheck` → `build` → `format:check` → `npm test` (same Compose test database as locally). Pin every action to a full commit SHA with a version comment, and check workflow changes with `actionlint`.
+**CI:** [.github/workflows/ci.yml](.github/workflows/ci.yml) runs on every PR into `dev` or `main` and on every push to them, in two jobs. `checks` (keep the name; branch protection uses it): `npm ci` → `npm audit --audit-level=high` → `lint` → `typecheck` → `build` → `format:check` → `npm test` (same Compose test database as locally). `e2e`, next to it: `npm ci` → Playwright Chromium → `npm run test:e2e`; when it fails, it uploads the Playwright HTML report (traces, screenshots) as an artifact. Pin every action to a full commit SHA with a version comment, and check workflow changes with `actionlint`.
 
 **Branch protection:** `main` accepts changes only through a pull request, and `checks` (from GitHub Actions) must pass; the rules apply to admins too. `dev` blocks force-push and deletion only, so approved merges are pushed to it directly (see `/mission` step 7).
 
-**Full system (Docker):** after `cp .env.example .env`, `docker compose up --build` builds the images (`server/Dockerfile`, `client/Dockerfile`, build context = repo root) and serves the app at `http://localhost:8080`. nginx in `client` forwards `/api` to `api`, whose port isn't published. The `api` container runs `prisma migrate deploy` on start (so `prisma` is a server **dependency**, not a devDependency) and takes its settings from `docker-compose.yml`, not from the dev values in `.env`; only `POSTGRES_*` and `LOG_LEVEL` come from `.env`. It uses the same `db` service and volume as local development, so `npm run db:seed` (run on your computer) adds the demo data to it, and `npm run dev` can run at the same time.
+**Full system (Docker):** after `cp .env.example .env`, `docker compose up --build` builds the images (`server/Dockerfile`, `client/Dockerfile`, build context = repo root) and serves the app at `http://localhost:8080`. nginx in `client` forwards `/api` to `api`, whose port isn't published. The `api` container runs `prisma migrate deploy` on start (so `prisma` is a server **dependency**, not a devDependency) and takes its settings from `docker-compose.yml`, not from the dev values in `.env`; only `POSTGRES_*`, `LOG_LEVEL` and `JWT_SECRET` come from `.env`. Every `docker compose` command (also `npm run db:up`) stops with a clear message if `.env` has no `JWT_SECRET`: copy it from `.env.example` into an older `.env` (AUTH-1). It uses the same `db` service and volume as local development, so `npm run db:seed` (run on your computer) adds the demo data to it, and `npm run dev` can run at the same time.
 
 ## Keeping this file up to date
 

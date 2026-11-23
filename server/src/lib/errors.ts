@@ -34,3 +34,14 @@ export class NotFoundError extends AppError {
     super(ErrorCode.NOT_FOUND, message);
   }
 }
+
+type ConflictCode = Extract<
+  ErrorCode,
+  'EDIT_CONFLICT' | 'EMAIL_TAKEN' | 'PROJECT_KEY_TAKEN' | 'ALREADY_MEMBER' | 'CANNOT_REMOVE_OWNER'
+>;
+
+export class ConflictError extends AppError {
+  constructor(code: ConflictCode, message: string) {
+    super(code, message);
+  }
+}

@@ -8,7 +8,10 @@ describe('App', () => {
     render(<App />);
 
     expect(
-      await screen.findByRole('heading', { level: 1, name: 'Welcome to Mini-Jira' }),
+      await screen.findByRole('heading', {
+        level: 1,
+        name: "Plan, track and ship your team's work.",
+      }),
     ).toBeInTheDocument();
   });
 });

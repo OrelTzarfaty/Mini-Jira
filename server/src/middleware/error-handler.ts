@@ -7,9 +7,21 @@ import { AppError, NotFoundError, ValidationError } from '../lib/errors.js';
 const INVALID_REQUEST_MESSAGE = 'The request is invalid';
 const INTERNAL_ERROR_MESSAGE = 'Something went wrong. Please try again.';
 
-const REQUEST_ERROR_MESSAGES: Readonly<Record<string, string>> = {
-  'entity.parse.failed': 'The request body must be valid JSON',
-  'entity.too.large': 'The request body is too large',
+interface KnownRequestError {
+  code: ErrorCode;
+  message: string;
+}
+
+// Errors from the body parser (`express.json`), by their `type`.
+const KNOWN_REQUEST_ERRORS: Readonly<Record<string, KnownRequestError>> = {
+  'entity.parse.failed': {
+    code: ErrorCode.VALIDATION_ERROR,
+    message: 'The request body must be valid JSON',
+  },
+  'entity.too.large': {
+    code: ErrorCode.PAYLOAD_TOO_LARGE,
+    message: 'The request body is too large',
+  },
 };
 
 interface ClientRequestError {
@@ -31,9 +43,11 @@ function toAppError(error: unknown): AppError | undefined {
     return error;
   }
   if (isClientRequestError(error)) {
-    const message = error.type ? REQUEST_ERROR_MESSAGES[error.type] : undefined;
+    const known = error.type ? KNOWN_REQUEST_ERRORS[error.type] : undefined;
 
-    return new ValidationError(message ?? INVALID_REQUEST_MESSAGE);
+    return known
+      ? new AppError(known.code, known.message)
+      : new ValidationError(INVALID_REQUEST_MESSAGE);
   }
 
   return undefined;

@@ -1,0 +1,27 @@
+# A separate copy of the whole system for the Playwright E2E tests (e2e/). It is always used on
+# top of docker-compose.yml, under its own project name:
+#   docker compose -p minijira-e2e -f docker-compose.yml -f docker-compose.e2e.yml up --build --detach --wait
+# e2e/support/e2e-stack.ts runs it and supplies the POSTGRES_* values and a fake JWT_SECRET, so no
+# .env is needed.
+# The E2E run deletes all data, so this copy never shares a database, volume, or port with the
+# development system (8080, 5432) or the test database (5433).
+name: minijira-e2e
+
+services:
+  db:
+    # "!override" replaces the base file's list; otherwise Compose would add these ports to it.
+    ports: !override
+      - '127.0.0.1:5434:5432'
+    # Throwaway data, kept in memory only, like docker-compose.test.yml.
+    volumes: !reset []
+    tmpfs:
+      - /var/lib/postgresql
+
+  api:
+    environment:
+      # The CSRF origin check compares the browser's Origin header with this address.
+      CLIENT_ORIGIN: http://localhost:8180
+
+  client:
+    ports: !override
+      - '127.0.0.1:8180:8080'

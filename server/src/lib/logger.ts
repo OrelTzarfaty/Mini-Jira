@@ -9,6 +9,7 @@ const options = (level: string): LoggerOptions => ({
       'req.headers.authorization',
       'res.headers["set-cookie"]',
       '*.password',
+      '*.email',
       '*.passwordHash',
       '*.token',
     ],

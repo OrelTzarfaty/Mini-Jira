@@ -1,8 +1,8 @@
 import type { Server } from 'node:http';
 
+import type { Express } from 'express';
 import type { Logger } from 'pino';
 
-import { createApp } from './app.js';
 import { registerProcessHandlers } from './lib/shutdown.js';
 
 // Longer than the connection timeout, so a failed connection reports its own error first.
@@ -15,7 +15,7 @@ export interface StartupDatabase {
 
 export interface StartServerOptions {
   port: number;
-  clientOrigin: string;
+  app: Express;
   logger: Logger;
   database: StartupDatabase;
 }
@@ -39,7 +39,7 @@ async function checkDatabase(database: StartupDatabase): Promise<void> {
 
 export async function startServer({
   port,
-  clientOrigin,
+  app,
   logger,
   database,
 }: StartServerOptions): Promise<Server> {
@@ -50,7 +50,7 @@ export async function startServer({
     process.exit(1);
   }
 
-  const server = createApp({ logger, clientOrigin }).listen(port, (error) => {
+  const server = app.listen(port, (error) => {
     if (error) {
       logger.fatal({ err: error }, 'The API could not start');
       process.exit(1);

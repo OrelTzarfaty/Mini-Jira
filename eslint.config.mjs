@@ -15,9 +15,10 @@ export default defineConfig(
     '**/coverage/',
     '**/test-results/',
     '**/playwright-report/',
+    '**/blob-report/',
     '.claude/',
-    '.playwright/',
-    '.playwright-cli/',
+    '**/.playwright/',
+    '**/.playwright-cli/',
     'qa-evidence/',
   ]),
 

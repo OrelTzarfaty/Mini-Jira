@@ -101,8 +101,10 @@ describe('AppShell', () => {
     async (path) => {
       renderRoute(path);
 
-      await screen.findByRole('main');
-      expect(screen.queryByRole('banner')).not.toBeInTheDocument();
+      // hidden: on /register the page sits behind the popup, hidden from screen readers.
+      await screen.findByRole('main', { hidden: true });
+      // The landing page has its own visitor bar (wireframe 01), so look for the app's links.
+      expect(screen.queryByRole('navigation', { name: 'Main' })).not.toBeInTheDocument();
     },
   );
 });

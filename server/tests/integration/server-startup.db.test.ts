@@ -66,6 +66,7 @@ function spawnServer(databaseUrl: string, apiPort: number): ChildProcessWithoutN
       LOG_LEVEL: 'info',
       CLIENT_ORIGIN: 'http://localhost:5173',
       DATABASE_URL: databaseUrl,
+      JWT_SECRET: 'startup-test-secret-of-at-least-32-chars',
     },
   });
 }

@@ -1,12 +1,17 @@
 import { Router } from 'express';
 
+import { createAuthRouter } from './modules/auth/auth.routes.js';
+import type { AuthRouterOptions } from './modules/auth/auth.routes.js';
 import { createHealthRouter } from './modules/health/health.routes.js';
 import { createOpenApiRouter } from './openapi/openapi.routes.js';
 
-export function createApiRouter(): Router {
+export type ApiDependencies = AuthRouterOptions;
+
+export function createApiRouter(dependencies: ApiDependencies): Router {
   const router = Router();
 
   router.use(createHealthRouter());
+  router.use(createAuthRouter(dependencies));
   router.use(createOpenApiRouter());
 
   return router;

@@ -71,25 +71,27 @@ After each agent finishes, check its report and the commits before starting the 
 Start `qa-engineer` with the pull request link, the exact final commit, the mission's story ID, and the QA level:
 
 - **light** if the pull request changes only Markdown (`.md`) files
-- **full** for every other pull request
+- **full** if this is the 5th code pull request: at least 4 merged pull requests into `dev` have the `qa:standard` label since the most recently merged one with `qa:full`. Also full when the project owner asks for it.
+- **standard** for every other pull request
 
-Check with `git diff --name-only --no-renames origin/dev...<final-commit>`. Without `--no-renames`, a file renamed to `.md` hides its old name. The levels are described in `.claude/agents/qa-engineer.md`.
+Check the changed files with `git diff --name-only --no-renames origin/dev...<final-commit>`. Without `--no-renames`, a file renamed to `.md` hides its old name. To count, find the merge time of the most recently merged `qa:full` pull request (`gh pr list --base dev --state merged --label qa:full --json mergedAt --jq 'max_by(.mergedAt).mergedAt'`; the list is sorted by creation date, not merge date, so don't use `--limit 1`), then count the `qa:standard` pull requests merged after it (`gh pr list --base dev --state merged --label qa:standard --search "merged:><time>" --json number`). Add the level's label (`qa:standard` or `qa:full`) to the pull request; light pull requests get no label and don't count. The levels are described in `.claude/agents/qa-engineer.md`.
 
 - **PASS:** continue to step 6.
-- **FAIL:** send the findings to the owning agent, have it fix the root cause, push the fix yourself, and run the QA check again on the new commit.
+- **FAIL:** send the findings to the owning agent, have it fix the root cause, push the fix yourself, and ask `qa-engineer` for a **re-check after a fix** on the new commit: it tests only the fix, not the whole check again.
+- **A finding fixed after a PASS** (with the owner's OK) gets the same re-check after a fix.
 - After **3 failed QA rounds**, stop and report the remaining problems.
 
 ## 6. Report and ask
 
 Before you report, confirm both of these, or go back to step 5:
 
-- **The pull request's head commit is exactly the commit QA passed.** Any newer commit, including tests added by QA, needs a new QA check.
+- **The pull request's head commit is exactly the commit QA passed.** Any newer commit, including tests added by QA, needs a new QA check (a re-check after a fix is enough when only a fix was added).
 - **CI is green** on that commit (`gh pr checks <number>`). If the repository has no CI yet, say so.
 
 Update the pull request description if it no longer matches the work. Then tell the project owner, in simple English:
 
 - the pull request link
-- the QA verdict, its level (light or full), and the commit it tested
+- the QA verdict, its level (light, standard, or full, plus any re-check after a fix), and the commit it tested
 - the CI result
 - what was built
 - every open QA finding, including Medium and Low ones
