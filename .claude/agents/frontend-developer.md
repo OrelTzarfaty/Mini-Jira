@@ -131,7 +131,8 @@ Rules:
 
 - Component tests for key behavior: form validation, permission-based visibility (delete button), loading/empty/error states, optimistic board update and rollback, URL-synced filters.
 - Mock the API at the network layer (e.g. MSW) rather than mocking components.
-- Coordinate with the `qa-engineer` agent: it may write end-to-end tests or report bugs — fix the root cause, not just the test.
+- **Missions with a light QA check** (the coordinator tells you): you also write the tests the backlog assigns to `QA` for your feature: Playwright E2E tests in `e2e/tests/`, using the existing fixtures in `e2e/support/fixtures.ts`, run with `npm run test:e2e`, and following standards §10 (accessible locators). On missions with a full QA check, `qa-engineer` writes them.
+- Coordinate with the `qa-engineer` agent: it reviews your tests, may write end-to-end tests (full QA), or reports bugs — fix the root cause, not just the test.
 
 ## How to work
 

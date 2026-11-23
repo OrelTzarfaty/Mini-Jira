@@ -114,21 +114,21 @@ Out of scope unless the user asks: email, password reset, attachments, OAuth, sp
 Agents live in `.claude/agents/`:
 - **`backend-developer`** — Express API, PostgreSQL schema/migrations, auth, permissions, validation, seed script, backend tests.
 - **`frontend-developer`** — React client, board, forms, states, accessibility, frontend tests. Uses the design skills below.
-- **`qa-engineer`** — verifies acceptance criteria, writes API and E2E tests, reports bugs. Does not change app code.
+- **`qa-engineer`** — verifies acceptance criteria, writes API and E2E tests on full-QA missions (on light-QA missions the developer agents write them), reports bugs. Does not change app code.
 
 **Every mission uses the agents:**
 1. `backend-developer` does all `BE` tasks, and `frontend-developer` does all `FE` tasks.
 2. The pull request is opened into `dev`.
-3. **QA check (required):** `qa-engineer` tests the final commit of **every** pull request and gives a **PASS** or **FAIL** verdict. Three levels (the owner's decision, 2026-11-22, to save usage):
-   - **Light:** a pull request that changes only Markdown files. CI result, a line-by-line content review, and a security review of agent instruction files.
-   - **Standard:** most code pull requests. Tests only that pull request's change, with a browser pass only for UI changes.
-   - **Full:** every **5th** code pull request into `dev` (counted with the `qa:standard` / `qa:full` labels), or whenever the owner asks. Tests **the whole app** from a clean `docker compose up`.
+3. **QA check (required):** `qa-engineer` tests the final commit of **every** pull request and gives a **PASS** or **FAIL** verdict. Two levels (the owner's decision of 2026-11-22, changed 2026-11-23, to save usage):
+   - **Light** for a pull request that changes only Markdown files: CI result, a line-by-line content review, and a security review of agent instruction files.
+   - **Light** for a code pull request: the CI result and a quick review of the diff, label `qa:light`. The developer agents write the backlog's `QA` test tasks (API tests: `backend-developer`, E2E tests: `frontend-developer`).
+   - **Full:** every **5th** code pull request into `dev` (counted with the `qa:light` / `qa:full` labels; the old `qa:standard` label still counts), or whenever the owner asks. Tests **the whole app** from a clean `docker compose up`.
 4. On **FAIL**, the owning agent fixes the root cause and `qa-engineer` re-checks **only the fix**. The same applies to a finding fixed after a PASS.
 5. A pull request is merged only after a QA **PASS** on its final commit **and** the project owner's approval.
 
 **Browser checks:** `frontend-developer` and `qa-engineer` use the **Chrome DevTools MCP** (`chrome-devtools`, configured in the user's Claude settings, not in this repo) to check features in a real browser: console and network errors, multi-user scenarios via isolated contexts, phone width, slow/offline network, and Lighthouse accessibility. Only local URLs and seed test accounts. QA screenshots go in `qa-evidence/` (not committed).
 
-**E2E testing (Playwright):** `qa-engineer` writes, runs, and heals the Playwright E2E tests with the **`playwright-cli` skill** (`.claude/skills/playwright-cli`; CLI installed globally via `npm install -g @playwright/cli`), and explores features interactively with the **Playwright MCP** (`playwright`, user settings, runs with `--isolated`). Tests live in `e2e/tests/` and run with `npm run test:e2e` against their own copy of the system (ports 8180 and 5434, in-memory database), so the run never touches development data. Playwright output folders (`.playwright/`, `.playwright-cli/`, `test-results/`, `playwright-report/`, `blob-report/`) are not committed.
+**E2E testing (Playwright):** `qa-engineer` writes, runs, and heals the Playwright E2E tests on full-QA missions with the **`playwright-cli` skill** (`.claude/skills/playwright-cli`; CLI installed globally via `npm install -g @playwright/cli`), and explores features interactively with the **Playwright MCP** (`playwright`, user settings, runs with `--isolated`). On light-QA missions, `frontend-developer` writes the E2E tests. Tests live in `e2e/tests/` and run with `npm run test:e2e` against their own copy of the system (ports 8180 and 5434, in-memory database), so the run never touches development data. Playwright output folders (`.playwright/`, `.playwright-cli/`, `test-results/`, `playwright-report/`, `blob-report/`) are not committed.
 
 ## Design skills
 
