@@ -210,7 +210,7 @@ Sprint 2 · Size S · **Status: Done** — merged into `dev` in [#79](https://gi
 - [x] QA · API calls without the cookie return 401; E2E: Log out → landing page, cookie cleared
 
 ### AUTH-4 · Session survives refresh
-Sprint 2 · Size S · **Status: In progress** · Depends on AUTH-3
+Sprint 2 · Size S · **Status: In review** — [#81](https://github.com/OrelTzarfaty/Mini-Jira/pull/81) · Depends on AUTH-3
 - [x] BE · `GET /api/auth/me`
 - [x] FE · `useMe` query loaded on app start
 - [x] FE · `ProtectedRoute`: loading state, then the page or a redirect to `/login`
