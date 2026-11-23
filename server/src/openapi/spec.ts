@@ -64,6 +64,13 @@ const CLEAR_AUTH_COOKIE_HEADER = {
   },
 };
 
+const NO_STORE_HEADER = {
+  'Cache-Control': {
+    description: 'Always `no-store`: the response holds personal data.',
+    schema: { type: 'string', const: 'no-store' },
+  },
+};
+
 export function createOpenApiSpec(): Record<string, unknown> {
   return {
     openapi: '3.1.0',
@@ -175,8 +182,36 @@ export function createOpenApiSpec(): Record<string, unknown> {
           },
         },
       },
+      '/auth/me': {
+        get: {
+          tags: ['Auth'],
+          operationId: 'getMe',
+          summary: 'Get the logged-in user (restores the session after a page refresh)',
+          description: `AUTH-4. Reads the session from the auth cookie \`${AUTH_COOKIE_NAME}\` only (not an Authorization header). Answers with Cache-Control: no-store, so no browser or shared cache keeps the user's data.`,
+          security: [{ authCookie: [] }],
+          responses: {
+            '200': {
+              ...jsonResponse('The logged-in user', 'PublicUser'),
+              headers: NO_STORE_HEADER,
+            },
+            '401': jsonResponse(
+              'Not logged in (UNAUTHENTICATED): the cookie is missing, invalid or expired, or its user no longer exists; the answer never says which',
+              'ErrorResponse',
+            ),
+            '500': jsonResponse('Unexpected server error', 'ErrorResponse'),
+          },
+        },
+      },
     },
     components: {
+      securitySchemes: {
+        authCookie: {
+          type: 'apiKey',
+          in: 'cookie',
+          name: AUTH_COOKIE_NAME,
+          description: 'The session JWT set by register or login (AUTH-1, AUTH-2).',
+        },
+      },
       schemas: {
         ErrorResponse: toComponentSchema(errorResponseSchema),
         HealthResponse: toComponentSchema(healthResponseSchema),

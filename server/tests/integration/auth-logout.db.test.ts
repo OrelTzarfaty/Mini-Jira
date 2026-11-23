@@ -1,10 +1,7 @@
-import { Router } from 'express';
 import request from 'supertest';
 import { afterAll, beforeEach, describe, expect, it } from 'vitest';
 
 import { AUTH_COOKIE_NAME, createAuthCookie } from '../../src/lib/auth-cookie.js';
-import type { AuthCookie } from '../../src/lib/auth-cookie.js';
-import { createRequireAuth } from '../../src/middleware/require-auth.js';
 import { createAuthService } from '../../src/modules/auth/auth.service.js';
 import { createApiRouter } from '../../src/routes.js';
 import {
@@ -13,12 +10,7 @@ import {
   readAuthCookieAttributes,
 } from '../helpers/auth-response.js';
 import { resetDatabase, testPrisma } from '../helpers/database.js';
-import {
-  createMemoryLogger,
-  createTestApp,
-  TEST_JWT_SECRET,
-  testAuthCookie,
-} from '../helpers/test-app.js';
+import { createMemoryLogger, createTestApp, TEST_JWT_SECRET } from '../helpers/test-app.js';
 
 const LOGOUT_URL = '/api/auth/logout';
 const USER = {
@@ -48,23 +40,6 @@ const logOut = (cookie?: string, app = createTestApp()): request.Test => {
   return cookie === undefined ? test : test.set('Cookie', cookie);
 };
 
-/** The real API plus one route behind requireAuth (no real route uses it before AUTH-4). */
-function createAppWithPrivateRoute(
-  authCookie: AuthCookie = testAuthCookie,
-): ReturnType<typeof createTestApp> {
-  const apiRouter = Router();
-  apiRouter.use(createApiRouter({ prisma: testPrisma, authCookie }));
-  apiRouter.get(
-    '/private',
-    createRequireAuth(authCookie, createAuthService(testPrisma)),
-    (_req, res) => {
-      res.json({ ok: true });
-    },
-  );
-
-  return createTestApp({ apiRouter });
-}
-
 describe('POST /api/auth/logout', () => {
   let userId: string;
 
@@ -92,18 +67,17 @@ describe('POST /api/auth/logout', () => {
   });
 
   it('AUTH-3: after logout the browser no longer sends the session, so a protected route gets 401', async () => {
-    const app = createAppWithPrivateRoute();
-    const browser = request.agent(app);
+    const browser = request.agent(createTestApp());
     await sameOrigin(browser.post('/api/auth/login')).send({
       email: USER.email,
       password: USER.password,
     });
-    expect((await browser.get('/api/private')).status).toBe(200);
+    expect((await browser.get('/api/auth/me')).status).toBe(200);
 
     const response = await sameOrigin(browser.post(LOGOUT_URL));
 
     expect(response.status).toBe(204);
-    expect((await browser.get('/api/private')).status).toBe(401);
+    expect((await browser.get('/api/auth/me')).status).toBe(401);
   });
 
   it.each([
