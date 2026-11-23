@@ -1,5 +1,6 @@
 import { ErrorCode, healthResponseSchema } from '@mini-jira/shared';
-import { QueryClientProvider, useQuery } from '@tanstack/react-query';
+import { MutationObserver, QueryClientProvider, useQuery } from '@tanstack/react-query';
+import type { QueryClient } from '@tanstack/react-query';
 import { render, screen } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
 import type { ReactElement } from 'react';
@@ -8,8 +9,10 @@ import { describe, expect, it } from 'vitest';
 import { ApiError, ClientErrorCode, NO_RESPONSE_STATUS } from './api-error';
 import { apiRequest } from './client';
 import { createQueryClient, shouldRetry } from './query-client';
+import { ME_QUERY_KEY } from './query-keys';
 
 import { server } from '@/test/server';
+import { TEST_USER } from '@/test/session';
 
 // A screen that loads data the way every feature will: useQuery + apiRequest.
 function HealthStatus(): ReactElement {
@@ -85,5 +88,53 @@ describe('shouldRetry', () => {
     });
 
     expect(shouldRetry(0, networkError)).toBe(true);
+  });
+});
+
+describe('createQueryClient when the session ends (401)', () => {
+  function apiErrorWithCode(code: ErrorCode): ApiError {
+    return new ApiError({ status: 401, code, message: 'Not allowed' });
+  }
+
+  function loggedInQueryClient(): QueryClient {
+    const queryClient = createQueryClient();
+    queryClient.setQueryData(ME_QUERY_KEY, TEST_USER);
+
+    return queryClient;
+  }
+
+  it('AUTH-4: a query that gets 401 UNAUTHENTICATED marks the user as logged out', async () => {
+    const queryClient = loggedInQueryClient();
+
+    await queryClient
+      .fetchQuery({
+        queryKey: ['projects'],
+        queryFn: () => Promise.reject(apiErrorWithCode(ErrorCode.UNAUTHENTICATED)),
+      })
+      .catch(() => undefined);
+
+    expect(queryClient.getQueryData(ME_QUERY_KEY)).toBeNull();
+  });
+
+  it('AUTH-4: a mutation that gets 401 UNAUTHENTICATED marks the user as logged out', async () => {
+    const queryClient = loggedInQueryClient();
+    const mutation = new MutationObserver(queryClient, {
+      mutationFn: () => Promise.reject(apiErrorWithCode(ErrorCode.UNAUTHENTICATED)),
+    });
+
+    await mutation.mutate().catch(() => undefined);
+
+    expect(queryClient.getQueryData(ME_QUERY_KEY)).toBeNull();
+  });
+
+  it("AUTH-4: login's 401 INVALID_CREDENTIALS never logs anyone out", async () => {
+    const queryClient = loggedInQueryClient();
+    const mutation = new MutationObserver(queryClient, {
+      mutationFn: () => Promise.reject(apiErrorWithCode(ErrorCode.INVALID_CREDENTIALS)),
+    });
+
+    await mutation.mutate().catch(() => undefined);
+
+    expect(queryClient.getQueryData(ME_QUERY_KEY)).toEqual(TEST_USER);
   });
 });

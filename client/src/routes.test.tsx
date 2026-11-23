@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 
 import { renderRoute } from '@/test/render-route';
+import { mockLoggedIn } from '@/test/session';
 
 describe('routes', () => {
   it.each([
@@ -13,6 +14,7 @@ describe('routes', () => {
     ['/projects/WEB/settings', 'WEB settings'],
     ['/my-work', 'My Work'],
   ])('SETUP-5: %s shows the "%s" page with a matching tab title', async (path, title) => {
+    mockLoggedIn();
     renderRoute(path);
 
     expect(await screen.findByRole('heading', { level: 1, name: title })).toBeInTheDocument();

@@ -1,7 +1,7 @@
 import type { PublicUser } from '@mini-jira/shared';
 import { http, HttpResponse } from 'msw';
 
-import { server } from './server';
+import { server, visitorMeHandler } from './server';
 
 /** The user that logged-in tests use (wireframe 02 F). */
 export const TEST_USER: PublicUser = {
@@ -13,4 +13,9 @@ export const TEST_USER: PublicUser = {
 /** Makes GET /api/auth/me answer with the user, as if the browser held a valid session (AUTH-4). */
 export function mockLoggedIn(user: PublicUser = TEST_USER): void {
   server.use(http.get('/api/auth/me', () => HttpResponse.json(user)));
+}
+
+/** Makes GET /api/auth/me answer 401 again, as after the API cleared the cookie (logout). */
+export function mockLoggedOut(): void {
+  server.use(visitorMeHandler);
 }

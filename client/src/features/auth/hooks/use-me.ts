@@ -47,3 +47,17 @@ export function startSession(queryClient: QueryClient, user: PublicUser): void {
   queryClient.removeQueries();
   queryClient.setQueryData(ME_QUERY_KEY, user);
 }
+
+/**
+ * The logged-in user, for components under ProtectedRoute: it renders them only once the user
+ * is known, so a missing user here is a programming mistake, not a state to handle.
+ */
+export function useCurrentUser(): PublicUser {
+  const { data: user } = useMe();
+
+  if (!user) {
+    throw new Error('useCurrentUser must be used under ProtectedRoute');
+  }
+
+  return user;
+}

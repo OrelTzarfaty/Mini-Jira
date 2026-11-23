@@ -3,7 +3,7 @@ import { http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
 
 /** Every page asks who is logged in (AUTH-4), so this one answer is the default: a visitor. */
-const visitorMeHandler = http.get('/api/auth/me', () =>
+export const visitorMeHandler = http.get('/api/auth/me', () =>
   HttpResponse.json(
     { error: { code: ErrorCode.UNAUTHENTICATED, message: UNAUTHENTICATED_MESSAGE } },
     { status: 401 },
