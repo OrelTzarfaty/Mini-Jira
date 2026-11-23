@@ -1,8 +1,13 @@
 import type { ReactElement } from 'react';
 
-import { PlaceholderPage } from '@/components/placeholder-page';
+import { AuthPopup } from '@/features/auth/components/auth-popup';
+import { LoginForm } from '@/features/auth/components/login-form';
 
-// TODO(AUTH-2): show the landing page with the Log in popup open (wireframe 01 B).
+/** /login: the landing page (the parent route) with the Log in popup open (wireframe 01 B). */
 export function LoginPage(): ReactElement {
-  return <PlaceholderPage title="Log in" />;
+  return (
+    <AuthPopup title="Log in to Mini-Jira" tabTitle="Log in">
+      <LoginForm />
+    </AuthPopup>
+  );
 }

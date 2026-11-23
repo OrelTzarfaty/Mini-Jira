@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import type { ReactElement } from 'react';
 import { Link, useOutlet } from 'react-router';
 
@@ -47,10 +48,13 @@ function LandingTopBar(): ReactElement {
  * narrower screens the photo sits on top, cropped to the person and the monitor, and the text
  * sits below it on plain white.
  *
- * /register renders its popup in the Outlet, over this page (wireframe 01 C).
+ * /login and /register render their popup in the Outlet, over this page (wireframe 01 B and C).
  */
 export function LandingPage(): ReactElement {
-  const popup = useOutlet();
+  // What opened the Log in or Register popup, so focus can return to it on close. It lives
+  // here, not in the popup, so it survives a switch from one popup to the other.
+  const popupOpenerRef = useRef<HTMLElement | null>(null);
+  const popup = useOutlet(popupOpenerRef);
 
   return (
     <div className="flex min-h-svh flex-col">

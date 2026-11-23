@@ -190,15 +190,15 @@ AC (extra): email stored lowercase · `409 EMAIL_TAKEN` · register logs the use
 - [x] QA · E2E: register → lands on My Projects
 
 ### AUTH-2 · Log in
-Sprint 2 · Size M · Status: To do · Depends on AUTH-1
+Sprint 2 · Size M · **Status: In review** — [#78](https://github.com/OrelTzarfaty/Mini-Jira/pull/78) · Depends on AUTH-1
 AC (extra): one generic `401 INVALID_CREDENTIALS` for unknown email and wrong password · rate-limited (`429`).
-- [ ] BE · `POST /api/auth/login`: verify the password, set the auth cookie (helper from AUTH-1), generic 401 on failure; an unknown email still runs a hash
-- [ ] BE · Login rate limits (`429 RATE_LIMITED`): failed attempts per email + IP (5 per 15 minutes) and per IP (100 per day)
-- [ ] FE · Log in popup with a generic error message (wireframe 01; `/login` opens the landing page with it open)
-- [ ] QA · Integration: same error for unknown email vs. wrong password; cookie flags
-- [ ] QA · Integration: both rate limits kick in (email + IP, and IP)
-- [ ] QA · E2E login fixtures: log in as owner / member / outsider (used by all later E2E tests)
-- [ ] QA · E2E: login → My Projects
+- [x] BE · `POST /api/auth/login`: verify the password, set the auth cookie (helper from AUTH-1), generic 401 on failure; an unknown email still runs a hash
+- [x] BE · Login rate limits (`429 RATE_LIMITED`): failed attempts per email + IP (5 per 15 minutes) and per IP (100 per day)
+- [x] FE · Log in popup with a generic error message (wireframe 01; `/login` opens the landing page with it open)
+- [x] QA · Integration: same error for unknown email vs. wrong password; cookie flags
+- [x] QA · Integration: both rate limits kick in (email + IP, and IP)
+- [x] QA · E2E login fixtures: log in as owner / member / outsider (used by all later E2E tests)
+- [x] QA · E2E: login → My Projects
 
 ### AUTH-3 · Log out
 Sprint 2 · Size S · Status: To do · Depends on AUTH-2

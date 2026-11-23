@@ -1,4 +1,4 @@
-import { ERROR_HTTP_STATUS, ErrorCode } from '@mini-jira/shared';
+import { ERROR_HTTP_STATUS, ErrorCode, INVALID_CREDENTIALS_MESSAGE } from '@mini-jira/shared';
 import type { ErrorDetail } from '@mini-jira/shared';
 
 export class AppError extends Error {
@@ -20,6 +20,13 @@ export class AppError extends Error {
 export class ValidationError extends AppError {
   constructor(message: string, details?: ErrorDetail[]) {
     super(ErrorCode.VALIDATION_ERROR, message, details);
+  }
+}
+
+// AUTH-2: one error for an unknown email and a wrong password, so the answer never says which.
+export class InvalidCredentialsError extends AppError {
+  constructor() {
+    super(ErrorCode.INVALID_CREDENTIALS, INVALID_CREDENTIALS_MESSAGE);
   }
 }
 
