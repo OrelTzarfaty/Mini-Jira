@@ -101,7 +101,10 @@ export const listProjectsQuerySchema = paginationQuerySchema;
 
 export type ListProjectsQuery = z.infer<typeof listProjectsQuerySchema>;
 
-// PRJ-2: one card on the My Projects page: the project with the caller's role.
-export const projectListItemSchema = projectSchema;
+// PRJ-2: one card on the My Projects page: the project with the caller's role and the number of
+// its tickets that aren't Done.
+export const projectListItemSchema = projectSchema.extend({
+  openTicketCount: z.number().int().min(0),
+});
 
 export type ProjectListItem = z.infer<typeof projectListItemSchema>;

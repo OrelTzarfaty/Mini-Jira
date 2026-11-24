@@ -56,6 +56,17 @@ const projectKeyTaken = (): ConflictError =>
   ]);
 
 export function createProjectsService(prisma: PrismaClient): ProjectsService {
+  /**
+   * PRJ-2: the number of open tickets (status not DONE) in each of these projects, for the
+   * project cards. Projects missing from the map have none.
+   */
+  function countOpenTickets(projectIds: readonly string[]): Promise<ReadonlyMap<string, number>> {
+    // TODO(TKT-1): there is no Ticket model yet, so every project has 0 open tickets. Replace
+    // with one grouped query once tickets exist:
+    // prisma.ticket.groupBy({ by: ['projectId'], where: { projectId: { in: projectIds }, status: { not: 'DONE' } }, _count: true })
+    return Promise.resolve(new Map(projectIds.map((projectId) => [projectId, 0])));
+  }
+
   return {
     // PRJ-1: the schema already trimmed the input and uppercased the key, so the unique index
     // on key also blocks the same key in another letter case.
@@ -114,9 +125,15 @@ export function createProjectsService(prisma: PrismaClient): ProjectsService {
         prisma.projectMember.count({ where }),
       ]);
 
+      // One count query for the whole page, not one per project.
+      const openTicketCounts = await countOpenTickets(memberships.map(({ project }) => project.id));
+
       return {
         items: memberships.map(({ project, role }) =>
-          projectListItemSchema.parse(toProjectResponse(project, role)),
+          projectListItemSchema.parse({
+            ...toProjectResponse(project, role),
+            openTicketCount: openTicketCounts.get(project.id) ?? 0,
+          }),
         ),
         page,
         pageSize: PAGE_SIZE,
