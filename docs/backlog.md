@@ -233,9 +233,9 @@ AC (extra): key 2–6 uppercase, unique (`409 PROJECT_KEY_TAKEN`), immutable · 
 
 ### PRJ-2 · My Projects list
 Sprint 3 · Size M · **Status: In progress** · Depends on PRJ-1
-- [ ] BE · `GET /api/projects`: only my projects, my role, paginated
-- [ ] BE · Open-ticket count per project (status ≠ DONE) in the same response — 0 until tickets exist
-- [ ] BE · Optional `q` search by project name or key (used by the project dropdown)
+- [x] BE · `GET /api/projects`: only my projects, my role, paginated
+- [x] BE · Open-ticket count per project (status ≠ DONE) in the same response — 0 until tickets exist
+- [x] BE · Optional `q` search by project name or key (used by the project dropdown)
 - [ ] FE · `/projects` page: project cards (key, name, role, open tickets) + "Show more" (wireframe 02)
 - [ ] FE · Loading, empty (with a "Create project" call to action), and error states
 - [ ] FE · Project dropdown in the top bar: search, current project ✓, "View all projects", "+ Create project" (wireframe 02 E)

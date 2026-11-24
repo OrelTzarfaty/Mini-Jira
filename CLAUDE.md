@@ -92,6 +92,7 @@ Endpoints so far (full details in Swagger at `/api/docs`):
 | `POST` | `/api/auth/login` | Log in (sets the auth cookie); generic `401 INVALID_CREDENTIALS`, failed logins limited per email + IP and per IP (`429 RATE_LIMITED`) |
 | `POST` | `/api/auth/logout` | Log out: always `204` and clears the auth cookie (public, so a missing or expired session never gets `401`) |
 | `GET` | `/api/auth/me` | The logged-in user (`id`, `name`, `email`), `Cache-Control: no-store`; `401 UNAUTHENTICATED` without a valid session. The web app calls it on start to restore the session |
+| `GET` | `/api/projects?q&page` | My Projects: only projects the caller is a member of, with their `role` and `openTicketCount` (status ≠ Done; 0 until tickets exist), sorted by name then key, page size 20 (`{ items, page, pageSize, total, totalPages }`). Optional `q` searches name or key (case-insensitive; `%`/`_` literal). `Cache-Control: no-store`; unknown params → `400` |
 | `POST` | `/api/projects` | Create a project (`name`, `key`, optional `description`); the key is uppercased, must be 2–6 letters and can't be changed later. The creator becomes Owner in the same transaction. `201` with the project and `role`; `409 PROJECT_KEY_TAKEN` |
 | `GET` | `/api/projects/:projectKey` | One project with the caller's `role` (members only). A missing project and a non-member get the same `404 NOT_FOUND` ("Project not found"), so the response never reveals that a project exists. All project routes use `loadProjectAccess` (404) and owner-only ones add `requireOwner` (403) |
 
