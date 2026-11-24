@@ -1,6 +1,51 @@
 import { describe, expect, it } from 'vitest';
 
-import { memberPageSchema, memberSchema } from './members.js';
+import {
+  addMemberSchema,
+  alreadyMemberMessage,
+  memberPageSchema,
+  memberSchema,
+  USER_NOT_FOUND_MESSAGE,
+} from './members.js';
+
+/** The messages zod reports for the email field, so tests check the exact text the user sees. */
+const emailMessages = (input: unknown): string[] => {
+  const result = addMemberSchema.safeParse(input);
+  if (result.success) return [];
+
+  return result.error.issues.map((issue) => issue.message);
+};
+
+describe('addMemberSchema', () => {
+  it('PRJ-3: trims and lowercases the email like register does', () => {
+    expect(addMemberSchema.parse({ email: '  Avi@MiniJira.TEST ' })).toEqual({
+      email: 'avi@minijira.test',
+    });
+  });
+
+  it.each([
+    ['missing', {}, 'Email is required'],
+    ['empty', { email: '   ' }, 'Email is required'],
+    ['not an email', { email: 'avi' }, 'Enter a valid email address'],
+  ])('PRJ-3: rejects an email that is %s', (_description, input, message) => {
+    expect(emailMessages(input)).toEqual([message]);
+  });
+
+  it('PRJ-3: rejects unknown fields, so a role can never be sent', () => {
+    expect(addMemberSchema.safeParse({ email: 'avi@minijira.test', role: 'OWNER' }).success).toBe(
+      false,
+    );
+  });
+});
+
+describe('member messages', () => {
+  it('PRJ-3: uses the wireframe 06 C texts', () => {
+    expect(USER_NOT_FOUND_MESSAGE).toBe(
+      'No Mini-Jira user with this email. They need to register first.',
+    );
+    expect(alreadyMemberMessage('Avi Ben')).toBe('Avi Ben is already a member.');
+  });
+});
 
 const member = {
   userId: '0b7c9f3e-4a51-4c4e-9a52-2f1f7f0f9d11',

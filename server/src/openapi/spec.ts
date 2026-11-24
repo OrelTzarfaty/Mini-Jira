@@ -1,4 +1,5 @@
 import {
+  addMemberSchema,
   createProjectSchema,
   errorResponseSchema,
   healthResponseSchema,
@@ -310,6 +311,44 @@ export function createOpenApiSpec(): Record<string, unknown> {
             '500': jsonResponse('Unexpected server error', 'ErrorResponse'),
           },
         },
+        post: {
+          tags: ['Projects'],
+          operationId: 'addProjectMember',
+          summary: 'Add a registered user to the project by email (owner only)',
+          description:
+            'PRJ-3. Only the project owner may add members; the new member gets the MEMBER role. The email is trimmed and lowercased like at register, so it matches in any letter case. Only registered users can be added: an unknown email gets 404 USER_NOT_FOUND (so the owner can tell whether an email is registered, which the requirement asks for). A user who is already in the project, including the owner, gets 409 ALREADY_MEMBER, also when two adds race. Unknown fields are rejected. Browsers must send the request from the web app (same origin), or it gets 403.',
+          security: [{ authCookie: [] }],
+          parameters: [PROJECT_KEY_PARAMETER],
+          requestBody: jsonRequestBody('AddMemberRequest'),
+          responses: {
+            '201': jsonResponse('The user was added as a MEMBER', 'Member'),
+            '400': jsonResponse(
+              'Invalid input (VALIDATION_ERROR), with one entry in details[] per field',
+              'ErrorResponse',
+            ),
+            '401': jsonResponse(
+              'Not logged in (UNAUTHENTICATED): the cookie is missing, invalid or expired, or its user no longer exists',
+              'ErrorResponse',
+            ),
+            '403': jsonResponse(
+              'The caller is a member but not the owner (FORBIDDEN, "Only the project owner can do this"), or a cross-site request (FORBIDDEN)',
+              'ErrorResponse',
+            ),
+            '404': jsonResponse(
+              'No such project or the caller is not a member of it (NOT_FOUND, "Project not found"), or no user has this email (USER_NOT_FOUND, with details[] on the email field)',
+              'ErrorResponse',
+            ),
+            '409': jsonResponse(
+              'The user is already a member of the project (ALREADY_MEMBER), with details[] on the email field',
+              'ErrorResponse',
+            ),
+            '413': jsonResponse(
+              'The request body is over 100 kB (PAYLOAD_TOO_LARGE)',
+              'ErrorResponse',
+            ),
+            '500': jsonResponse('Unexpected server error', 'ErrorResponse'),
+          },
+        },
       },
     },
     components: {
@@ -322,6 +361,7 @@ export function createOpenApiSpec(): Record<string, unknown> {
         },
       },
       schemas: {
+        AddMemberRequest: toComponentSchema(addMemberSchema, 'input'),
         ErrorResponse: toComponentSchema(errorResponseSchema),
         CreateProjectRequest: toComponentSchema(createProjectSchema, 'input'),
         HealthResponse: toComponentSchema(healthResponseSchema),

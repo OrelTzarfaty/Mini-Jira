@@ -122,6 +122,25 @@ describe('GET /api/openapi.json', () => {
     ]);
   });
 
+  it('PRJ-3: documents the add-member endpoint with its responses', async () => {
+    const spec = await getSpec();
+    const operation = spec.paths['/projects/{projectKey}/members']?.post;
+
+    expect(Object.keys(operation?.responses ?? {})).toEqual([
+      '201',
+      '400',
+      '401',
+      '403',
+      '404',
+      '409',
+      '413',
+      '500',
+    ]);
+    expect(operation?.parameters).toEqual([
+      expect.objectContaining({ name: 'projectKey', in: 'path', required: true }),
+    ]);
+  });
+
   it('SETUP-3: builds the error schema from the shared error codes', async () => {
     const spec = await getSpec();
 

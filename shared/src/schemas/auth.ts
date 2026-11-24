@@ -11,11 +11,11 @@ export const PASSWORD_MAX_LENGTH = 128;
 
 const passwordMaxMessage = `Password must be at most ${PASSWORD_MAX_LENGTH} characters`;
 
-// AUTH-1/AUTH-2: one email rule for register and login, so the same address always
-// normalizes to the same stored value. Zod schemas are immutable, so sharing one is safe.
+// AUTH-1/AUTH-2/PRJ-3: one email rule for register, login and "add a member", so the same
+// address always normalizes to the stored value. Zod schemas are immutable, so sharing is safe.
 // Trim and lowercase first, then check the format: zod 4 runs checks in order, so the
 // format check must see the cleaned value (" Ana@Example.COM " → "ana@example.com").
-const emailField = requiredString('Email')
+export const emailField = requiredString('Email')
   .trim()
   .toLowerCase()
   .min(1, 'Email is required')

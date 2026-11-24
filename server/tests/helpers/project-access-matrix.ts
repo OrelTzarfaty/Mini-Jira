@@ -93,7 +93,7 @@ export async function createProjectAccessMatrix({
     name,
     description,
   });
-  // Inserted directly until PRJ-3 adds the "add member" endpoint.
+  // Inserted directly: faster than the PRJ-3 endpoint, and independent of it.
   await testPrisma.projectMember.create({
     data: { projectId: created.id, userId: member.id, role: Role.MEMBER },
   });
