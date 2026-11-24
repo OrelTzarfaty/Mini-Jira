@@ -32,13 +32,15 @@ export interface Credentials {
 }
 
 /**
- * The API as the web app calls it. The Origin header makes the request same-origin for the
- * API's CSRF check (server/src/middleware/origin-check.ts), which rejects any other caller.
+ * The API as the web app calls it, logged out or with a session. The Origin header makes the
+ * request same-origin for the API's CSRF check (server/src/middleware/origin-check.ts), which
+ * rejects any other caller.
  */
-function newApiContext(): Promise<APIRequestContext> {
+export function newApiContext(storageState?: StorageState): Promise<APIRequestContext> {
   return request.newContext({
     baseURL: E2E_BASE_URL,
     extraHTTPHeaders: { Origin: E2E_BASE_URL },
+    storageState,
   });
 }
 
