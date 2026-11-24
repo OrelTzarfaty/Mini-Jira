@@ -12,6 +12,7 @@ import { BoardPage } from '@/features/board/pages/board-page';
 import { ListPage } from '@/features/list/pages/list-page';
 import { MyWorkPage } from '@/features/my-work/pages/my-work-page';
 import { ProjectLayout } from '@/features/projects/components/project-layout';
+import { ProjectTabsLayout } from '@/features/projects/components/project-tabs-layout';
 import { MyProjectsPage } from '@/features/projects/pages/my-projects-page';
 import { ProjectSettingsPage } from '@/features/projects/pages/project-settings-page';
 import { TicketPage } from '@/features/tickets/pages/ticket-page';
@@ -61,10 +62,16 @@ export const routes: RouteObject[] = [
                     children: [
                       // /projects/WEB alone is no screen (architecture §5.2).
                       { index: true, Component: NotFoundPage },
-                      { path: 'board', Component: BoardPage },
-                      { path: 'list', Component: ListPage },
+                      {
+                        // The project header with the Board · List · Settings tabs (wireframe 03).
+                        Component: ProjectTabsLayout,
+                        children: [
+                          { path: 'board', Component: BoardPage },
+                          { path: 'list', Component: ListPage },
+                          { path: 'settings', Component: ProjectSettingsPage },
+                        ],
+                      },
                       { path: 'tickets/:ticketKey', Component: TicketPage },
-                      { path: 'settings', Component: ProjectSettingsPage },
                     ],
                   },
                   { path: '/my-work', Component: MyWorkPage },
