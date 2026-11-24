@@ -3,6 +3,10 @@ import {
   errorResponseSchema,
   healthResponseSchema,
   loginSchema,
+  MAX_PAGE,
+  memberPageSchema,
+  memberSchema,
+  PAGE_SIZE,
   projectSchema,
   publicUserSchema,
   registerSchema,
@@ -80,6 +84,15 @@ const PROJECT_KEY_PARAMETER = {
   required: true,
   description: 'The project key, exactly as stored: 2-6 uppercase letters A-Z (e.g. WEB)',
   schema: { type: 'string', pattern: '^[A-Z]{2,6}$', example: 'WEB' },
+};
+
+// LST-4: the query parameter of every paginated list.
+const PAGE_QUERY_PARAMETER = {
+  name: 'page',
+  in: 'query',
+  required: false,
+  description: `The 1-based page number; each page has up to ${PAGE_SIZE} items. A page after the last one returns no items.`,
+  schema: { type: 'integer', minimum: 1, maximum: MAX_PAGE, default: 1 },
 };
 
 export function createOpenApiSpec(): Record<string, unknown> {
@@ -272,6 +285,32 @@ export function createOpenApiSpec(): Record<string, unknown> {
           },
         },
       },
+      '/projects/{projectKey}/members': {
+        get: {
+          tags: ['Projects'],
+          operationId: 'listProjectMembers',
+          summary: 'List the members of a project',
+          description: `PRJ-3. Any member of the project may list its members, ${PAGE_SIZE} per page: the owner first, then by the time they joined (oldest first). Unknown query parameters are rejected. A project that does not exist and a project the caller is not a member of get the same 404.`,
+          security: [{ authCookie: [] }],
+          parameters: [PROJECT_KEY_PARAMETER, PAGE_QUERY_PARAMETER],
+          responses: {
+            '200': jsonResponse('One page of members', 'MemberPage'),
+            '400': jsonResponse(
+              'Invalid query string (VALIDATION_ERROR), with one entry in details[] per parameter',
+              'ErrorResponse',
+            ),
+            '401': jsonResponse(
+              'Not logged in (UNAUTHENTICATED): the cookie is missing, invalid or expired, or its user no longer exists',
+              'ErrorResponse',
+            ),
+            '404': jsonResponse(
+              'No such project, or the caller is not a member of it (NOT_FOUND, "Project not found")',
+              'ErrorResponse',
+            ),
+            '500': jsonResponse('Unexpected server error', 'ErrorResponse'),
+          },
+        },
+      },
     },
     components: {
       securitySchemes: {
@@ -287,6 +326,8 @@ export function createOpenApiSpec(): Record<string, unknown> {
         CreateProjectRequest: toComponentSchema(createProjectSchema, 'input'),
         HealthResponse: toComponentSchema(healthResponseSchema),
         LoginRequest: toComponentSchema(loginSchema, 'input'),
+        Member: toComponentSchema(memberSchema),
+        MemberPage: toComponentSchema(memberPageSchema),
         Project: toComponentSchema(projectSchema),
         PublicUser: toComponentSchema(publicUserSchema),
         RegisterRequest: toComponentSchema(registerSchema, 'input'),
