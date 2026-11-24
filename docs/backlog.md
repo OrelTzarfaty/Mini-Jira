@@ -222,7 +222,7 @@ Sprint 2 · Size S · **Status: Done** — merged into `dev` in [#81](https://gi
 ## E3 · Projects & members — Sprint 3
 
 ### PRJ-1 · Create project
-Sprint 3 · Size M · **Status: Done** (#82, 8b550ba) · Depends on AUTH-4
+Sprint 3 · Size M · **Status: Done** — merged into `dev` in [#82](https://github.com/OrelTzarfaty/Mini-Jira/pull/82) (`8b550ba`); light QA PASS · Depends on AUTH-4
 AC (extra): key 2–6 uppercase, unique (`409 PROJECT_KEY_TAKEN`), immutable · creator gets an OWNER membership in the same transaction.
 - [x] BE · Migration: `Project` (with `ticketCounter`), `ProjectMember` (role) + indexes
 - [x] BE · Shared `createProjectSchema` (key 2–6 uppercase letters)
