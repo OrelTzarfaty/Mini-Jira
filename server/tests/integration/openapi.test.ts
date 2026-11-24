@@ -6,7 +6,10 @@ import { createTestApp } from '../helpers/test-app.js';
 
 interface OpenApiSpec {
   openapi: string;
-  paths: Record<string, Record<string, { responses: Record<string, unknown> }>>;
+  paths: Record<
+    string,
+    Record<string, { responses: Record<string, unknown>; parameters?: unknown[] }>
+  >;
   components: {
     schemas: Record<
       string,
@@ -96,6 +99,16 @@ describe('GET /api/openapi.json', () => {
     ]);
     // The internal counter is never part of the documented response.
     expect(JSON.stringify(spec.components.schemas.Project)).not.toContain('ticketCounter');
+  });
+
+  it('PRJ-6: documents the get-project endpoint with its path parameter and responses', async () => {
+    const spec = await getSpec();
+    const operation = spec.paths['/projects/{projectKey}']?.get;
+
+    expect(Object.keys(operation?.responses ?? {})).toEqual(['200', '401', '404', '500']);
+    expect(operation?.parameters).toEqual([
+      expect.objectContaining({ name: 'projectKey', in: 'path', required: true }),
+    ]);
   });
 
   it('SETUP-3: builds the error schema from the shared error codes', async () => {

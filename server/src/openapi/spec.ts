@@ -73,6 +73,15 @@ const NO_STORE_HEADER = {
   },
 };
 
+// PRJ-6: the path parameter of every /projects/{projectKey}/... route.
+const PROJECT_KEY_PARAMETER = {
+  name: 'projectKey',
+  in: 'path',
+  required: true,
+  description: 'The project key, exactly as stored: 2-6 uppercase letters A-Z (e.g. WEB)',
+  schema: { type: 'string', pattern: '^[A-Z]{2,6}$', example: 'WEB' },
+};
+
 export function createOpenApiSpec(): Record<string, unknown> {
   return {
     openapi: '3.1.0',
@@ -234,6 +243,29 @@ export function createOpenApiSpec(): Record<string, unknown> {
             ),
             '413': jsonResponse(
               'The request body is over 100 kB (PAYLOAD_TOO_LARGE)',
+              'ErrorResponse',
+            ),
+            '500': jsonResponse('Unexpected server error', 'ErrorResponse'),
+          },
+        },
+      },
+      '/projects/{projectKey}': {
+        get: {
+          tags: ['Projects'],
+          operationId: 'getProject',
+          summary: 'Get a project the caller is a member of',
+          description:
+            'PRJ-6. Returns the project with the role the caller has in it (OWNER or MEMBER). The key in the URL is matched exactly: it must be the stored uppercase key ("WEB", not "web"). A project that does not exist and a project the caller is not a member of get the same 404, so the answer never reveals whether the project exists.',
+          security: [{ authCookie: [] }],
+          parameters: [PROJECT_KEY_PARAMETER],
+          responses: {
+            '200': jsonResponse("The project; role is the caller's role in it", 'Project'),
+            '401': jsonResponse(
+              'Not logged in (UNAUTHENTICATED): the cookie is missing, invalid or expired, or its user no longer exists',
+              'ErrorResponse',
+            ),
+            '404': jsonResponse(
+              'No such project, or the caller is not a member of it (NOT_FOUND, "Project not found")',
               'ErrorResponse',
             ),
             '500': jsonResponse('Unexpected server error', 'ErrorResponse'),

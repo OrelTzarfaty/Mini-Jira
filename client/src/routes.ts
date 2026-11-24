@@ -11,6 +11,7 @@ import { RegisterPage } from '@/features/auth/pages/register-page';
 import { BoardPage } from '@/features/board/pages/board-page';
 import { ListPage } from '@/features/list/pages/list-page';
 import { MyWorkPage } from '@/features/my-work/pages/my-work-page';
+import { ProjectLayout } from '@/features/projects/components/project-layout';
 import { MyProjectsPage } from '@/features/projects/pages/my-projects-page';
 import { ProjectSettingsPage } from '@/features/projects/pages/project-settings-page';
 import { TicketPage } from '@/features/tickets/pages/ticket-page';
@@ -52,10 +53,20 @@ export const routes: RouteObject[] = [
                 ErrorBoundary: RouteErrorBoundary,
                 children: [
                   { path: '/projects', Component: MyProjectsPage },
-                  { path: '/projects/:projectKey/board', Component: BoardPage },
-                  { path: '/projects/:projectKey/list', Component: ListPage },
-                  { path: '/projects/:projectKey/tickets/:ticketKey', Component: TicketPage },
-                  { path: '/projects/:projectKey/settings', Component: ProjectSettingsPage },
+                  {
+                    // Loads the project before any of its pages: a non-member or a missing
+                    // project gets "Project not found" (PRJ-6).
+                    path: '/projects/:projectKey',
+                    Component: ProjectLayout,
+                    children: [
+                      // /projects/WEB alone is no screen (architecture §5.2).
+                      { index: true, Component: NotFoundPage },
+                      { path: 'board', Component: BoardPage },
+                      { path: 'list', Component: ListPage },
+                      { path: 'tickets/:ticketKey', Component: TicketPage },
+                      { path: 'settings', Component: ProjectSettingsPage },
+                    ],
+                  },
                   { path: '/my-work', Component: MyWorkPage },
                 ],
               },
