@@ -3,13 +3,10 @@ import type { LoginInput, PublicUser, RegisterInput } from '@mini-jira/shared';
 
 import { z } from 'zod';
 
-import { Prisma } from '../../generated/prisma/client.js';
 import type { PrismaClient } from '../../generated/prisma/client.js';
 import { ConflictError, InvalidCredentialsError, UnauthenticatedError } from '../../lib/errors.js';
 import { hashPassword, verifyDummyPassword, verifyPassword } from '../../lib/password.js';
-
-// Prisma's code for a unique constraint violation.
-const UNIQUE_VIOLATION = 'P2002';
+import { isUniqueViolation } from '../../lib/prisma-errors.js';
 
 // Only the fields a client may see; passwordHash never leaves this service.
 const PUBLIC_USER_FIELDS = { id: true, name: true, email: true } as const;
@@ -29,10 +26,6 @@ export interface AuthService {
 
 const emailTaken = (): ConflictError =>
   new ConflictError(ErrorCode.EMAIL_TAKEN, 'This email is already registered');
-
-function isUniqueViolation(error: unknown): boolean {
-  return error instanceof Prisma.PrismaClientKnownRequestError && error.code === UNIQUE_VIOLATION;
-}
 
 export function createAuthService(prisma: PrismaClient): AuthService {
   return {
