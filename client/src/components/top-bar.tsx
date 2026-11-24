@@ -16,6 +16,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { LogOutButton } from '@/features/auth/components/log-out-button';
 import { useCurrentUser } from '@/features/auth/hooks/use-me';
+import { ProjectSwitcher } from '@/features/projects/components/project-switcher';
 
 // NavLink marks the link to the current page with aria-current="page". The style follows it: a
 // navy underline, like the active tab in wireframes 03 and 07, so it never relies on color alone.
@@ -117,15 +118,10 @@ export function TopBar(): ReactElement {
           <img src="/favicon.svg" alt="" className="size-6" />
           Mini-Jira
         </Link>
-        <nav aria-label="Main">
+        <nav aria-label="Main" className="min-w-0">
           <ul className="flex items-center gap-1">
-            <li>
-              {/* TODO(PRJ-2): becomes the project dropdown (wireframe 02 E). */}
-              <Button asChild variant="ghost" className={CURRENT_PAGE_CLASSES}>
-                <NavLink to="/projects" end>
-                  Projects
-                </NavLink>
-              </Button>
+            <li className="min-w-0">
+              <ProjectSwitcher />
             </li>
             <li className="hidden sm:block">
               <Button asChild variant="ghost" className={CURRENT_PAGE_CLASSES}>

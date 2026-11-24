@@ -29,6 +29,9 @@ export function createProjectsRouter({ prisma, authCookie }: ProjectsRouterOptio
   // the body rules (architecture §4.3).
   router.post('/projects', requireAuth, validateBody(createProjectSchema), controller.create);
 
+  // PRJ-2: My Projects. requireAuth runs first; the controller then parses the query (400).
+  router.get('/projects', requireAuth, controller.list);
+
   // PRJ-6: a member (OWNER or MEMBER) gets the project with their role.
   router.get('/projects/:projectKey', requireAuth, loadProjectAccess, controller.get);
 

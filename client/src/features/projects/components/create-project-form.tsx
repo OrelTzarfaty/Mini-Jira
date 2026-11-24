@@ -65,7 +65,12 @@ function cleanKeyInput(input: HTMLInputElement): void {
 }
 
 /** The Create project form (wireframe 02 D, PRJ-1). The shared createProjectSchema checks it. */
-export function CreateProjectForm(): ReactElement {
+export function CreateProjectForm({
+  onCreated,
+}: {
+  /** Closes the popup. Leaving the page isn't enough: the top bar's popup stays mounted (PRJ-2). */
+  onCreated: () => void;
+}): ReactElement {
   const navigate = useNavigate();
   const createProjectMutation = useCreateProjectMutation();
   const {
@@ -107,8 +112,9 @@ export function CreateProjectForm(): ReactElement {
   // Gets the schema's output: trimmed, the key uppercased, an empty description as null.
   function handleValidSubmit(input: CreateProjectInput): void {
     createProjectMutation.mutate(input, {
-      // Straight to the new project's board (wireframe 02 D). Leaving the page closes the popup.
+      // Straight to the new project's board (wireframe 02 D).
       onSuccess: (project) => {
+        onCreated();
         void navigate(`/projects/${project.key}/board`);
       },
       onError: (error) => {
