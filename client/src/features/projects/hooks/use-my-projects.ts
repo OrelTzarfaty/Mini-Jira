@@ -1,4 +1,4 @@
-import { pageSchema, projectListItemSchema } from '@mini-jira/shared';
+import { projectListPageSchema } from '@mini-jira/shared';
 import type { Page, ProjectListItem } from '@mini-jira/shared';
 import { keepPreviousData, useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import type { InfiniteData, UseInfiniteQueryResult, UseQueryResult } from '@tanstack/react-query';
@@ -7,7 +7,6 @@ import { apiRequest } from '@/api/client';
 import { PROJECTS_QUERY_KEY } from '@/api/query-keys';
 
 const FIRST_PAGE = 1;
-const projectPageSchema = pageSchema(projectListItemSchema);
 
 // Both keys sit under PROJECTS_QUERY_KEY, so creating a project (PRJ-1) refreshes them. The
 // lowercase words can't clash with a project key (projectQueryKey), which is always uppercase.
@@ -38,7 +37,7 @@ function fetchProjectPage({
     params.set('q', search);
   }
 
-  return apiRequest(`/projects?${params.toString()}`, { schema: projectPageSchema, signal });
+  return apiRequest(`/projects?${params.toString()}`, { schema: projectListPageSchema, signal });
 }
 
 /**

@@ -1,9 +1,8 @@
 import {
   ErrorCode,
   PAGE_SIZE,
-  pageSchema,
   PROJECT_SEARCH_MAX_LENGTH,
-  projectListItemSchema,
+  projectListPageSchema,
   Role,
   UNAUTHENTICATED_MESSAGE,
 } from '@mini-jira/shared';
@@ -22,7 +21,6 @@ import {
 import { createTestApp } from '../helpers/test-app.js';
 
 const PROJECTS_URL = '/api/projects';
-const projectListPageSchema = pageSchema(projectListItemSchema);
 
 // Letters only, because project keys are 2-6 letters A-Z: 0 → "AA", 1 → "AB", 26 → "BA".
 const keyFor = (index: number): string =>

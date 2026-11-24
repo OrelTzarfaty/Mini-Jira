@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 import { Role } from '../enums.js';
 import { CONTROL_CHARACTER, requiredString } from './common.js';
-import { paginationQuerySchema } from './pagination.js';
+import { pageSchema, paginationQuerySchema } from './pagination.js';
 
 export const PROJECT_KEY_MIN_LENGTH = 2;
 export const PROJECT_KEY_MAX_LENGTH = 6;
@@ -123,3 +123,8 @@ export const projectListItemSchema = projectSchema.extend({
 });
 
 export type ProjectListItem = z.infer<typeof projectListItemSchema>;
+
+// PRJ-2: one page of `GET /api/projects`.
+export const projectListPageSchema = pageSchema(projectListItemSchema);
+
+export type ProjectListPage = z.infer<typeof projectListPageSchema>;

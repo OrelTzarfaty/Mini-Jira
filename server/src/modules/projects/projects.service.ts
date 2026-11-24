@@ -1,6 +1,5 @@
 import {
   ErrorCode,
-  PAGE_SIZE,
   PROJECT_KEY_TAKEN_MESSAGE,
   projectListItemSchema,
   projectSchema,
@@ -17,6 +16,7 @@ import type {
 import { Prisma } from '../../generated/prisma/client.js';
 import type { PrismaClient, Project as ProjectRow } from '../../generated/prisma/client.js';
 import { ConflictError } from '../../lib/errors.js';
+import { pageWindow, toPage } from '../../lib/pagination.js';
 import { isUniqueViolation } from '../../lib/prisma-errors.js';
 
 export interface ProjectsService {
@@ -152,6 +152,7 @@ export function createProjectsService(prisma: PrismaClient): ProjectsService {
           ? Prisma.empty
           : Prisma.sql`AND (p."name" ILIKE '%' || ${search} || '%' OR p."key" ILIKE '%' || ${search} || '%')`;
 
+      const { skip, take } = pageWindow(page);
       const { memberships, total } = await prisma.$transaction(async (tx) => {
         const pageIds = await tx.$queryRaw<{ id: string }[]>`
           SELECT p."id"
@@ -159,7 +160,7 @@ export function createProjectsService(prisma: PrismaClient): ProjectsService {
           JOIN "Project" p ON p."id" = pm."projectId"
           WHERE pm."userId" = ${userId}::uuid ${searchFilter}
           ORDER BY lower(p."name") COLLATE "C", p."name" COLLATE "C", p."key" COLLATE "C"
-          LIMIT ${PAGE_SIZE} OFFSET ${(page - 1) * PAGE_SIZE}`;
+          LIMIT ${take} OFFSET ${skip}`;
         const ids = pageIds.map(({ id }) => id);
         const rows = await tx.projectMember.findMany({
           where: { userId, projectId: { in: ids } },
@@ -177,19 +178,17 @@ export function createProjectsService(prisma: PrismaClient): ProjectsService {
       // One count query for the whole page, not one per project.
       const openTicketCounts = await countOpenTickets(memberships.map(({ project }) => project.id));
 
-      return {
-        items: memberships.map(({ project, role }) =>
+      // A page past the end is still a 200 with no items and the real totals.
+      return toPage(
+        memberships.map(({ project, role }) =>
           projectListItemSchema.parse({
             ...toProjectResponse(project, role),
             openTicketCount: openTicketCounts.get(project.id) ?? 0,
           }),
         ),
-        page,
-        pageSize: PAGE_SIZE,
         total,
-        // A page past the end is still a 200 with no items and the real totals.
-        totalPages: Math.ceil(total / PAGE_SIZE),
-      };
+        page,
+      );
     },
   };
 }

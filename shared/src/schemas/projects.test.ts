@@ -1,7 +1,6 @@
 import { describe, expect, expectTypeOf, it } from 'vitest';
 
 import type { Page } from '../api-types.js';
-import { pageSchema } from './pagination.js';
 
 import {
   createProjectSchema,
@@ -11,9 +10,10 @@ import {
   PROJECT_NAME_MAX_LENGTH,
   PROJECT_SEARCH_MAX_LENGTH,
   projectListItemSchema,
+  projectListPageSchema,
   projectSchema,
 } from './projects.js';
-import type { ProjectListItem } from './projects.js';
+import type { ProjectListItem, ProjectListPage } from './projects.js';
 
 const validInput = { name: 'Website', key: 'WEB' };
 const keyFormatMessage = 'Key must be 2–6 letters (A–Z)';
@@ -243,11 +243,9 @@ describe('projectListItemSchema', () => {
   });
 
   it('LST-4: a page of list items has the Page<T> shape', () => {
-    expectTypeOf<
-      ReturnType<typeof pageSchema<typeof projectListItemSchema>>['_output']
-    >().toEqualTypeOf<Page<ProjectListItem>>();
+    expectTypeOf<ProjectListPage>().toEqualTypeOf<Page<ProjectListItem>>();
     expect(
-      pageSchema(projectListItemSchema).parse({
+      projectListPageSchema.parse({
         items: [item],
         page: 1,
         pageSize: 20,
