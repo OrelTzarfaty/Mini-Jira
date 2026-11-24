@@ -1,4 +1,11 @@
-import { alreadyMemberMessage, ErrorCode, Role, USER_NOT_FOUND_MESSAGE } from '@mini-jira/shared';
+import {
+  alreadyMemberMessage,
+  CANNOT_REMOVE_OWNER_MESSAGE,
+  ErrorCode,
+  MEMBER_NOT_FOUND_MESSAGE,
+  Role,
+  USER_NOT_FOUND_MESSAGE,
+} from '@mini-jira/shared';
 import type { ErrorResponse, Member } from '@mini-jira/shared';
 import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -14,6 +21,8 @@ import { server } from '@/test/server';
 import { mockLoggedIn } from '@/test/session';
 
 const MEMBERS_URL = '/api/projects/:projectKey/members';
+const MEMBER_URL = '/api/projects/:projectKey/members/:userId';
+const [OWNER, NOA] = TEST_MEMBERS as [Member, Member];
 const NEW_MEMBER: Member = {
   userId: '8b3e4c5a-6d7f-4a81-8cbd-2e3f4a5b6c7d',
   name: 'Avi Ben',
@@ -244,5 +253,138 @@ describe('Add a member by email', () => {
       await screen.findByRole('heading', { level: 2, name: 'Members (3)' }),
     ).toBeInTheDocument();
     expect(memberRows()[2]).toHaveTextContent('Avi Ben');
+  });
+});
+
+/** Serves the members list from `members`, which the DELETE handler below may change. */
+function mockMembersList(getMembers: () => Member[]): void {
+  server.use(http.get(MEMBERS_URL, () => HttpResponse.json(memberPage(getMembers()))));
+}
+
+async function openRemoveDialog(name: string): Promise<HTMLElement> {
+  await userEvent.click(await screen.findByRole('button', { name: `Remove ${name}` }));
+
+  return screen.getByRole('alertdialog', { name: `Remove ${name} from WEB?` });
+}
+
+describe('Remove a member', () => {
+  it('PRJ-4: every member row has a Remove button named after the member, the owner row none', async () => {
+    mockMembers();
+    openSettings();
+
+    const removeNoa = await screen.findByRole('button', { name: 'Remove Noa Katz' });
+
+    const [ownerRow, memberRow] = memberRows() as [HTMLElement, HTMLElement];
+    expect(within(ownerRow).queryByRole('button')).not.toBeInTheDocument();
+    expect(within(memberRow).getByRole('button')).toBe(removeNoa);
+    expect(removeNoa).toHaveTextContent('Remove');
+    expect(screen.queryByRole('button', { name: `Remove ${OWNER.name}` })).not.toBeInTheDocument();
+  });
+
+  it('PRJ-4: confirming sends DELETE, removes the row, announces "<name> removed", and focuses the list', async () => {
+    let members = TEST_MEMBERS;
+    const deletedPaths: string[] = [];
+    mockMembersList(() => members);
+    server.use(
+      http.delete(MEMBER_URL, async ({ request }) => {
+        deletedPaths.push(new URL(request.url).pathname);
+        members = [OWNER];
+        await delay(50);
+
+        return new HttpResponse(null, { status: 204 });
+      }),
+    );
+    openSettings();
+
+    const dialog = await openRemoveDialog('Noa Katz');
+    expect(dialog).toHaveAccessibleDescription(
+      'Tickets assigned to Noa will become unassigned. Noa will lose access to this project.',
+    );
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Remove' }));
+
+    expect(await within(dialog).findByRole('button', { name: 'Removing…' })).toBeDisabled();
+    expect(await screen.findByText('Noa Katz removed')).toHaveAttribute('role', 'status');
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+    expect(deletedPaths).toEqual([`/api/projects/WEB/members/${NOA.userId}`]);
+    expect(
+      await screen.findByRole('heading', { level: 2, name: 'Members (1)' }),
+    ).toBeInTheDocument();
+    expect(screen.queryByText('Noa Katz')).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByRole('list', { name: 'Members' })).toHaveFocus();
+    });
+  });
+
+  it('PRJ-4: "Cancel" closes the dialog, sends nothing, and returns focus to Remove', async () => {
+    mockMembers();
+    let deleteRequests = 0;
+    server.use(
+      http.delete(MEMBER_URL, () => {
+        deleteRequests += 1;
+
+        return new HttpResponse(null, { status: 204 });
+      }),
+    );
+    openSettings();
+
+    const dialog = await openRemoveDialog('Noa Katz');
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Cancel' }));
+
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+    expect(deleteRequests).toBe(0);
+    expect(memberRows()).toHaveLength(2);
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Remove Noa Katz' })).toHaveFocus();
+    });
+  });
+
+  it('PRJ-4: a server error stays in the open dialog, and a new dialog starts without it', async () => {
+    mockMembers();
+    server.use(
+      http.delete(MEMBER_URL, () =>
+        HttpResponse.json(
+          {
+            error: { code: ErrorCode.CANNOT_REMOVE_OWNER, message: CANNOT_REMOVE_OWNER_MESSAGE },
+          },
+          { status: 409 },
+        ),
+      ),
+    );
+    openSettings();
+
+    const dialog = await openRemoveDialog('Noa Katz');
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Remove' }));
+
+    expect(await within(dialog).findByRole('alert')).toHaveTextContent(CANNOT_REMOVE_OWNER_MESSAGE);
+    expect(within(dialog).getByRole('button', { name: 'Remove' })).toBeEnabled();
+
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Cancel' }));
+    const reopened = await openRemoveDialog('Noa Katz');
+
+    expect(within(reopened).queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  it('PRJ-4: a member someone else already removed (404) shows the message and reloads the list', async () => {
+    let members = TEST_MEMBERS;
+    mockMembersList(() => members);
+    server.use(
+      http.delete(MEMBER_URL, () => {
+        members = [OWNER];
+
+        return HttpResponse.json(
+          { error: { code: ErrorCode.NOT_FOUND, message: MEMBER_NOT_FOUND_MESSAGE } },
+          { status: 404 },
+        );
+      }),
+    );
+    openSettings();
+
+    const dialog = await openRemoveDialog('Noa Katz');
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Remove' }));
+
+    expect(await within(dialog).findByRole('alert')).toHaveTextContent(MEMBER_NOT_FOUND_MESSAGE);
+    expect(
+      await screen.findByRole('heading', { level: 2, name: 'Members (1)', hidden: true }),
+    ).toBeInTheDocument();
   });
 });

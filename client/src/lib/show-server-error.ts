@@ -5,6 +5,11 @@ import { ApiError } from '@/api/api-error';
 
 const UNKNOWN_ERROR_MESSAGE = 'Something went wrong. Please try again.';
 
+/** The message to show for a failed request: the API's own, or a general one for anything else. */
+export function serverErrorMessage(error: Error): string {
+  return error instanceof ApiError ? error.message : UNKNOWN_ERROR_MESSAGE;
+}
+
 interface ServerErrorOptions<T extends FieldValues> {
   /** The form's field names (schema.keyof().options), to match the server's details[].field. */
   fields: readonly FieldPath<T>[];
@@ -26,7 +31,7 @@ export function showServerError<T extends FieldValues>(
   { fields, showKnownError }: ServerErrorOptions<T>,
 ): void {
   if (!(error instanceof ApiError)) {
-    setError('root.server', { message: UNKNOWN_ERROR_MESSAGE });
+    setError('root.server', { message: serverErrorMessage(error) });
 
     return;
   }
