@@ -236,12 +236,12 @@ Sprint 3 · Size M · **Status: In progress** · Depends on PRJ-1
 - [x] BE · `GET /api/projects`: only my projects, my role, paginated
 - [x] BE · Open-ticket count per project (status ≠ DONE) in the same response — 0 until tickets exist
 - [x] BE · Optional `q` search by project name or key (used by the project dropdown)
-- [ ] FE · `/projects` page: project cards (key, name, role, open tickets) + "Show more" (wireframe 02)
-- [ ] FE · Loading, empty (with a "Create project" call to action), and error states
-- [ ] FE · Project dropdown in the top bar: search, current project ✓, "View all projects", "+ Create project" (wireframe 02 E)
-- [ ] FE · User menu in the top bar: name, email, Log out (wireframe 02 F)
-- [ ] QA · Only my projects appear; role and counts are right; empty state shows
-- [ ] QA · Project dropdown: search finds a project, switching opens its board, keyboard works
+- [x] FE · `/projects` page: project cards (key, name, role, open tickets) + "Show more" (wireframe 02)
+- [x] FE · Loading, empty (with a "Create project" call to action), and error states
+- [x] FE · Project dropdown in the top bar: search, current project ✓, "View all projects", "+ Create project" (wireframe 02 E)
+- [x] FE · User menu in the top bar: name, email, Log out (wireframe 02 F) — built in AUTH-3, checked against the wireframe
+- [x] QA · Only my projects appear; role and counts are right; empty state shows (E2E covers Owner and "0 open"; the Member label is in component tests until PRJ-3 can add members)
+- [x] QA · Project dropdown: search finds a project, switching opens its board, keyboard works
 
 ### PRJ-6 · Non-members can't access a project
 Sprint 3 · Size M · **Status: Done** — merged into `dev` in [#83](https://github.com/OrelTzarfaty/Mini-Jira/pull/83) (`98f020f`); light QA PASS · Depends on PRJ-1 · **Build before PRJ-3/4/5**
