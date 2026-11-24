@@ -2,6 +2,7 @@ import type { BrowserContext, Locator, Page } from '@playwright/test';
 
 import { AUTH_COOKIE_NAME, logInAsNewUser } from '../support/auth-api.js';
 import { expect, test } from '../support/fixtures.js';
+import { collectPageErrors } from '../support/page-errors.js';
 
 // AUTH-3 (wireframe 02 F and H): a logged-in user logs out from the user menu (the ☰ menu on
 // phones), the browser drops the session cookie, and the landing page opens. Afterwards the
@@ -76,11 +77,12 @@ test.describe('Log out (AUTH-3)', () => {
 });
 
 test.describe('After logout (AUTH-4)', () => {
-  test('AUTH-4: protected pages send the logged-out user to the login popup', async ({
+  test('AUTH-4: protected pages send the logged-out user to the login popup, without errors', async ({
     page,
     context,
   }) => {
     await logInAsNewUser(context);
+    const pageErrors = collectPageErrors(page);
     await page.goto('/projects');
     await page.getByRole('button', { name: 'Account menu' }).click();
     await logOutFrom(page, page.getByRole('dialog', { name: 'Account menu' }));
@@ -92,5 +94,8 @@ test.describe('After logout (AUTH-4)', () => {
       await expect(page.getByRole('dialog', { name: 'Log in to Mini-Jira' })).toBeVisible();
       await expect(page.getByRole('navigation', { name: 'Main' })).toBeHidden();
     }
+
+    // Logged out, /api/auth/me answers 401 by design; nothing else may fail or crash.
+    expect(pageErrors).toEqual([]);
   });
 });

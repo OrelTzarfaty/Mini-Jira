@@ -1,17 +1,6 @@
 import { expect, test } from '@playwright/test';
-import type { ConsoleMessage } from '@playwright/test';
 
-/**
- * AUTH-4: every page asks GET /api/auth/me who is logged in, and for a visitor it answers 401
- * by design. Chromium logs every 4xx response as a console error, so that one message is
- * expected. Only it is skipped: the same text for any other URL still fails the test.
- */
-function isVisitorMeResponse(message: ConsoleMessage): boolean {
-  return (
-    message.text().startsWith('Failed to load resource') &&
-    message.location().url.endsWith('/api/auth/me')
-  );
-}
+import { collectPageErrors } from '../support/page-errors.js';
 
 // Proves that the whole system runs: nginx serves the React app and forwards /api to the API.
 // The real journeys live in their own specs (auth-register, auth-login).
@@ -24,13 +13,7 @@ test.describe('Smoke', () => {
   });
 
   test('SETUP-9: the login page renders without console errors', async ({ page }) => {
-    const consoleErrors: string[] = [];
-    page.on('console', (message) => {
-      if (message.type() === 'error' && !isVisitorMeResponse(message)) {
-        consoleErrors.push(message.text());
-      }
-    });
-    page.on('pageerror', (error) => consoleErrors.push(error.message));
+    const consoleErrors = collectPageErrors(page);
 
     await page.goto('/login');
 
