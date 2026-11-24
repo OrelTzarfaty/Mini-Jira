@@ -39,3 +39,22 @@ export async function createProjectThroughApi(session: StorageState): Promise<Cr
     await api.dispose();
   }
 }
+
+/** Adds a registered user to the project with `POST /api/projects/:projectKey/members` as its owner (PRJ-3). */
+export async function addMemberThroughApi(
+  ownerSession: StorageState,
+  projectKey: string,
+  email: string,
+): Promise<void> {
+  const api = await newApiContext(ownerSession);
+  try {
+    const response = await api.post(`/api/projects/${projectKey}/members`, { data: { email } });
+    if (response.status() !== 201) {
+      throw new Error(
+        `POST /api/projects/${projectKey}/members failed: ${String(response.status())} ${await response.text()}`,
+      );
+    }
+  } finally {
+    await api.dispose();
+  }
+}

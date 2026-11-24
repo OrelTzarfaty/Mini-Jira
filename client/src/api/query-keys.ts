@@ -13,3 +13,10 @@ export function projectQueryKey(
 ): readonly [...typeof PROJECTS_QUERY_KEY, string] {
   return [...PROJECTS_QUERY_KEY, projectKey];
 }
+
+/** A project's members (PRJ-3). Under the project's key, so refreshing the project refreshes them too. */
+export function projectMembersQueryKey(
+  projectKey: string,
+): readonly [...ReturnType<typeof projectQueryKey>, 'members'] {
+  return [...projectQueryKey(projectKey), 'members'];
+}

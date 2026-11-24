@@ -1,9 +1,12 @@
 import {
+  addMemberSchema,
   createProjectSchema,
   errorResponseSchema,
   healthResponseSchema,
   loginSchema,
   MAX_PAGE,
+  memberPageSchema,
+  memberSchema,
   PAGE_SIZE,
   PROJECT_SEARCH_MAX_LENGTH,
   pageSchema,
@@ -87,12 +90,12 @@ const PROJECT_KEY_PARAMETER = {
   schema: { type: 'string', pattern: '^[A-Z]{2,6}$', example: 'WEB' },
 };
 
-// LST-4: the page parameter of every paginated list.
-const PAGE_PARAMETER = {
+// LST-4: the query parameter of every paginated list.
+const PAGE_QUERY_PARAMETER = {
   name: 'page',
   in: 'query',
   required: false,
-  description: `The page to return, starting at 1; ${PAGE_SIZE} items per page`,
+  description: `The 1-based page number; each page has up to ${PAGE_SIZE} items. A page after the last one returns no items.`,
   schema: { type: 'integer', minimum: 1, maximum: MAX_PAGE, default: 1 },
 };
 
@@ -246,7 +249,7 @@ export function createOpenApiSpec(): Record<string, unknown> {
           description:
             "PRJ-2. Only projects where the caller is a member (OWNER or MEMBER); role is the caller's role in each, and openTicketCount the number of its tickets that are not Done (0 until tickets exist). Sorted by name, then by key. Paginated: a page past the end returns no items with the real total and totalPages. Unknown query parameters are rejected. Answers with Cache-Control: no-store, so no browser or shared cache keeps the user's data.",
           security: [{ authCookie: [] }],
-          parameters: [PROJECT_SEARCH_PARAMETER, PAGE_PARAMETER],
+          parameters: [PROJECT_SEARCH_PARAMETER, PAGE_QUERY_PARAMETER],
           responses: {
             '200': {
               ...jsonResponse("One page of the caller's projects", 'ProjectListPage'),
@@ -320,6 +323,70 @@ export function createOpenApiSpec(): Record<string, unknown> {
           },
         },
       },
+      '/projects/{projectKey}/members': {
+        get: {
+          tags: ['Projects'],
+          operationId: 'listProjectMembers',
+          summary: 'List the members of a project',
+          description: `PRJ-3. Any member of the project may list its members, ${PAGE_SIZE} per page: the owner first, then by the time they joined (oldest first). Unknown query parameters are rejected. A project that does not exist and a project the caller is not a member of get the same 404.`,
+          security: [{ authCookie: [] }],
+          parameters: [PROJECT_KEY_PARAMETER, PAGE_QUERY_PARAMETER],
+          responses: {
+            '200': jsonResponse('One page of members', 'MemberPage'),
+            '400': jsonResponse(
+              'Invalid query string (VALIDATION_ERROR), with one entry in details[] per parameter',
+              'ErrorResponse',
+            ),
+            '401': jsonResponse(
+              'Not logged in (UNAUTHENTICATED): the cookie is missing, invalid or expired, or its user no longer exists',
+              'ErrorResponse',
+            ),
+            '404': jsonResponse(
+              'No such project, or the caller is not a member of it (NOT_FOUND, "Project not found")',
+              'ErrorResponse',
+            ),
+            '500': jsonResponse('Unexpected server error', 'ErrorResponse'),
+          },
+        },
+        post: {
+          tags: ['Projects'],
+          operationId: 'addProjectMember',
+          summary: 'Add a registered user to the project by email (owner only)',
+          description:
+            'PRJ-3. Only the project owner may add members; the new member gets the MEMBER role. The email is trimmed and lowercased like at register, so it matches in any letter case. Only registered users can be added: an unknown email gets 404 USER_NOT_FOUND (so the owner can tell whether an email is registered, which the requirement asks for). A user who is already in the project, including the owner, gets 409 ALREADY_MEMBER, also when two adds race. Unknown fields are rejected. Browsers must send the request from the web app (same origin), or it gets 403.',
+          security: [{ authCookie: [] }],
+          parameters: [PROJECT_KEY_PARAMETER],
+          requestBody: jsonRequestBody('AddMemberRequest'),
+          responses: {
+            '201': jsonResponse('The user was added as a MEMBER', 'Member'),
+            '400': jsonResponse(
+              'Invalid input (VALIDATION_ERROR), with one entry in details[] per field',
+              'ErrorResponse',
+            ),
+            '401': jsonResponse(
+              'Not logged in (UNAUTHENTICATED): the cookie is missing, invalid or expired, or its user no longer exists',
+              'ErrorResponse',
+            ),
+            '403': jsonResponse(
+              'The caller is a member but not the owner (FORBIDDEN, "Only the project owner can do this"), or a cross-site request (FORBIDDEN)',
+              'ErrorResponse',
+            ),
+            '404': jsonResponse(
+              'No such project or the caller is not a member of it (NOT_FOUND, "Project not found"), or no user has this email (USER_NOT_FOUND, with details[] on the email field)',
+              'ErrorResponse',
+            ),
+            '409': jsonResponse(
+              'The user is already a member of the project (ALREADY_MEMBER), with details[] on the email field',
+              'ErrorResponse',
+            ),
+            '413': jsonResponse(
+              'The request body is over 100 kB (PAYLOAD_TOO_LARGE)',
+              'ErrorResponse',
+            ),
+            '500': jsonResponse('Unexpected server error', 'ErrorResponse'),
+          },
+        },
+      },
     },
     components: {
       securitySchemes: {
@@ -331,10 +398,13 @@ export function createOpenApiSpec(): Record<string, unknown> {
         },
       },
       schemas: {
+        AddMemberRequest: toComponentSchema(addMemberSchema, 'input'),
         ErrorResponse: toComponentSchema(errorResponseSchema),
         CreateProjectRequest: toComponentSchema(createProjectSchema, 'input'),
         HealthResponse: toComponentSchema(healthResponseSchema),
         LoginRequest: toComponentSchema(loginSchema, 'input'),
+        Member: toComponentSchema(memberSchema),
+        MemberPage: toComponentSchema(memberPageSchema),
         Project: toComponentSchema(projectSchema),
         ProjectListPage: toComponentSchema(pageSchema(projectListItemSchema)),
         PublicUser: toComponentSchema(publicUserSchema),

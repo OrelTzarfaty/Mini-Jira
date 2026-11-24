@@ -9,17 +9,20 @@ export const paginationQuerySchema = z.strictObject({
 
 export type PaginationQuery = z.infer<typeof paginationQuerySchema>;
 
-// LST-4: the zod shape of Page<T> (api-types.ts) for a list of `item`, used to check and
-// document every paginated response (architecture §9: `{ items, page, pageSize, total, totalPages }`).
-export function pageSchema<T extends z.ZodType>(
-  item: T,
-): z.ZodObject<{
-  items: z.ZodArray<T>;
+type PageShape<Item extends z.ZodType> = z.ZodObject<{
+  items: z.ZodArray<Item>;
   page: z.ZodNumber;
   pageSize: z.ZodNumber;
   total: z.ZodNumber;
   totalPages: z.ZodNumber;
-}> {
+}>;
+
+/**
+ * LST-4 (architecture §9): the response of every paginated list, `{ items, page, pageSize,
+ * total, totalPages }` (the `Page<T>` type), as a schema for the item schema given. Used for the
+ * OpenAPI docs and to check responses in tests.
+ */
+export function pageSchema<Item extends z.ZodType>(item: Item): PageShape<Item> {
   return z.object({
     items: z.array(item),
     page: z.number().int().min(1),

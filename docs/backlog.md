@@ -253,13 +253,13 @@ AC (extra): project missing or caller not a member → `404`; member without rig
 - [x] QA · Outsider gets 404 and no project data, through the API and the UI
 
 ### PRJ-3 · Add a member by email
-Sprint 3 · Size M · Status: To do · Depends on PRJ-6
-- [ ] BE · `GET /api/projects/:projectKey/members`
-- [ ] BE · `POST /api/projects/:projectKey/members` `{ email }` (owner only): `404 USER_NOT_FOUND`, `409 ALREADY_MEMBER`
-- [ ] FE · Project settings page layout (sections: details, members, danger zone) — reused by PRJ-4 and PRJ-5. **Owner only:** the Settings tab is hidden from members; a member opening the URL sees "Only the project owner can open settings" (wireframe 03)
-- [ ] FE · Members list
-- [ ] FE · "Add by email" form with clear errors
-- [ ] QA · Owner can add; member gets 403; unknown email; already a member
+Sprint 3 · Size M · **Status: Done** — merged into `dev` in [#84](https://github.com/OrelTzarfaty/Mini-Jira/pull/84) (`abda93f`); light QA PASS · Depends on PRJ-6
+- [x] BE · `GET /api/projects/:projectKey/members`
+- [x] BE · `POST /api/projects/:projectKey/members` `{ email }` (owner only): `404 USER_NOT_FOUND`, `409 ALREADY_MEMBER`
+- [x] FE · Project settings page layout (sections: details, members, danger zone) — reused by PRJ-4 and PRJ-5. **Owner only:** the Settings tab is hidden from members; a member opening the URL sees "Only the project owner can open settings" (wireframe 03)
+- [x] FE · Members list
+- [x] FE · "Add by email" form with clear errors
+- [x] QA · Owner can add; member gets 403; unknown email; already a member
 
 ### PRJ-4 · Remove a member
 Sprint 3 · Size S · Status: To do · Depends on PRJ-3

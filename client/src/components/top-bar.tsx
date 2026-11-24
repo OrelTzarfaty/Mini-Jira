@@ -20,7 +20,7 @@ import { ProjectSwitcher } from '@/features/projects/components/project-switcher
 
 // NavLink marks the link to the current page with aria-current="page". The style follows it: a
 // navy underline, like the active tab in wireframes 03 and 07, so it never relies on color alone.
-const CURRENT_PAGE_CLASSES =
+export const CURRENT_PAGE_CLASSES =
   'aria-[current=page]:underline aria-[current=page]:decoration-primary aria-[current=page]:decoration-2 aria-[current=page]:underline-offset-8';
 
 /** Who is logged in, above Log out in both menus (wireframe 02 F and H). */

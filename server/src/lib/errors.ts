@@ -48,9 +48,12 @@ export class ForbiddenError extends AppError {
   }
 }
 
+type NotFoundCode = Extract<ErrorCode, 'NOT_FOUND' | 'USER_NOT_FOUND'>;
+
 export class NotFoundError extends AppError {
-  constructor(message: string) {
-    super(ErrorCode.NOT_FOUND, message);
+  // PRJ-3: USER_NOT_FOUND with `details` on the email field when adding a member.
+  constructor(message: string, code: NotFoundCode = ErrorCode.NOT_FOUND, details?: ErrorDetail[]) {
+    super(code, message, details);
   }
 }
 
