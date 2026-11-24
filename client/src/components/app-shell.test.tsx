@@ -48,7 +48,7 @@ describe('AppShell', () => {
     await userEvent.tab();
     expect(screen.getByRole('link', { name: 'Mini-Jira' })).toHaveFocus();
     await userEvent.tab();
-    expect(within(navigation).getByRole('link', { name: 'Projects' })).toHaveFocus();
+    expect(within(navigation).getByRole('button', { name: 'Projects' })).toHaveFocus();
     await userEvent.tab();
     expect(within(navigation).getByRole('link', { name: 'My Work' })).toHaveFocus();
   });
@@ -64,9 +64,6 @@ describe('AppShell', () => {
     expect(within(getMainNavigation()).getByRole('link', { name: 'My Work' })).toHaveAttribute(
       'aria-current',
       'page',
-    );
-    expect(within(getMainNavigation()).getByRole('link', { name: 'Projects' })).not.toHaveAttribute(
-      'aria-current',
     );
   });
 

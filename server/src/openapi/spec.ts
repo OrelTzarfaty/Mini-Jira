@@ -8,6 +8,8 @@ import {
   memberPageSchema,
   memberSchema,
   PAGE_SIZE,
+  PROJECT_SEARCH_MAX_LENGTH,
+  projectListPageSchema,
   projectSchema,
   publicUserSchema,
   registerSchema,
@@ -94,6 +96,16 @@ const PAGE_QUERY_PARAMETER = {
   required: false,
   description: `The 1-based page number; each page has up to ${PAGE_SIZE} items. A page after the last one returns no items.`,
   schema: { type: 'integer', minimum: 1, maximum: MAX_PAGE, default: 1 },
+};
+
+// PRJ-2: the optional search of My Projects and the project dropdown.
+const PROJECT_SEARCH_PARAMETER = {
+  name: 'q',
+  in: 'query',
+  required: false,
+  description:
+    'Keeps only projects whose name or key contains this text, in any letter case. Trimmed; empty means no search. % and _ are plain characters, not wildcards',
+  schema: { type: 'string', maxLength: PROJECT_SEARCH_MAX_LENGTH, example: 'web' },
 };
 
 export function createOpenApiSpec(): Record<string, unknown> {
@@ -229,6 +241,30 @@ export function createOpenApiSpec(): Record<string, unknown> {
         },
       },
       '/projects': {
+        get: {
+          tags: ['Projects'],
+          operationId: 'listMyProjects',
+          summary: 'List the projects the caller is a member of',
+          description:
+            "PRJ-2. Only projects where the caller is a member (OWNER or MEMBER); role is the caller's role in each, and openTicketCount the number of its tickets that are not Done (0 until tickets exist). Sorted by name, then by key. Paginated: a page past the end returns no items with the real total and totalPages. Unknown query parameters are rejected. Answers with Cache-Control: no-store, so no browser or shared cache keeps the user's data.",
+          security: [{ authCookie: [] }],
+          parameters: [PROJECT_SEARCH_PARAMETER, PAGE_QUERY_PARAMETER],
+          responses: {
+            '200': {
+              ...jsonResponse("One page of the caller's projects", 'ProjectListPage'),
+              headers: NO_STORE_HEADER,
+            },
+            '400': jsonResponse(
+              'Invalid query (VALIDATION_ERROR), with one entry in details[] per parameter',
+              'ErrorResponse',
+            ),
+            '401': jsonResponse(
+              'Not logged in (UNAUTHENTICATED): the cookie is missing, invalid or expired, or its user no longer exists',
+              'ErrorResponse',
+            ),
+            '500': jsonResponse('Unexpected server error', 'ErrorResponse'),
+          },
+        },
         post: {
           tags: ['Projects'],
           operationId: 'createProject',
@@ -369,6 +405,7 @@ export function createOpenApiSpec(): Record<string, unknown> {
         Member: toComponentSchema(memberSchema),
         MemberPage: toComponentSchema(memberPageSchema),
         Project: toComponentSchema(projectSchema),
+        ProjectListPage: toComponentSchema(projectListPageSchema),
         PublicUser: toComponentSchema(publicUserSchema),
         RegisterRequest: toComponentSchema(registerSchema, 'input'),
       },

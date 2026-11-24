@@ -1,12 +1,19 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, expectTypeOf, it } from 'vitest';
+
+import type { Page } from '../api-types.js';
 
 import {
   createProjectSchema,
   isProjectKey,
+  listProjectsQuerySchema,
   PROJECT_DESCRIPTION_MAX_LENGTH,
   PROJECT_NAME_MAX_LENGTH,
+  PROJECT_SEARCH_MAX_LENGTH,
+  projectListItemSchema,
+  projectListPageSchema,
   projectSchema,
 } from './projects.js';
+import type { ProjectListItem, ProjectListPage } from './projects.js';
 
 const validInput = { name: 'Website', key: 'WEB' };
 const keyFormatMessage = 'Key must be 2–6 letters (A–Z)';
@@ -167,5 +174,84 @@ describe('isProjectKey', () => {
     for (const key of ['WEB1', 'WE-B', ' WEB', 'WEB ', 'WEB\n', 'ÄBC', 'ΑΒΓ', '%57EB']) {
       expect(isProjectKey(key)).toBe(false);
     }
+  });
+});
+
+describe('listProjectsQuerySchema', () => {
+  it('PRJ-2: uses page 1 and no search when nothing is sent', () => {
+    expect(listProjectsQuerySchema.parse({})).toEqual({ page: 1 });
+  });
+
+  it('PRJ-2: converts the page and trims the search', () => {
+    expect(listProjectsQuerySchema.parse({ page: '2', q: '  web  ' })).toEqual({
+      page: 2,
+      q: 'web',
+    });
+  });
+
+  it('PRJ-2: treats an empty search (after trimming) as no search', () => {
+    for (const q of ['', '   ']) {
+      expect(listProjectsQuerySchema.parse({ q }).q).toBeUndefined();
+    }
+  });
+
+  it(`PRJ-2: accepts a search of ${PROJECT_SEARCH_MAX_LENGTH} characters and rejects a longer one`, () => {
+    expect(
+      listProjectsQuerySchema.safeParse({ q: 'a'.repeat(PROJECT_SEARCH_MAX_LENGTH) }).success,
+    ).toBe(true);
+    expect(
+      listProjectsQuerySchema.safeParse({ q: 'a'.repeat(PROJECT_SEARCH_MAX_LENGTH + 1) }).success,
+    ).toBe(false);
+  });
+
+  it('PRJ-2: keeps % and _ in the search as typed', () => {
+    expect(listProjectsQuerySchema.parse({ q: '100%_x' }).q).toBe('100%_x');
+  });
+
+  it.each([
+    ['a repeated search', { q: ['a', 'b'] }],
+    ['a control character', { q: 'a\u0000b' }],
+    ['an invalid page', { page: '0' }],
+    ['an unknown parameter', { sort: 'name' }],
+  ])('PRJ-2: rejects %s', (_description, query) => {
+    expect(listProjectsQuerySchema.safeParse(query).success).toBe(false);
+  });
+});
+
+describe('projectListItemSchema', () => {
+  const item = {
+    id: '6f1f0a52-5d43-4c1e-9b7e-0b6f4d3f2a10',
+    key: 'WEB',
+    name: 'Website',
+    description: null,
+    role: 'OWNER',
+    createdAt: '2026-11-24T10:00:00.000Z',
+    updatedAt: '2026-11-24T10:00:00.000Z',
+    openTicketCount: 3,
+  };
+
+  it('PRJ-2: is a project plus its open-ticket count', () => {
+    expect(projectListItemSchema.parse(item)).toEqual(item);
+  });
+
+  it('PRJ-2: drops internal fields such as ticketCounter', () => {
+    expect(projectListItemSchema.parse({ ...item, ticketCounter: 7 })).toEqual(item);
+  });
+
+  it.each([-1, 1.5])('PRJ-2: rejects an open-ticket count of %s', (openTicketCount) => {
+    expect(projectListItemSchema.safeParse({ ...item, openTicketCount }).success).toBe(false);
+  });
+
+  it('LST-4: a page of list items has the Page<T> shape', () => {
+    expectTypeOf<ProjectListPage>().toEqualTypeOf<Page<ProjectListItem>>();
+    expect(
+      projectListPageSchema.parse({
+        items: [item],
+        page: 1,
+        pageSize: 20,
+        total: 1,
+        totalPages: 1,
+      }),
+    ).toEqual({ items: [item], page: 1, pageSize: 20, total: 1, totalPages: 1 });
   });
 });

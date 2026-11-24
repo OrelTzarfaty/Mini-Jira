@@ -1,5 +1,5 @@
-import { ErrorCode, Role } from '@mini-jira/shared';
-import type { Project } from '@mini-jira/shared';
+import { ErrorCode, PAGE_SIZE, Role } from '@mini-jira/shared';
+import type { Project, ProjectListItem } from '@mini-jira/shared';
 import { http, HttpResponse } from 'msw';
 
 import { server } from './server';
@@ -30,6 +30,67 @@ export function mockProjectNotFound(): void {
       HttpResponse.json(
         { error: { code: ErrorCode.NOT_FOUND, message: 'Project not found' } },
         { status: 404 },
+      ),
+    ),
+  );
+}
+
+/** A project as My Projects lists it (PRJ-2), based on TEST_PROJECT. */
+export function buildProjectListItem(overrides: Partial<ProjectListItem> = {}): ProjectListItem {
+  return { ...TEST_PROJECT, openTicketCount: 0, ...overrides };
+}
+
+/** `count` projects with keys AA, AB, ... and names "Project 1", "Project 2", ... */
+export function buildProjectListItems(count: number): ProjectListItem[] {
+  const firstLetter = 'A'.charCodeAt(0);
+
+  return Array.from({ length: count }, (_, index) =>
+    buildProjectListItem({
+      id: `00000000-0000-4000-8000-${String(index).padStart(12, '0')}`,
+      key: `A${String.fromCharCode(firstLetter + index)}`,
+      name: `Project ${String(index + 1)}`,
+    }),
+  );
+}
+
+/**
+ * Makes GET /api/projects answer like the API (PRJ-2): `q` matches the name or key (any case),
+ * then 20 per page. Returns the URLs it was asked for, so a test can check the query string.
+ */
+export function mockMyProjects(projects: readonly ProjectListItem[]): URL[] {
+  const requests: URL[] = [];
+
+  server.use(
+    http.get('/api/projects', ({ request }) => {
+      const url = new URL(request.url);
+      requests.push(url);
+      const search = (url.searchParams.get('q') ?? '').toLowerCase();
+      const page = Number(url.searchParams.get('page') ?? '1');
+      const matches = projects.filter((project) =>
+        `${project.name} ${project.key}`.toLowerCase().includes(search),
+      );
+      const start = (page - 1) * PAGE_SIZE;
+
+      return HttpResponse.json({
+        items: matches.slice(start, start + PAGE_SIZE),
+        page,
+        pageSize: PAGE_SIZE,
+        total: matches.length,
+        totalPages: Math.ceil(matches.length / PAGE_SIZE),
+      });
+    }),
+  );
+
+  return requests;
+}
+
+/** Makes GET /api/projects fail with a server error (PRJ-2 error states). */
+export function mockMyProjectsError(): void {
+  server.use(
+    http.get('/api/projects', () =>
+      HttpResponse.json(
+        { error: { code: ErrorCode.INTERNAL_ERROR, message: 'Something went wrong' } },
+        { status: 500 },
       ),
     ),
   );

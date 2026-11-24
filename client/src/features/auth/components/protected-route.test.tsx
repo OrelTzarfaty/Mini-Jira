@@ -129,7 +129,7 @@ describe('ProtectedRoute', () => {
     expect(
       await screen.findByRole('heading', { level: 1, name: 'My Projects' }),
     ).toBeInTheDocument();
-    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    expect(screen.queryByText('Loading your account')).not.toBeInTheDocument();
     expect(requestCount).toBe(0);
   });
 });
