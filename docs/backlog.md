@@ -222,7 +222,7 @@ Sprint 2 · Size S · **Status: In review** — [#81](https://github.com/OrelTza
 ## E3 · Projects & members — Sprint 3
 
 ### PRJ-1 · Create project
-Sprint 3 · Size M · Status: To do · Depends on AUTH-4
+Sprint 3 · Size M · **Status: In progress** · Depends on AUTH-4
 AC (extra): key 2–6 uppercase, unique (`409 PROJECT_KEY_TAKEN`), immutable · creator gets an OWNER membership in the same transaction.
 - [ ] BE · Migration: `Project` (with `ticketCounter`), `ProjectMember` (role) + indexes
 - [ ] BE · Shared `createProjectSchema` (key 2–6 uppercase letters)
