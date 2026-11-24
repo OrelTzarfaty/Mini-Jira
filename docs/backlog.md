@@ -244,7 +244,7 @@ Sprint 3 · Size M · Status: To do · Depends on PRJ-1
 - [ ] QA · Project dropdown: search finds a project, switching opens its board, keyboard works
 
 ### PRJ-6 · Non-members can't access a project
-Sprint 3 · Size M · Status: To do · Depends on PRJ-1 · **Build before PRJ-3/4/5**
+Sprint 3 · Size M · Status: In progress · Depends on PRJ-1 · **Build before PRJ-3/4/5**
 AC (extra): project missing or caller not a member → `404`; member without rights → `403`.
 - [ ] BE · `loadProjectAccess` and `requireOwner` middleware (architecture §6)
 - [ ] BE · `GET /api/projects/:projectKey`
