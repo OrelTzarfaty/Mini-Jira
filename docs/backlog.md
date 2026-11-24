@@ -255,7 +255,7 @@ AC (extra): project missing or caller not a member → `404`; member without rig
 ### PRJ-3 · Add a member by email
 Sprint 3 · Size M · Status: In progress · Depends on PRJ-6
 - [x] BE · `GET /api/projects/:projectKey/members`
-- [ ] BE · `POST /api/projects/:projectKey/members` `{ email }` (owner only): `404 USER_NOT_FOUND`, `409 ALREADY_MEMBER`
+- [x] BE · `POST /api/projects/:projectKey/members` `{ email }` (owner only): `404 USER_NOT_FOUND`, `409 ALREADY_MEMBER`
 - [ ] FE · Project settings page layout (sections: details, members, danger zone) — reused by PRJ-4 and PRJ-5. **Owner only:** the Settings tab is hidden from members; a member opening the URL sees "Only the project owner can open settings" (wireframe 03)
 - [ ] FE · Members list
 - [ ] FE · "Add by email" form with clear errors
