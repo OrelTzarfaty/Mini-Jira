@@ -3,7 +3,9 @@ import { describe, expect, it } from 'vitest';
 import {
   addMemberSchema,
   alreadyMemberMessage,
+  INVALID_USER_ID_MESSAGE,
   memberPageSchema,
+  memberParamsSchema,
   memberSchema,
   USER_NOT_FOUND_MESSAGE,
 } from './members.js';
@@ -78,5 +80,30 @@ describe('memberPageSchema', () => {
 
   it('LST-4: rejects a page without its totals', () => {
     expect(memberPageSchema.safeParse({ items: [member], page: 1 }).success).toBe(false);
+  });
+});
+
+describe('memberParamsSchema', () => {
+  const userId = '0b6f2c1e-8f4a-4c3b-9a7d-2e5f1a3b4c6d';
+
+  it('PRJ-4: accepts a UUID and drops the other path parameters', () => {
+    expect(memberParamsSchema.parse({ projectKey: 'WEB', userId })).toEqual({ userId });
+  });
+
+  it.each([
+    ['not a UUID', { userId: 'abc' }],
+    ['missing', {}],
+    ['a UUID with extra characters', { userId: `${userId}x` }],
+  ])('PRJ-4: rejects a user id that is %s', (_description, input) => {
+    const result = memberParamsSchema.safeParse(input);
+
+    expect(result.success).toBe(false);
+    expect(result.error?.issues.map(({ path }) => path)).toEqual([['userId']]);
+  });
+
+  it('PRJ-4: a bad UUID gets the shared message', () => {
+    expect(memberParamsSchema.safeParse({ userId: 'abc' }).error?.issues[0]?.message).toBe(
+      INVALID_USER_ID_MESSAGE,
+    );
   });
 });

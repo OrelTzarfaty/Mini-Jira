@@ -1,19 +1,21 @@
-import { paginationQuerySchema } from '@mini-jira/shared';
+import { memberParamsSchema, paginationQuerySchema } from '@mini-jira/shared';
 import type { AddMemberInput, Member, MemberPage } from '@mini-jira/shared';
 import type { RequestHandler } from 'express';
 
 import { requireProjectAccess } from '../../middleware/project-access.js';
 import { requireUserId } from '../../middleware/require-auth.js';
-import { parseQuery } from '../../middleware/validate.js';
+import { parseParams, parseQuery } from '../../middleware/validate.js';
 import type { MembersService } from './members.service.js';
 
 type ListMembersHandler = RequestHandler<{ projectKey: string }, MemberPage>;
 // The body type is safe because validateBody(addMemberSchema) runs before this handler.
 type AddMemberHandler = RequestHandler<{ projectKey: string }, Member, AddMemberInput>;
+type RemoveMemberHandler = RequestHandler<{ projectKey: string; userId: string }, void>;
 
 export interface MembersController {
   list: ListMembersHandler;
   add: AddMemberHandler;
+  remove: RemoveMemberHandler;
 }
 
 export function createMembersController(membersService: MembersService): MembersController {
@@ -35,6 +37,18 @@ export function createMembersController(membersService: MembersService): Members
         'Project member added',
       );
       res.status(201).json(member);
+    },
+
+    // PRJ-4: requireOwner already ran, so only the owner learns that the user id must be a UUID.
+    async remove(req, res) {
+      const { project } = requireProjectAccess(req);
+      const { userId } = parseParams(memberParamsSchema, req.params);
+      await membersService.removeMember(project.id, userId);
+      req.log.info(
+        { userId: requireUserId(req), projectId: project.id, memberUserId: userId },
+        'Project member removed',
+      );
+      res.status(204).end();
     },
   };
 }

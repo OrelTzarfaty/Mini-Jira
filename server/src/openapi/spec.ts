@@ -87,6 +87,15 @@ const PROJECT_KEY_PARAMETER = {
   schema: { type: 'string', pattern: '^[A-Z]{2,6}$', example: 'WEB' },
 };
 
+// PRJ-4: the member to remove.
+const USER_ID_PARAMETER = {
+  name: 'userId',
+  in: 'path',
+  required: true,
+  description: "The member's user id (a UUID), as in the members list",
+  schema: { type: 'string', format: 'uuid' },
+};
+
 // LST-4: the query parameter of every paginated list.
 const PAGE_QUERY_PARAMETER = {
   name: 'page',
@@ -344,6 +353,41 @@ export function createOpenApiSpec(): Record<string, unknown> {
             ),
             '413': jsonResponse(
               'The request body is over 100 kB (PAYLOAD_TOO_LARGE)',
+              'ErrorResponse',
+            ),
+            '500': jsonResponse('Unexpected server error', 'ErrorResponse'),
+          },
+        },
+      },
+      '/projects/{projectKey}/members/{userId}': {
+        delete: {
+          tags: ['Projects'],
+          operationId: 'removeProjectMember',
+          summary: 'Remove a member from the project (owner only)',
+          description:
+            "PRJ-4. Only the project owner may remove members. The owner can't be removed (409 CANNOT_REMOVE_OWNER), so a project always keeps its owner, also when requests race. Send no request body. Browsers must send the request from the web app (same origin), or it gets 403.",
+          security: [{ authCookie: [] }],
+          parameters: [PROJECT_KEY_PARAMETER, USER_ID_PARAMETER],
+          responses: {
+            '204': { description: 'The member was removed; no response body' },
+            '400': jsonResponse(
+              'The user id is not a UUID (VALIDATION_ERROR), with details[] on the userId field',
+              'ErrorResponse',
+            ),
+            '401': jsonResponse(
+              'Not logged in (UNAUTHENTICATED): the cookie is missing, invalid or expired, or its user no longer exists',
+              'ErrorResponse',
+            ),
+            '403': jsonResponse(
+              'The caller is a member but not the owner (FORBIDDEN, "Only the project owner can do this"), or a cross-site request (FORBIDDEN)',
+              'ErrorResponse',
+            ),
+            '404': jsonResponse(
+              'No such project or the caller is not a member of it (NOT_FOUND, "Project not found"), or the user is not a member of the project (NOT_FOUND, "Member not found")',
+              'ErrorResponse',
+            ),
+            '409': jsonResponse(
+              "The user is the project's owner, who can't be removed (CANNOT_REMOVE_OWNER)",
               'ErrorResponse',
             ),
             '500': jsonResponse('Unexpected server error', 'ErrorResponse'),

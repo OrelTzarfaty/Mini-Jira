@@ -39,5 +39,16 @@ export function createMembersRouter({ prisma, authCookie }: MembersRouterOptions
     controller.add,
   );
 
+  // PRJ-4: only the owner may remove a member (403 for a member); the owner can't remove
+  // themselves (409). The app-wide origin check blocks cross-site DELETEs; the userId is
+  // validated in the controller, after the access checks.
+  router.delete(
+    `${membersPath}/:userId`,
+    requireAuth,
+    loadProjectAccess,
+    requireOwner,
+    controller.remove,
+  );
+
   return router;
 }

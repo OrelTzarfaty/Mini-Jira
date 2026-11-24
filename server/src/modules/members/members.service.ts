@@ -1,6 +1,8 @@
 import {
   alreadyMemberMessage,
+  CANNOT_REMOVE_OWNER_MESSAGE,
   ErrorCode,
+  MEMBER_NOT_FOUND_MESSAGE,
   memberSchema,
   Role,
   USER_NOT_FOUND_MESSAGE,
@@ -20,6 +22,11 @@ export interface MembersService {
    * no user has the email, and 409 ALREADY_MEMBER when they are in the project already.
    */
   addMember(projectId: string, input: AddMemberInput): Promise<Member>;
+  /**
+   * PRJ-4: removes the user's MEMBER row from the project. Throws 409 CANNOT_REMOVE_OWNER when
+   * the user is the project's owner, and 404 NOT_FOUND when they aren't in the project.
+   */
+  removeMember(projectId: string, userId: string): Promise<void>;
 }
 
 // Only the public user fields: the password hash never leaves this module.
@@ -109,6 +116,33 @@ export function createMembersService(prisma: PrismaClient): MembersService {
         }
         throw error;
       }
+    },
+
+    // PRJ-4: the delete itself only matches a MEMBER row, so the owner's row can never be
+    // deleted, even by two requests at the same moment: there is no "read the role, then delete"
+    // gap. Only when nothing was deleted do we read the row, to tell the owner (409) from a user
+    // who isn't in the project (404). Roles never change (architecture §8), so that read can't
+    // see a different role than the delete did.
+    async removeMember(projectId, userId) {
+      await prisma.$transaction(async (tx) => {
+        const { count } = await tx.projectMember.deleteMany({
+          where: { projectId, userId, role: Role.MEMBER },
+        });
+
+        if (count === 0) {
+          const membership = await tx.projectMember.findUnique({
+            where: { projectId_userId: { projectId, userId } },
+            select: { role: true },
+          });
+          throw membership?.role === Role.OWNER
+            ? new ConflictError(ErrorCode.CANNOT_REMOVE_OWNER, CANNOT_REMOVE_OWNER_MESSAGE)
+            : new NotFoundError(MEMBER_NOT_FOUND_MESSAGE);
+        }
+
+        // TODO(TKT-5): in this same transaction, unassign the removed user's tickets in this
+        // project (`tx.ticket.updateMany({ where: { projectId, assigneeId: userId }, data:
+        // { assigneeId: null } })`), so the membership and the assignments change together.
+      });
     },
   };
 }
