@@ -14,7 +14,8 @@ import type {
   ProjectListItem,
 } from '@mini-jira/shared';
 
-import type { Prisma, PrismaClient, Project as ProjectRow } from '../../generated/prisma/client.js';
+import { Prisma } from '../../generated/prisma/client.js';
+import type { PrismaClient, Project as ProjectRow } from '../../generated/prisma/client.js';
 import { ConflictError } from '../../lib/errors.js';
 import { isUniqueViolation } from '../../lib/prisma-errors.js';
 
@@ -119,10 +120,17 @@ export function createProjectsService(prisma: PrismaClient): ProjectsService {
     },
 
     // PRJ-2: the caller's memberships are the list, so another user's project can never appear.
-    // The ProjectMember userId index finds them. Sorted on the server by name, then by the unique
-    // key, so the order is total and a project never shows on two pages or on none. The page and
-    // the total are read in one transaction.
+    // The ProjectMember userId index finds them. The page and the total are read in one
+    // transaction.
     // `q` (optional) keeps the projects whose name or key contains it, in any letter case (ILIKE).
+    //
+    // Sort: by name ignoring letter case, then by the exact name, then by the unique key, so the
+    // order is total and a project never shows on two pages or on none. Prisma's orderBy can't
+    // call lower(), so one parameterised raw query picks the page of project ids in that order,
+    // and Prisma loads those rows. Both name sorts use the "C" collation (byte order), because a
+    // plain ORDER BY name follows the database collation, which differs between our Docker image
+    // (byte order: "Website" before "api") and other servers such as RDS. lower() makes "api"
+    // and "API" sort together on every database.
     async listMyProjects(userId, { page, q }) {
       const search = q === undefined ? undefined : escapeLikePattern(q);
       const where: Prisma.ProjectMemberWhereInput = {
@@ -138,16 +146,33 @@ export function createProjectsService(prisma: PrismaClient): ProjectsService {
               },
             }),
       };
-      const [memberships, total] = await prisma.$transaction([
-        prisma.projectMember.findMany({
-          where,
+      // The same filter as `where`, in SQL: Prisma's insensitive `contains` is ILIKE '%text%'.
+      const searchFilter =
+        search === undefined
+          ? Prisma.empty
+          : Prisma.sql`AND (p."name" ILIKE '%' || ${search} || '%' OR p."key" ILIKE '%' || ${search} || '%')`;
+
+      const { memberships, total } = await prisma.$transaction(async (tx) => {
+        const pageIds = await tx.$queryRaw<{ id: string }[]>`
+          SELECT p."id"
+          FROM "ProjectMember" pm
+          JOIN "Project" p ON p."id" = pm."projectId"
+          WHERE pm."userId" = ${userId}::uuid ${searchFilter}
+          ORDER BY lower(p."name") COLLATE "C", p."name" COLLATE "C", p."key" COLLATE "C"
+          LIMIT ${PAGE_SIZE} OFFSET ${(page - 1) * PAGE_SIZE}`;
+        const ids = pageIds.map(({ id }) => id);
+        const rows = await tx.projectMember.findMany({
+          where: { userId, projectId: { in: ids } },
           select: { role: true, project: true },
-          orderBy: [{ project: { name: 'asc' } }, { project: { key: 'asc' } }],
-          skip: (page - 1) * PAGE_SIZE,
-          take: PAGE_SIZE,
-        }),
-        prisma.projectMember.count({ where }),
-      ]);
+        });
+        // findMany with `in` has no order, so put the rows back in the order of the page.
+        const rowById = new Map(rows.map((row) => [row.project.id, row]));
+
+        return {
+          memberships: ids.flatMap((id) => rowById.get(id) ?? []),
+          total: await tx.projectMember.count({ where }),
+        };
+      });
 
       // One count query for the whole page, not one per project.
       const openTicketCounts = await countOpenTickets(memberships.map(({ project }) => project.id));

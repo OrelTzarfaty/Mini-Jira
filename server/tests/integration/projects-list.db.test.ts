@@ -149,6 +149,54 @@ describe('GET /api/projects (PRJ-2)', () => {
       expect(keysOf(await list('owner'))).toEqual(['ABC', 'ZED', 'MID', 'WEB']);
     });
 
+    // Byte order would put every uppercase letter before every lowercase one ("Delta" before
+    // "beta"); the list must ignore letter case on every database.
+    it('PRJ-2: sorts by name ignoring letter case', async () => {
+      await createProject(matrix.owner.id, 'BET', 'beta');
+      await createProject(matrix.owner.id, 'ALP', 'Alpha');
+      await createProject(matrix.owner.id, 'GAM', 'gamma');
+      await createProject(matrix.owner.id, 'DEL', 'Delta');
+
+      const names = projectListPageSchema
+        .parse((await list('owner')).body)
+        .items.map(({ name }) => name);
+      expect(names).toEqual(['Alpha', 'beta', 'Delta', 'gamma', 'Website']);
+    });
+
+    it('PRJ-2: names that differ only in letter case come back in a fixed order', async () => {
+      await createProject(matrix.owner.id, 'LOW', 'alpha');
+      await createProject(matrix.owner.id, 'CAP', 'Alpha');
+      await createProject(matrix.owner.id, 'UPP', 'ALPHA');
+      await createProject(matrix.owner.id, 'TWO', 'Alpha');
+
+      // Same name ignoring case → exact name in byte order (uppercase first) → key.
+      const expected = ['UPP', 'CAP', 'TWO', 'LOW', 'WEB'];
+      expect(keysOf(await list('owner'))).toEqual(expected);
+      expect(keysOf(await list('owner'))).toEqual(expected);
+    });
+
+    it('LST-4: the letter-case-insensitive order holds across page 1 and page 2', async () => {
+      // 21 more projects + WEB = 22, alternating lowercase and uppercase names.
+      for (let index = 0; index < PAGE_SIZE + 1; index += 1) {
+        const name = `${index % 2 === 0 ? 'item' : 'ITEM'} ${String(index).padStart(2, '0')}`;
+        await createProject(matrix.owner.id, keyFor(index), name);
+      }
+      // A lowercase name that must land on page 2, after "ITEM 19"/"item 20" and before "Website".
+      await createProject(matrix.owner.id, 'ZZ', 'unit');
+
+      const first = projectListPageSchema.parse((await list('owner')).body);
+      const second = projectListPageSchema.parse((await list('owner', '?page=2')).body);
+      expect(first.total).toBe(23);
+      expect(first.items.map(({ name }) => name)).toEqual(
+        Array.from(
+          { length: PAGE_SIZE },
+          (_unused, index) =>
+            `${index % 2 === 0 ? 'item' : 'ITEM'} ${String(index).padStart(2, '0')}`,
+        ),
+      );
+      expect(second.items.map(({ name }) => name)).toEqual(['item 20', 'unit', 'Website']);
+    });
+
     it('LST-4: returns 20 projects per page, the rest on page 2, and nothing past the end', async () => {
       // 21 more projects + WEB = 22. Names sort before "Website".
       for (let index = 0; index < PAGE_SIZE + 1; index += 1) {
