@@ -3,6 +3,10 @@ import {
   errorResponseSchema,
   healthResponseSchema,
   loginSchema,
+  MAX_PAGE,
+  PAGE_SIZE,
+  pageSchema,
+  projectListItemSchema,
   projectSchema,
   publicUserSchema,
   registerSchema,
@@ -80,6 +84,15 @@ const PROJECT_KEY_PARAMETER = {
   required: true,
   description: 'The project key, exactly as stored: 2-6 uppercase letters A-Z (e.g. WEB)',
   schema: { type: 'string', pattern: '^[A-Z]{2,6}$', example: 'WEB' },
+};
+
+// LST-4: the page parameter of every paginated list.
+const PAGE_PARAMETER = {
+  name: 'page',
+  in: 'query',
+  required: false,
+  description: `The page to return, starting at 1; ${PAGE_SIZE} items per page`,
+  schema: { type: 'integer', minimum: 1, maximum: MAX_PAGE, default: 1 },
 };
 
 export function createOpenApiSpec(): Record<string, unknown> {
@@ -215,6 +228,30 @@ export function createOpenApiSpec(): Record<string, unknown> {
         },
       },
       '/projects': {
+        get: {
+          tags: ['Projects'],
+          operationId: 'listMyProjects',
+          summary: 'List the projects the caller is a member of',
+          description:
+            "PRJ-2. Only projects where the caller is a member (OWNER or MEMBER); role is the caller's role in each. Sorted by name, then by key. Paginated: a page past the end returns no items with the real total and totalPages. Unknown query parameters are rejected. Answers with Cache-Control: no-store, so no browser or shared cache keeps the user's data.",
+          security: [{ authCookie: [] }],
+          parameters: [PAGE_PARAMETER],
+          responses: {
+            '200': {
+              ...jsonResponse("One page of the caller's projects", 'ProjectListPage'),
+              headers: NO_STORE_HEADER,
+            },
+            '400': jsonResponse(
+              'Invalid query (VALIDATION_ERROR), with one entry in details[] per parameter',
+              'ErrorResponse',
+            ),
+            '401': jsonResponse(
+              'Not logged in (UNAUTHENTICATED): the cookie is missing, invalid or expired, or its user no longer exists',
+              'ErrorResponse',
+            ),
+            '500': jsonResponse('Unexpected server error', 'ErrorResponse'),
+          },
+        },
         post: {
           tags: ['Projects'],
           operationId: 'createProject',
@@ -288,6 +325,7 @@ export function createOpenApiSpec(): Record<string, unknown> {
         HealthResponse: toComponentSchema(healthResponseSchema),
         LoginRequest: toComponentSchema(loginSchema, 'input'),
         Project: toComponentSchema(projectSchema),
+        ProjectListPage: toComponentSchema(pageSchema(projectListItemSchema)),
         PublicUser: toComponentSchema(publicUserSchema),
         RegisterRequest: toComponentSchema(registerSchema, 'input'),
       },

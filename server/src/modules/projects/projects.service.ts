@@ -1,5 +1,18 @@
-import { ErrorCode, PROJECT_KEY_TAKEN_MESSAGE, projectSchema, Role } from '@mini-jira/shared';
-import type { CreateProjectInput, Project } from '@mini-jira/shared';
+import {
+  ErrorCode,
+  PAGE_SIZE,
+  PROJECT_KEY_TAKEN_MESSAGE,
+  projectListItemSchema,
+  projectSchema,
+  Role,
+} from '@mini-jira/shared';
+import type {
+  CreateProjectInput,
+  ListProjectsQuery,
+  Page,
+  Project,
+  ProjectListItem,
+} from '@mini-jira/shared';
 
 import type { PrismaClient, Project as ProjectRow } from '../../generated/prisma/client.js';
 import { ConflictError } from '../../lib/errors.js';
@@ -13,6 +26,8 @@ export interface ProjectsService {
    * project doesn't exist **or** the caller isn't a member (the caller can't tell which).
    */
   findProjectAccess(userId: string, projectKey: string): Promise<ProjectAccess | null>;
+  /** PRJ-2: one page of the projects the caller is a member of, with the caller's role in each. */
+  listMyProjects(userId: string, query: ListProjectsQuery): Promise<Page<ProjectListItem>>;
 }
 
 /** PRJ-6: what loadProjectAccess puts on the request: the project row and the caller's role. */
@@ -80,6 +95,35 @@ export function createProjectsService(prisma: PrismaClient): ProjectsService {
         where: { userId, project: { key: projectKey } },
         select: { role: true, project: true },
       });
+    },
+
+    // PRJ-2: the caller's memberships are the list, so another user's project can never appear.
+    // The ProjectMember userId index finds them. Sorted on the server by name, then by the unique
+    // key, so the order is total and a project never shows on two pages or on none. The page and
+    // the total are read in one transaction.
+    async listMyProjects(userId, { page }) {
+      const where = { userId };
+      const [memberships, total] = await prisma.$transaction([
+        prisma.projectMember.findMany({
+          where,
+          select: { role: true, project: true },
+          orderBy: [{ project: { name: 'asc' } }, { project: { key: 'asc' } }],
+          skip: (page - 1) * PAGE_SIZE,
+          take: PAGE_SIZE,
+        }),
+        prisma.projectMember.count({ where }),
+      ]);
+
+      return {
+        items: memberships.map(({ project, role }) =>
+          projectListItemSchema.parse(toProjectResponse(project, role)),
+        ),
+        page,
+        pageSize: PAGE_SIZE,
+        total,
+        // A page past the end is still a 200 with no items and the real totals.
+        totalPages: Math.ceil(total / PAGE_SIZE),
+      };
     },
   };
 }

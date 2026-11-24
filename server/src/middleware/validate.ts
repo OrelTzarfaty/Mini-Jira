@@ -42,3 +42,25 @@ export function validateBody(schema: z.ZodType): RequestHandler {
     next();
   };
 }
+
+const INVALID_QUERY_MESSAGE = 'The query string is invalid';
+
+/**
+ * Parses `req.query` with a strict zod schema (unknown parameters rejected) and returns the typed
+ * result (numbers converted, defaults filled in). A function the handler calls, not a middleware:
+ * Express 5 makes `req.query` read-only, and returning the parsed value keeps its zod type
+ * without an `as` cast (standards §5). Invalid input → throws 400 VALIDATION_ERROR with `details[]`.
+ */
+export function parseQuery<S extends z.ZodType>(schema: S, query: unknown): z.output<S> {
+  const result = schema.safeParse(query);
+
+  if (!result.success) {
+    const details = result.error.issues.flatMap(toErrorDetails);
+    throw new ValidationError(
+      details[0]?.message ?? INVALID_QUERY_MESSAGE,
+      details.length > 0 ? details : undefined,
+    );
+  }
+
+  return result.data;
+}

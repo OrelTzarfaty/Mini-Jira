@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 import { Role } from '../enums.js';
 import { CONTROL_CHARACTER, requiredString } from './common.js';
+import { paginationQuerySchema } from './pagination.js';
 
 export const PROJECT_KEY_MIN_LENGTH = 2;
 export const PROJECT_KEY_MAX_LENGTH = 6;
@@ -94,3 +95,13 @@ export const projectSchema = z.object({
 });
 
 export type Project = z.infer<typeof projectSchema>;
+
+// PRJ-2: the query of `GET /api/projects` (My Projects). Strict, so an unknown parameter is a 400.
+export const listProjectsQuerySchema = paginationQuerySchema;
+
+export type ListProjectsQuery = z.infer<typeof listProjectsQuerySchema>;
+
+// PRJ-2: one card on the My Projects page: the project with the caller's role.
+export const projectListItemSchema = projectSchema;
+
+export type ProjectListItem = z.infer<typeof projectListItemSchema>;
