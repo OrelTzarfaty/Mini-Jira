@@ -244,13 +244,13 @@ Sprint 3 · Size M · Status: To do · Depends on PRJ-1
 - [ ] QA · Project dropdown: search finds a project, switching opens its board, keyboard works
 
 ### PRJ-6 · Non-members can't access a project
-Sprint 3 · Size M · Status: In progress · Depends on PRJ-1 · **Build before PRJ-3/4/5**
+Sprint 3 · Size M · Status: In review · Depends on PRJ-1 · **Build before PRJ-3/4/5**
 AC (extra): project missing or caller not a member → `404`; member without rights → `403`.
-- [ ] BE · `loadProjectAccess` and `requireOwner` middleware (architecture §6)
-- [ ] BE · `GET /api/projects/:projectKey`
-- [ ] FE · Project 404 page ("Project not found") for direct URLs
-- [ ] QA · Reusable **authorization-matrix test helper** (owner / member / outsider) that every later story uses
-- [ ] QA · Outsider gets 404 and no project data, through the API and the UI
+- [x] BE · `loadProjectAccess` and `requireOwner` middleware (architecture §6)
+- [x] BE · `GET /api/projects/:projectKey`
+- [x] FE · Project 404 page ("Project not found") for direct URLs
+- [x] QA · Reusable **authorization-matrix test helper** (owner / member / outsider) that every later story uses
+- [x] QA · Outsider gets 404 and no project data, through the API and the UI
 
 ### PRJ-3 · Add a member by email
 Sprint 3 · Size M · Status: To do · Depends on PRJ-6
