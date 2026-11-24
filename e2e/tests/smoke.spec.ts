@@ -4,11 +4,15 @@ import type { ConsoleMessage } from '@playwright/test';
 /**
  * AUTH-4: every page asks GET /api/auth/me who is logged in, and for a visitor it answers 401
  * by design. Chromium logs every 4xx response as a console error, so that one message is
- * expected. Only it is skipped: the same text for any other URL still fails the test.
+ * expected. Only it is skipped: a 401 from any other URL, or any other status from /me (a 500,
+ * for example), still fails the test.
  */
 function isVisitorMeResponse(message: ConsoleMessage): boolean {
+  const text = message.text();
+
   return (
-    message.text().startsWith('Failed to load resource') &&
+    text.startsWith('Failed to load resource') &&
+    text.includes('status of 401') &&
     message.location().url.endsWith('/api/auth/me')
   );
 }
