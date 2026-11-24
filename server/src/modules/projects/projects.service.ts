@@ -14,7 +14,7 @@ import type {
   ProjectListItem,
 } from '@mini-jira/shared';
 
-import type { PrismaClient, Project as ProjectRow } from '../../generated/prisma/client.js';
+import type { Prisma, PrismaClient, Project as ProjectRow } from '../../generated/prisma/client.js';
 import { ConflictError } from '../../lib/errors.js';
 import { isUniqueViolation } from '../../lib/prisma-errors.js';
 
@@ -54,6 +54,16 @@ const projectKeyTaken = (): ConflictError =>
   new ConflictError(ErrorCode.PROJECT_KEY_TAKEN, PROJECT_KEY_TAKEN_MESSAGE, [
     { field: 'key', message: PROJECT_KEY_TAKEN_MESSAGE },
   ]);
+
+/**
+ * PRJ-2: Prisma's `contains` puts the text into an (I)LIKE pattern without escaping it, so `%` and
+ * `_` would work as wildcards (a search for "%" would match every project). A backslash before
+ * them makes them plain characters; PostgreSQL's default LIKE escape character is the backslash,
+ * so a backslash typed by the user is escaped too.
+ */
+function escapeLikePattern(text: string): string {
+  return text.replace(/[\\%_]/g, (character) => `\\${character}`);
+}
 
 export function createProjectsService(prisma: PrismaClient): ProjectsService {
   /**
@@ -112,8 +122,22 @@ export function createProjectsService(prisma: PrismaClient): ProjectsService {
     // The ProjectMember userId index finds them. Sorted on the server by name, then by the unique
     // key, so the order is total and a project never shows on two pages or on none. The page and
     // the total are read in one transaction.
-    async listMyProjects(userId, { page }) {
-      const where = { userId };
+    // `q` (optional) keeps the projects whose name or key contains it, in any letter case (ILIKE).
+    async listMyProjects(userId, { page, q }) {
+      const search = q === undefined ? undefined : escapeLikePattern(q);
+      const where: Prisma.ProjectMemberWhereInput = {
+        userId,
+        ...(search === undefined
+          ? {}
+          : {
+              project: {
+                OR: [
+                  { name: { contains: search, mode: 'insensitive' } },
+                  { key: { contains: search, mode: 'insensitive' } },
+                ],
+              },
+            }),
+      };
       const [memberships, total] = await prisma.$transaction([
         prisma.projectMember.findMany({
           where,

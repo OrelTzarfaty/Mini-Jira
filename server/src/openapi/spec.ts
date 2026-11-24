@@ -5,6 +5,7 @@ import {
   loginSchema,
   MAX_PAGE,
   PAGE_SIZE,
+  PROJECT_SEARCH_MAX_LENGTH,
   pageSchema,
   projectListItemSchema,
   projectSchema,
@@ -93,6 +94,16 @@ const PAGE_PARAMETER = {
   required: false,
   description: `The page to return, starting at 1; ${PAGE_SIZE} items per page`,
   schema: { type: 'integer', minimum: 1, maximum: MAX_PAGE, default: 1 },
+};
+
+// PRJ-2: the optional search of My Projects and the project dropdown.
+const PROJECT_SEARCH_PARAMETER = {
+  name: 'q',
+  in: 'query',
+  required: false,
+  description:
+    'Keeps only projects whose name or key contains this text, in any letter case. Trimmed; empty means no search. % and _ are plain characters, not wildcards',
+  schema: { type: 'string', maxLength: PROJECT_SEARCH_MAX_LENGTH, example: 'web' },
 };
 
 export function createOpenApiSpec(): Record<string, unknown> {
@@ -235,7 +246,7 @@ export function createOpenApiSpec(): Record<string, unknown> {
           description:
             "PRJ-2. Only projects where the caller is a member (OWNER or MEMBER); role is the caller's role in each, and openTicketCount the number of its tickets that are not Done (0 until tickets exist). Sorted by name, then by key. Paginated: a page past the end returns no items with the real total and totalPages. Unknown query parameters are rejected. Answers with Cache-Control: no-store, so no browser or shared cache keeps the user's data.",
           security: [{ authCookie: [] }],
-          parameters: [PAGE_PARAMETER],
+          parameters: [PROJECT_SEARCH_PARAMETER, PAGE_PARAMETER],
           responses: {
             '200': {
               ...jsonResponse("One page of the caller's projects", 'ProjectListPage'),

@@ -8,6 +8,8 @@ export const PROJECT_KEY_MIN_LENGTH = 2;
 export const PROJECT_KEY_MAX_LENGTH = 6;
 export const PROJECT_NAME_MAX_LENGTH = 100;
 export const PROJECT_DESCRIPTION_MAX_LENGTH = 2000;
+// PRJ-2: the longest search text for My Projects and the project dropdown.
+export const PROJECT_SEARCH_MAX_LENGTH = 100;
 // PRJ-1: shown under the Key field when another project already uses the key (wireframe 02 D).
 export const PROJECT_KEY_TAKEN_MESSAGE = 'This key is already taken';
 // PRJ-6: the one 404 message for a missing project and for a project the caller isn't a member
@@ -97,7 +99,20 @@ export const projectSchema = z.object({
 export type Project = z.infer<typeof projectSchema>;
 
 // PRJ-2: the query of `GET /api/projects` (My Projects). Strict, so an unknown parameter is a 400.
-export const listProjectsQuerySchema = paginationQuerySchema;
+// `q` is an optional search in the project name or key; empty after trimming means no search.
+export const listProjectsQuerySchema = paginationQuerySchema.extend({
+  q: z
+    .string()
+    .trim()
+    .max(
+      PROJECT_SEARCH_MAX_LENGTH,
+      `Search must be at most ${PROJECT_SEARCH_MAX_LENGTH} characters`,
+    )
+    // Names can't contain control characters, and PostgreSQL rejects U+0000 in a query (500).
+    .refine((q) => !CONTROL_CHARACTER.test(q), "Search contains characters that aren't allowed")
+    .optional()
+    .transform((q) => (q === '' ? undefined : q)),
+});
 
 export type ListProjectsQuery = z.infer<typeof listProjectsQuerySchema>;
 
