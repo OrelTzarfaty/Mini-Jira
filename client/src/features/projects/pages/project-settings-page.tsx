@@ -6,6 +6,7 @@ import { Link } from 'react-router';
 
 import { DocumentTitle } from '@/components/document-title';
 import { Button } from '@/components/ui/button';
+import { MembersSection } from '@/features/members/components/members-section';
 import { SettingsSection } from '@/features/projects/components/settings-section';
 import { useCurrentProject } from '@/features/projects/hooks/use-project';
 import { cn } from '@/lib/utils';
@@ -82,9 +83,7 @@ export function ProjectSettingsPage(): ReactElement {
       <SettingsSection title="Project details">
         <ProjectDetails project={project} />
       </SettingsSection>
-      <SettingsSection title="Members">
-        <p className="text-muted-foreground">Members come next.</p>
-      </SettingsSection>
+      <MembersSection projectKey={project.key} />
       {/* The red frame marks the only destructive part of the page; the Delete project button
           and its dialog come in PRJ-5. */}
       <SettingsSection title="Danger zone" className="border-destructive">
