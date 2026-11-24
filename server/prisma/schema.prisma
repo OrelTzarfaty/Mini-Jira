@@ -16,4 +16,48 @@ model User {
   passwordHash String
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+
+  // PRJ-1: a user's memberships; deleting the user removes them (architecture §8).
+  memberships ProjectMember[]
+}
+
+// PRJ-1: the roles a user can have in a project (architecture §8). Exactly one OWNER per
+// project; there is no API to change roles.
+enum Role {
+  OWNER
+  MEMBER
+}
+
+model Project {
+  id            String   @id @default(uuid()) @db.Uuid
+  // Unique index: every project URL looks the project up by key (architecture §8.1).
+  // 2-6 uppercase letters (CHECK constraint in the migration); immutable after creation.
+  key           String   @unique
+  name          String
+  description   String?
+  // Last ticket number handed out; incremented atomically per new ticket, never reused
+  // (architecture §10.1). Starts at 0; CHECK constraint in the migration keeps it >= 0.
+  ticketCounter Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  members ProjectMember[]
+}
+
+model ProjectMember {
+  // The composite primary key (projectId, userId) also serves the access check on every
+  // project request (loadProjectAccess, architecture §6 and §8.1).
+  projectId String   @db.Uuid
+  userId    String   @db.Uuid
+  role      Role
+  joinedAt  DateTime @default(now())
+
+  // Hard delete (architecture §10.5): deleting a project or a user removes the membership.
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([projectId, userId])
+  // My Projects lists the caller's projects by userId (architecture §8.1); the PK can't serve
+  // it because userId is its second column.
+  @@index([userId])
 }

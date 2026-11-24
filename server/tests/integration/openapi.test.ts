@@ -82,6 +82,22 @@ describe('GET /api/openapi.json', () => {
     ]);
   });
 
+  it('PRJ-1: documents the create-project endpoint with its responses', async () => {
+    const spec = await getSpec();
+
+    expect(Object.keys(spec.paths['/projects']?.post?.responses ?? {})).toEqual([
+      '201',
+      '400',
+      '401',
+      '403',
+      '409',
+      '413',
+      '500',
+    ]);
+    // The internal counter is never part of the documented response.
+    expect(JSON.stringify(spec.components.schemas.Project)).not.toContain('ticketCounter');
+  });
+
   it('SETUP-3: builds the error schema from the shared error codes', async () => {
     const spec = await getSpec();
 

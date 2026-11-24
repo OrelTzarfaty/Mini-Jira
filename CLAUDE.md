@@ -92,6 +92,7 @@ Endpoints so far (full details in Swagger at `/api/docs`):
 | `POST` | `/api/auth/login` | Log in (sets the auth cookie); generic `401 INVALID_CREDENTIALS`, failed logins limited per email + IP and per IP (`429 RATE_LIMITED`) |
 | `POST` | `/api/auth/logout` | Log out: always `204` and clears the auth cookie (public, so a missing or expired session never gets `401`) |
 | `GET` | `/api/auth/me` | The logged-in user (`id`, `name`, `email`), `Cache-Control: no-store`; `401 UNAUTHENTICATED` without a valid session. The web app calls it on start to restore the session |
+| `POST` | `/api/projects` | Create a project (`name`, `key`, optional `description`); the key is uppercased, must be 2–6 letters and can't be changed later. The creator becomes Owner in the same transaction. `201` with the project and `role`; `409 PROJECT_KEY_TAKEN` |
 
 ## Features
 
@@ -99,8 +100,8 @@ Summary only — task-level status lives in [docs/backlog.md](docs/backlog.md).
 
 | Area | IDs | Priority | Status |
 |---|---|---|---|
-| Authentication | AUTH-1..4 | P0 | In progress — AUTH-1..3 done (register, log in, log out); AUTH-4 (session survives refresh) built, in review |
-| Projects & members | PRJ-1..6 | P0 | Not started |
+| Authentication | AUTH-1..4 | P0 | Done — AUTH-1..4 done (register, log in, log out, session survives refresh) |
+| Projects & members | PRJ-1..6 | P0 | In progress — PRJ-1 (create project) built, in review |
 | Tickets | TKT-1..5 | P0 | Not started |
 | Board | BRD-1..4 | P0 | Not started |
 | Comments & activity | CMT-1..2, ACT-1 | P1 | Not started |

@@ -210,7 +210,7 @@ Sprint 2 · Size S · **Status: Done** — merged into `dev` in [#79](https://gi
 - [x] QA · API calls without the cookie return 401; E2E: Log out → landing page, cookie cleared
 
 ### AUTH-4 · Session survives refresh
-Sprint 2 · Size S · **Status: In review** — [#81](https://github.com/OrelTzarfaty/Mini-Jira/pull/81) · Depends on AUTH-3
+Sprint 2 · Size S · **Status: Done** — merged into `dev` in [#81](https://github.com/OrelTzarfaty/Mini-Jira/pull/81) (`d51868b`); light QA PASS · Depends on AUTH-3
 - [x] BE · `GET /api/auth/me`
 - [x] FE · `useMe` query loaded on app start
 - [x] FE · `ProtectedRoute`: loading state, then the page or a redirect to `/login`
@@ -222,14 +222,14 @@ Sprint 2 · Size S · **Status: In review** — [#81](https://github.com/OrelTza
 ## E3 · Projects & members — Sprint 3
 
 ### PRJ-1 · Create project
-Sprint 3 · Size M · Status: To do · Depends on AUTH-4
+Sprint 3 · Size M · **Status: In review** · Depends on AUTH-4
 AC (extra): key 2–6 uppercase, unique (`409 PROJECT_KEY_TAKEN`), immutable · creator gets an OWNER membership in the same transaction.
-- [ ] BE · Migration: `Project` (with `ticketCounter`), `ProjectMember` (role) + indexes
-- [ ] BE · Shared `createProjectSchema` (key 2–6 uppercase letters)
-- [ ] BE · `POST /api/projects` (transaction: project + owner membership)
-- [ ] FE · "Create project" dialog: name, description, key (auto-uppercase), inline errors
-- [ ] FE · Suggest the key from the name while typing (initials, or first 3 letters of one word); stop once edited by hand (wireframe 02 D)
-- [ ] QA · Integration: valid/invalid keys, duplicate key, creator is OWNER
+- [x] BE · Migration: `Project` (with `ticketCounter`), `ProjectMember` (role) + indexes
+- [x] BE · Shared `createProjectSchema` (key 2–6 uppercase letters)
+- [x] BE · `POST /api/projects` (transaction: project + owner membership)
+- [x] FE · "Create project" dialog: name, description, key (auto-uppercase), inline errors
+- [x] FE · Suggest the key from the name while typing (initials, or first 3 letters of one word); stop once edited by hand (wireframe 02 D)
+- [x] QA · Integration: valid/invalid keys, duplicate key, creator is OWNER
 
 ### PRJ-2 · My Projects list
 Sprint 3 · Size M · Status: To do · Depends on PRJ-1

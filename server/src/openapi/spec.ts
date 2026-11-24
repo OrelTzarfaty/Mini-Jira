@@ -1,7 +1,9 @@
 import {
+  createProjectSchema,
   errorResponseSchema,
   healthResponseSchema,
   loginSchema,
+  projectSchema,
   publicUserSchema,
   registerSchema,
 } from '@mini-jira/shared';
@@ -83,6 +85,7 @@ export function createOpenApiSpec(): Record<string, unknown> {
     tags: [
       { name: 'System', description: 'API status' },
       { name: 'Auth', description: 'Accounts and login sessions' },
+      { name: 'Projects', description: 'Projects and their members' },
     ],
     paths: {
       '/health': {
@@ -202,6 +205,41 @@ export function createOpenApiSpec(): Record<string, unknown> {
           },
         },
       },
+      '/projects': {
+        post: {
+          tags: ['Projects'],
+          operationId: 'createProject',
+          summary: 'Create a project; the caller becomes its owner',
+          description:
+            'PRJ-1. Any logged-in user may create a project. The name (1-100 characters) and the description (optional, up to 2000) are trimmed; a missing, null or empty description is stored as null. The key is trimmed, must be 2-6 English letters A-Z in either case (no digits, no other letters), and is then uppercased ("web" becomes "WEB"); it must not be used by any other project in any letter case and can\'t be changed later, because it is the prefix of every ticket key (WEB-12). The project and the caller\'s OWNER membership are created in one transaction. Unknown fields are rejected. Browsers must send the request from the web app (same origin), or it gets 403.',
+          security: [{ authCookie: [] }],
+          requestBody: jsonRequestBody('CreateProjectRequest'),
+          responses: {
+            '201': jsonResponse(
+              "The project was created; role is the caller's role (OWNER)",
+              'Project',
+            ),
+            '400': jsonResponse(
+              'Invalid input (VALIDATION_ERROR), with one entry in details[] per field',
+              'ErrorResponse',
+            ),
+            '401': jsonResponse(
+              'Not logged in (UNAUTHENTICATED): the cookie is missing, invalid or expired, or its user no longer exists',
+              'ErrorResponse',
+            ),
+            '403': jsonResponse('A cross-site request (FORBIDDEN)', 'ErrorResponse'),
+            '409': jsonResponse(
+              'Another project already uses this key (PROJECT_KEY_TAKEN), with details[] on the key field',
+              'ErrorResponse',
+            ),
+            '413': jsonResponse(
+              'The request body is over 100 kB (PAYLOAD_TOO_LARGE)',
+              'ErrorResponse',
+            ),
+            '500': jsonResponse('Unexpected server error', 'ErrorResponse'),
+          },
+        },
+      },
     },
     components: {
       securitySchemes: {
@@ -214,8 +252,10 @@ export function createOpenApiSpec(): Record<string, unknown> {
       },
       schemas: {
         ErrorResponse: toComponentSchema(errorResponseSchema),
+        CreateProjectRequest: toComponentSchema(createProjectSchema, 'input'),
         HealthResponse: toComponentSchema(healthResponseSchema),
         LoginRequest: toComponentSchema(loginSchema, 'input'),
+        Project: toComponentSchema(projectSchema),
         PublicUser: toComponentSchema(publicUserSchema),
         RegisterRequest: toComponentSchema(registerSchema, 'input'),
       },

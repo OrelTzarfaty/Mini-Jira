@@ -60,7 +60,8 @@ type ConflictCode = Extract<
 >;
 
 export class ConflictError extends AppError {
-  constructor(code: ConflictCode, message: string) {
-    super(code, message);
+  // `details` points the client at the field to fix, e.g. the key in PRJ-1.
+  constructor(code: ConflictCode, message: string, details?: ErrorDetail[]) {
+    super(code, message, details);
   }
 }

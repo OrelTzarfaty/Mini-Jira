@@ -4,3 +4,4 @@ export * from './errors.js';
 export * from './schemas/auth.js';
 export * from './schemas/health.js';
 export * from './schemas/pagination.js';
+export * from './schemas/projects.js';
