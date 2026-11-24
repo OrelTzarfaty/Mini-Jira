@@ -8,6 +8,7 @@ import {
 } from '@mini-jira/shared';
 import type { CreateProjectFormValues, CreateProjectInput } from '@mini-jira/shared';
 import { Loader2Icon } from 'lucide-react';
+import { useRef } from 'react';
 import type { ChangeEvent, ReactElement } from 'react';
 import { useForm } from 'react-hook-form';
 import type { UseFormSetError } from 'react-hook-form';
@@ -21,7 +22,7 @@ import { DialogClose, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useCreateProjectMutation } from '@/features/projects/hooks/use-create-project-mutation';
-import { toProjectKeyCharacters } from '@/features/projects/lib/project-key';
+import { suggestProjectKey, toProjectKeyCharacters } from '@/features/projects/lib/project-key';
 import { showServerError } from '@/lib/show-server-error';
 
 const KEY_HINT = `${PROJECT_KEY_MIN_LENGTH}–${PROJECT_KEY_MAX_LENGTH} letters. Used in ticket keys like WEB-12. Can't be changed later`;
@@ -71,17 +72,33 @@ export function CreateProjectForm(): ReactElement {
     register,
     handleSubmit,
     setError,
-    formState: { errors },
+    setValue,
+    formState: { errors, isSubmitted },
   } = useForm({
     resolver: zodResolver(createProjectSchema),
     defaultValues: { name: '', key: '', description: '' },
   });
   const isSending = createProjectMutation.isPending;
+  // The key follows the name until the user types in the Key field (wireframe 02 D). Only event
+  // handlers read it, so a ref is enough: changing it needs no new render.
+  const isKeyEditedByHandRef = useRef(false);
   // Registered in the order they appear, so a failed submit focuses the first field with an error.
   const nameField = register('name');
   const keyField = register('key');
 
+  function handleNameChange(event: ChangeEvent<HTMLInputElement>): void {
+    void nameField.onChange(event);
+
+    if (isKeyEditedByHandRef.current) {
+      return;
+    }
+
+    // After a submit, check the key again at once, as when the user types in the field.
+    setValue('key', suggestProjectKey(event.target.value), { shouldValidate: isSubmitted });
+  }
+
   function handleKeyChange(event: ChangeEvent<HTMLInputElement>): void {
+    isKeyEditedByHandRef.current = true;
     cleanKeyInput(event.target);
 
     void keyField.onChange(event);
@@ -111,7 +128,9 @@ export function CreateProjectForm(): ReactElement {
       className="grid gap-4"
     >
       <FormField label="Name" error={errors.name?.message}>
-        {(control) => <Input {...control} {...nameField} autoComplete="off" />}
+        {(control) => (
+          <Input {...control} {...nameField} onChange={handleNameChange} autoComplete="off" />
+        )}
       </FormField>
       <FormField label="Key" hint={KEY_HINT} error={errors.key?.message}>
         {(control) => (

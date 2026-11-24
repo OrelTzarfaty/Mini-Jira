@@ -76,6 +76,32 @@ describe('CreateProjectDialog', () => {
     expect(key).toHaveValue('WEBABC');
   });
 
+  it('PRJ-1: suggests the key from the name while typing', async () => {
+    const { popup } = await openPopup();
+    const name = within(popup).getByLabelText('Name');
+    const key = within(popup).getByLabelText('Key');
+
+    await userEvent.type(name, 'Documentation');
+    expect(key).toHaveValue('DOC');
+
+    await userEvent.clear(name);
+    await userEvent.type(name, 'Mobile App Backend');
+    expect(key).toHaveValue('MAB');
+  });
+
+  it('PRJ-1: stops following the name once the key is edited by hand', async () => {
+    const { popup } = await openPopup();
+    const name = within(popup).getByLabelText('Name');
+    const key = within(popup).getByLabelText('Key');
+    await userEvent.type(name, 'Website Redesign');
+    expect(key).toHaveValue('WR');
+
+    await userEvent.type(key, 'x');
+    await userEvent.type(name, ' Team');
+
+    expect(key).toHaveValue('WRX');
+  });
+
   it("PRJ-1: shows the schema's messages under the fields and sends nothing", async () => {
     let requests = 0;
     server.use(
