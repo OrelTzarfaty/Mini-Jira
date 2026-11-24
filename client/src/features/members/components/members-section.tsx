@@ -3,6 +3,7 @@ import type { ReactElement } from 'react';
 
 import { ErrorState } from '@/components/error-state';
 import { Button } from '@/components/ui/button';
+import { AddMemberForm } from '@/features/members/components/add-member-form';
 import { MemberList, MemberListSkeleton } from '@/features/members/components/member-list';
 import { useProjectMembers } from '@/features/members/hooks/use-project-members';
 import { SettingsSection } from '@/features/projects/components/settings-section';
@@ -70,7 +71,13 @@ export function MembersSection({ projectKey }: { projectKey: string }): ReactEle
 
   return (
     <SettingsSection title={total === undefined ? 'Members' : `Members (${String(total)})`}>
-      <MembersContent membersQuery={membersQuery} />
+      <div className="grid gap-4">
+        <AddMemberForm projectKey={projectKey} />
+        {/* A hairline between the form and the list (wireframe 06 A). */}
+        <div className="border-t pt-1">
+          <MembersContent membersQuery={membersQuery} />
+        </div>
+      </div>
     </SettingsSection>
   );
 }
