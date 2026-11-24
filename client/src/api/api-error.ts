@@ -43,3 +43,11 @@ export class ApiError extends Error {
 export function isUnauthenticatedError(error: unknown): boolean {
   return error instanceof ApiError && error.code === ErrorCode.UNAUTHENTICATED;
 }
+
+/**
+ * Whether the API said the resource isn't there (404 NOT_FOUND). For a project this also means
+ * "you aren't a member": the API answers both the same way, so nothing leaks (PRJ-6).
+ */
+export function isNotFoundError(error: unknown): boolean {
+  return error instanceof ApiError && error.code === ErrorCode.NOT_FOUND;
+}
