@@ -1,22 +1,13 @@
 import { z } from 'zod';
 
+import { CONTROL_CHARACTER, requiredString } from './common.js';
+
 export const NAME_MAX_LENGTH = 100;
 // RFC 5321 limits a forward path to 256 characters, which leaves 254 for the address itself.
 export const EMAIL_MAX_LENGTH = 254;
 export const PASSWORD_MIN_LENGTH = 8;
 // An upper limit stops very long passwords from making Argon2id hashing slow (a cheap DoS).
 export const PASSWORD_MAX_LENGTH = 128;
-
-// Unicode control characters (category Cc): C0 U+0000-U+001F, DEL U+007F and C1 U+0080-U+009F.
-// A name is one line of display text, so none of them belong in it, and PostgreSQL can't
-// store U+0000 in a text column at all (it would fail as a 500 after the password was hashed).
-const CONTROL_CHARACTER = /\p{Cc}/u;
-
-/** A string field that says "<label> is required" when it is missing; other type errors keep zod's message. */
-const requiredString = (label: string): z.ZodString =>
-  z.string({
-    error: (issue) => (issue.input === undefined ? `${label} is required` : undefined),
-  });
 
 const passwordMaxMessage = `Password must be at most ${PASSWORD_MAX_LENGTH} characters`;
 
