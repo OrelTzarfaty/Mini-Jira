@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   createProjectSchema,
+  isProjectKey,
   PROJECT_DESCRIPTION_MAX_LENGTH,
   PROJECT_NAME_MAX_LENGTH,
   projectSchema,
@@ -140,5 +141,31 @@ describe('projectSchema', () => {
 
   it('PRJ-1: rejects an unknown role', () => {
     expect(projectSchema.safeParse({ ...project, role: 'ADMIN' }).success).toBe(false);
+  });
+});
+
+describe('isProjectKey', () => {
+  it('PRJ-6: accepts 2 to 6 uppercase letters', () => {
+    for (const key of ['AB', 'WEB', 'ABCDEF']) {
+      expect(isProjectKey(key)).toBe(true);
+    }
+  });
+
+  it('PRJ-6: rejects lowercase or mixed case, because stored keys are uppercase', () => {
+    for (const key of ['web', 'Web', 'wEB']) {
+      expect(isProjectKey(key)).toBe(false);
+    }
+  });
+
+  it('PRJ-6: rejects keys that are too short or too long', () => {
+    for (const key of ['', 'A', 'ABCDEFG']) {
+      expect(isProjectKey(key)).toBe(false);
+    }
+  });
+
+  it('PRJ-6: rejects digits, symbols, spaces and non-ASCII letters', () => {
+    for (const key of ['WEB1', 'WE-B', ' WEB', 'WEB ', 'WEB\n', 'ÄBC', 'ΑΒΓ', '%57EB']) {
+      expect(isProjectKey(key)).toBe(false);
+    }
   });
 });

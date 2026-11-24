@@ -9,6 +9,11 @@ export const PROJECT_NAME_MAX_LENGTH = 100;
 export const PROJECT_DESCRIPTION_MAX_LENGTH = 2000;
 // PRJ-1: shown under the Key field when another project already uses the key (wireframe 02 D).
 export const PROJECT_KEY_TAKEN_MESSAGE = 'This key is already taken';
+// PRJ-6: the one 404 message for a missing project and for a project the caller isn't a member
+// of, so the answer never reveals whether the project exists.
+export const PROJECT_NOT_FOUND_MESSAGE = 'Project not found';
+// PRJ-6: a member (not the owner) tried an owner-only action (403).
+export const PROJECT_OWNER_ONLY_MESSAGE = 'Only the project owner can do this';
 
 // PRJ-1: a key is only the letters A-Z, because it becomes the prefix of every ticket key (WEB-1).
 // Lowercase ASCII is accepted here and uppercased afterwards. The check must run on the raw
@@ -16,6 +21,17 @@ export const PROJECT_KEY_TAKEN_MESSAGE = 'This key is already taken';
 const PROJECT_KEY_PATTERN = new RegExp(
   `^[A-Za-z]{${PROJECT_KEY_MIN_LENGTH},${PROJECT_KEY_MAX_LENGTH}}$`,
 );
+
+// PRJ-6: a stored key, exactly as it appears in project URLs (/projects/WEB/board): uppercase
+// A-Z only. Lowercase is not accepted here, because keys are stored uppercased (PRJ-1).
+const STORED_PROJECT_KEY_PATTERN = new RegExp(
+  `^[A-Z]{${PROJECT_KEY_MIN_LENGTH},${PROJECT_KEY_MAX_LENGTH}}$`,
+);
+
+/** PRJ-6: true only for a value that could be a stored project key (2-6 uppercase letters A-Z). */
+export function isProjectKey(value: string): boolean {
+  return STORED_PROJECT_KEY_PATTERN.test(value);
+}
 
 // A description may span lines, so tab, line feed and carriage return are allowed; every other
 // control character is rejected (PostgreSQL can't store U+0000 in a text column).
