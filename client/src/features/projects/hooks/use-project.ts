@@ -1,6 +1,6 @@
 import { projectSchema } from '@mini-jira/shared';
 import type { Project } from '@mini-jira/shared';
-import { useQuery } from '@tanstack/react-query';
+import { queryOptions, useQuery } from '@tanstack/react-query';
 import type { UseQueryResult } from '@tanstack/react-query';
 import { createContext, use } from 'react';
 
@@ -8,11 +8,11 @@ import { apiRequest } from '@/api/client';
 import { projectQueryKey } from '@/api/query-keys';
 
 /**
- * One project and the caller's role in it (PRJ-6). A missing project and a project the user
- * isn't a member of both fail with 404 NOT_FOUND; the query client never retries a 4xx.
+ * How to load one project and the caller's role in it (PRJ-6). A missing project and a project
+ * the user isn't a member of both fail with 404 NOT_FOUND; the query client never retries a 4xx.
  */
-export function useProject(projectKey: string): UseQueryResult<Project> {
-  return useQuery({
+function projectQueryOptions(projectKey: string) {
+  return queryOptions({
     queryKey: projectQueryKey(projectKey),
     queryFn: ({ signal }) =>
       apiRequest(`/projects/${encodeURIComponent(projectKey)}`, { schema: projectSchema, signal }),
@@ -20,6 +20,26 @@ export function useProject(projectKey: string): UseQueryResult<Project> {
     // "Try again" instead of a loading state that never ends (as in useMe).
     networkMode: 'always',
   });
+}
+
+/** One project and the caller's role in it (PRJ-6). */
+export function useProject(projectKey: string): UseQueryResult<Project> {
+  return useQuery(projectQueryOptions(projectKey));
+}
+
+/**
+ * The same project for UI that is on screen with and without one, such as the top bar's project
+ * dropdown (PRJ-2): undefined when `projectKey` is, and while the project loads or if it fails.
+ * It shares useProject's cache, so it sends no request of its own inside a project.
+ */
+export function useOptionalProject(projectKey: string | undefined): Project | undefined {
+  const { data } = useQuery({
+    // The empty key is never fetched: `enabled` is false whenever it is used.
+    ...projectQueryOptions(projectKey ?? ''),
+    enabled: projectKey !== undefined,
+  });
+
+  return projectKey === undefined ? undefined : data;
 }
 
 /**
