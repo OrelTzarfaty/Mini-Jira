@@ -4,7 +4,7 @@ import { collectPageErrors } from '../support/page-errors.js';
 import { addMemberThroughApi, createProjectThroughApi } from '../support/projects-api.js';
 
 // PRJ-3: the project owner adds registered users by email on the settings page; members don't
-// see the settings. Each test registers its own accounts: parallel logins of one shared account
+// see the settings. PRJ-4: the owner removes members after a confirmation. Each test registers its own accounts: parallel logins of one shared account
 // can hit the login rate limit (429).
 
 const USER_NOT_FOUND_MESSAGE = 'No Mini-Jira user with this email. They need to register first.';
@@ -90,5 +90,72 @@ test.describe('Add a member by email (PRJ-3)', () => {
 
     await page.getByRole('link', { name: 'Back to the board' }).click();
     await expect(page).toHaveURL(`/projects/${project.key}/board`);
+  });
+});
+
+test.describe('Remove a member (PRJ-4)', () => {
+  test('PRJ-4: the owner adds a user, then removes them after confirming, and the row is gone', async ({
+    page,
+    context,
+  }) => {
+    const owner = await registerThroughApi();
+    const project = await createProjectThroughApi(owner.session);
+    const newMember = await registerThroughApi();
+    await context.addCookies(owner.session.cookies);
+    const consoleErrors = collectPageErrors(page);
+
+    await page.goto(`/projects/${project.key}/settings`);
+    await page.getByLabel('Add a member by email').fill(newMember.email);
+    await page.getByRole('button', { name: 'Add' }).click();
+    const list = page.getByRole('list', { name: 'Members' });
+    await expect(list.getByRole('listitem')).toHaveCount(2);
+
+    await list.getByRole('button', { name: `Remove ${E2E_USER_NAME}` }).click();
+    const dialog = page.getByRole('alertdialog', {
+      name: `Remove ${E2E_USER_NAME} from ${project.key}?`,
+    });
+    await expect(dialog).toHaveAccessibleDescription(
+      'Tickets assigned to Erin will become unassigned. Erin will lose access to this project.',
+    );
+    const removeResponse = page.waitForResponse(
+      (response) =>
+        response.request().method() === 'DELETE' &&
+        response.url().includes(`/api/projects/${project.key}/members/`),
+    );
+    await dialog.getByRole('button', { name: 'Remove' }).click();
+
+    expect((await removeResponse).status()).toBe(204);
+    await expect(dialog).toBeHidden();
+    await expect(page.getByText(`${E2E_USER_NAME} removed`)).toHaveAttribute('role', 'status');
+    await expect(page.getByRole('region', { name: 'Members (1)' })).toBeVisible();
+    await expect(list.getByRole('listitem')).toHaveCount(1);
+    await expect(list.getByText(newMember.email)).toHaveCount(0);
+    await expect(list).toBeFocused();
+    expect(consoleErrors).toEqual([]);
+  });
+
+  test('PRJ-4: the owner row has no Remove button, and Cancel keeps the member', async ({
+    page,
+    context,
+  }) => {
+    const owner = await registerThroughApi();
+    const project = await createProjectThroughApi(owner.session);
+    const member = await registerThroughApi();
+    await addMemberThroughApi(owner.session, project.key, member.email);
+    await context.addCookies(owner.session.cookies);
+
+    await page.goto(`/projects/${project.key}/settings`);
+    const rows = page.getByRole('list', { name: 'Members' }).getByRole('listitem');
+    await expect(rows).toHaveCount(2);
+    await expect(rows.nth(0)).toContainText('Owner');
+    await expect(rows.nth(0).getByRole('button')).toHaveCount(0);
+
+    const removeButton = rows.nth(1).getByRole('button', { name: `Remove ${E2E_USER_NAME}` });
+    await removeButton.click();
+    await page.getByRole('alertdialog').getByRole('button', { name: 'Cancel' }).click();
+
+    await expect(page.getByRole('alertdialog')).toBeHidden();
+    await expect(removeButton).toBeFocused();
+    await expect(rows).toHaveCount(2);
   });
 });

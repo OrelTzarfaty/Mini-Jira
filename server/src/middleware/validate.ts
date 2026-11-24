@@ -6,6 +6,7 @@ import { ValidationError } from '../lib/errors.js';
 
 const INVALID_BODY_MESSAGE = 'The request body is invalid';
 const INVALID_QUERY_MESSAGE = 'The query string is invalid';
+const INVALID_PARAMS_MESSAGE = 'The path parameters are invalid';
 
 // One detail per field, so the client can show each message next to its input. An unknown key
 // is reported under its own name; a problem with the whole body (not a JSON object) has no
@@ -78,7 +79,28 @@ export function parseQuery<Schema extends z.ZodType>(
   schema: Schema,
   query: unknown,
 ): z.output<Schema> {
-  const result = parseInput(schema, query, INVALID_QUERY_MESSAGE);
+  return parseOrThrow(schema, query, INVALID_QUERY_MESSAGE);
+}
+
+/**
+ * PRJ-4: parses `req.params` with a zod schema (e.g. `memberParamsSchema`) and returns the typed
+ * value. A function the controller calls, like parseQuery, so it runs after the access checks
+ * and only a caller who may use the route learns its rules. Invalid input throws 400
+ * VALIDATION_ERROR with `details[]` on the parameter.
+ */
+export function parseParams<Schema extends z.ZodType>(
+  schema: Schema,
+  params: unknown,
+): z.output<Schema> {
+  return parseOrThrow(schema, params, INVALID_PARAMS_MESSAGE);
+}
+
+function parseOrThrow<Schema extends z.ZodType>(
+  schema: Schema,
+  input: unknown,
+  fallbackMessage: string,
+): z.output<Schema> {
+  const result = parseInput(schema, input, fallbackMessage);
 
   if (!result.success) {
     throw result.error;

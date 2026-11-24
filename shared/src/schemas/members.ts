@@ -8,6 +8,10 @@ import { pageSchema } from './pagination.js';
 export const USER_NOT_FOUND_MESSAGE =
   'No Mini-Jira user with this email. They need to register first.';
 export const alreadyMemberMessage = (name: string): string => `${name} is already a member.`;
+// PRJ-4: removing a user who isn't in the project, and the owner trying to remove themselves.
+export const MEMBER_NOT_FOUND_MESSAGE = 'Member not found';
+export const CANNOT_REMOVE_OWNER_MESSAGE = "The project owner can't be removed.";
+export const INVALID_USER_ID_MESSAGE = 'User id must be a valid UUID';
 
 // PRJ-3: the "Add by email" form and `POST /api/projects/:projectKey/members` body. The email is
 // trimmed and lowercased like at register, so it matches the stored address.
@@ -34,3 +38,13 @@ export type Member = z.infer<typeof memberSchema>;
 export const memberPageSchema = pageSchema(memberSchema);
 
 export type MemberPage = z.infer<typeof memberPageSchema>;
+
+// PRJ-4: the path parameters of `DELETE /api/projects/:projectKey/members/:userId`. User ids are
+// UUIDs, so anything else is a 400 before it reaches the database (a uuid column would reject
+// it with a 500). A plain (stripping) object: `projectKey` is in the same params and was already
+// checked by loadProjectAccess.
+export const memberParamsSchema = z.object({
+  userId: z.uuid(INVALID_USER_ID_MESSAGE),
+});
+
+export type MemberParams = z.infer<typeof memberParamsSchema>;

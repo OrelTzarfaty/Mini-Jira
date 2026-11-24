@@ -262,9 +262,9 @@ Sprint 3 · Size M · **Status: Done** — merged into `dev` in [#84](https://gi
 - [x] QA · Owner can add; member gets 403; unknown email; already a member
 
 ### PRJ-4 · Remove a member
-Sprint 3 · Size S · Status: To do · Depends on PRJ-3
-- [ ] BE · `DELETE /api/projects/:projectKey/members/:userId` (owner only); owner can't remove themselves (`409 CANNOT_REMOVE_OWNER`)
-- [ ] FE · Remove button with a confirmation dialog
+Sprint 3 · Size S · Status: In progress · Depends on PRJ-3
+- [x] BE · `DELETE /api/projects/:projectKey/members/:userId` (owner only); owner can't remove themselves (`409 CANNOT_REMOVE_OWNER`)
+- [x] FE · Remove button with a confirmation dialog
 - [ ] QA · Owner removes a member; member gets 403; owner can't remove themselves
 - (Unassigning their tickets is added in TKT-5, when tickets exist.)
 

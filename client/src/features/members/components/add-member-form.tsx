@@ -2,7 +2,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { addMemberSchema, ErrorCode } from '@mini-jira/shared';
 import type { AddMemberInput } from '@mini-jira/shared';
 import { Loader2Icon } from 'lucide-react';
-import { useState } from 'react';
 import type { ReactElement } from 'react';
 import { useForm } from 'react-hook-form';
 
@@ -18,8 +17,14 @@ const ADD_MEMBER_FIELDS = addMemberSchema.keyof().options;
 // Their messages name the problem with the email itself, so they go under the field (06 C).
 const EMAIL_ERROR_CODES: readonly string[] = [ErrorCode.USER_NOT_FOUND, ErrorCode.ALREADY_MEMBER];
 
+interface AddMemberFormProps {
+  projectKey: string;
+  /** Shows a message in the members section's status line, for example "Avi Ben added". */
+  announce: (message: string) => void;
+}
+
 /** "Add a member by email" (wireframe 06 C, PRJ-3). The shared addMemberSchema checks it. */
-export function AddMemberForm({ projectKey }: { projectKey: string }): ReactElement {
+export function AddMemberForm({ projectKey, announce }: AddMemberFormProps): ReactElement {
   const addMemberMutation = useAddMemberMutation(projectKey);
   const {
     register,
@@ -28,16 +33,15 @@ export function AddMemberForm({ projectKey }: { projectKey: string }): ReactElem
     reset,
     formState: { errors },
   } = useForm({ resolver: zodResolver(addMemberSchema), defaultValues: { email: '' } });
-  // "Avi Ben added": set by the last success, cleared when the next one is sent.
-  const [addedMessage, setAddedMessage] = useState('');
   const isSending = addMemberMutation.isPending;
 
   function handleValidSubmit(input: AddMemberInput): void {
-    setAddedMessage('');
+    // Cleared first, so adding the same name again is announced again.
+    announce('');
     addMemberMutation.mutate(input, {
       onSuccess: (member) => {
         reset();
-        setAddedMessage(`${member.name} added`);
+        announce(`${member.name} added`);
       },
       // setError only adds messages, so the email the user typed stays in the field.
       onError: (error) => {
@@ -85,11 +89,6 @@ export function AddMemberForm({ projectKey }: { projectKey: string }): ReactElem
         )}
       </FormField>
       {errors.root?.server?.message && <FormAlert message={errors.root.server.message} />}
-      {/* Always in the page (not hidden), so screen readers announce the message when it
-          appears. */}
-      <p role="status" className="text-sm">
-        {addedMessage}
-      </p>
     </form>
   );
 }
