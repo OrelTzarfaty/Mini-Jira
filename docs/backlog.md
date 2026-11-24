@@ -253,7 +253,7 @@ AC (extra): project missing or caller not a member → `404`; member without rig
 - [x] QA · Outsider gets 404 and no project data, through the API and the UI
 
 ### PRJ-3 · Add a member by email
-Sprint 3 · Size M · Status: In review · Depends on PRJ-6
+Sprint 3 · Size M · **Status: Done** (#84) · Depends on PRJ-6
 - [x] BE · `GET /api/projects/:projectKey/members`
 - [x] BE · `POST /api/projects/:projectKey/members` `{ email }` (owner only): `404 USER_NOT_FOUND`, `409 ALREADY_MEMBER`
 - [x] FE · Project settings page layout (sections: details, members, danger zone) — reused by PRJ-4 and PRJ-5. **Owner only:** the Settings tab is hidden from members; a member opening the URL sees "Only the project owner can open settings" (wireframe 03)
@@ -262,7 +262,7 @@ Sprint 3 · Size M · Status: In review · Depends on PRJ-6
 - [x] QA · Owner can add; member gets 403; unknown email; already a member
 
 ### PRJ-4 · Remove a member
-Sprint 3 · Size S · Status: To do · Depends on PRJ-3
+Sprint 3 · Size S · Status: In progress · Depends on PRJ-3
 - [ ] BE · `DELETE /api/projects/:projectKey/members/:userId` (owner only); owner can't remove themselves (`409 CANNOT_REMOVE_OWNER`)
 - [ ] FE · Remove button with a confirmation dialog
 - [ ] QA · Owner removes a member; member gets 403; owner can't remove themselves

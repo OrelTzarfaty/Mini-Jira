@@ -104,7 +104,7 @@ Summary only — task-level status lives in [docs/backlog.md](docs/backlog.md).
 | Area | IDs | Priority | Status |
 |---|---|---|---|
 | Authentication | AUTH-1..4 | P0 | Done — AUTH-1..4 done (register, log in, log out, session survives refresh) |
-| Projects & members | PRJ-1..6 | P0 | In progress — PRJ-1 (create project) and PRJ-6 (non-member access) done; PRJ-3 (add member) built, in review |
+| Projects & members | PRJ-1..6 | P0 | In progress — PRJ-1 (create project) and PRJ-6 (non-member access) done; PRJ-3 (add member) done; PRJ-4 (remove member) in progress |
 | Tickets | TKT-1..5 | P0 | Not started |
 | Board | BRD-1..4 | P0 | Not started |
 | Comments & activity | CMT-1..2, ACT-1 | P1 | Not started |
