@@ -264,7 +264,7 @@ Sprint 3 · Size M · **Status: Done** (#84) · Depends on PRJ-6
 ### PRJ-4 · Remove a member
 Sprint 3 · Size S · Status: In progress · Depends on PRJ-3
 - [x] BE · `DELETE /api/projects/:projectKey/members/:userId` (owner only); owner can't remove themselves (`409 CANNOT_REMOVE_OWNER`)
-- [ ] FE · Remove button with a confirmation dialog
+- [x] FE · Remove button with a confirmation dialog
 - [ ] QA · Owner removes a member; member gets 403; owner can't remove themselves
 - (Unassigning their tickets is added in TKT-5, when tickets exist.)
 
