@@ -96,6 +96,7 @@ Endpoints so far (full details in Swagger at `/api/docs`):
 | `GET` | `/api/projects/:projectKey` | One project with the caller's `role` (members only). A missing project and a non-member get the same `404 NOT_FOUND` ("Project not found"), so the response never reveals that a project exists. All project routes use `loadProjectAccess` (404) and owner-only ones add `requireOwner` (403) |
 | `GET` | `/api/projects/:projectKey/members?page=` | The project's members (any member), 20 per page: owner first, then by join time. Each item: `userId`, `name`, `email`, `role`, `joinedAt` |
 | `POST` | `/api/projects/:projectKey/members` | Add a registered user by `email` (owner only, `403` for members). `201` with the member (role `MEMBER`); `404 USER_NOT_FOUND` for an unknown email, `409 ALREADY_MEMBER` if already in the project (both with `details` on `email`) |
+| `DELETE` | `/api/projects/:projectKey/members/:userId` | Remove a member (owner only, `403` for members). `204` no body; `409 CANNOT_REMOVE_OWNER` for the owner, `404 NOT_FOUND` ("Member not found") if the user isn't in the project, `400` if `userId` isn't a UUID. Ticket unassignment comes with TKT-5 |
 
 ## Features
 
