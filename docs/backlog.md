@@ -232,7 +232,7 @@ AC (extra): key 2–6 uppercase, unique (`409 PROJECT_KEY_TAKEN`), immutable · 
 - [x] QA · Integration: valid/invalid keys, duplicate key, creator is OWNER
 
 ### PRJ-2 · My Projects list
-Sprint 3 · Size M · Status: To do · Depends on PRJ-1
+Sprint 3 · Size M · **Status: In progress** · Depends on PRJ-1
 - [ ] BE · `GET /api/projects`: only my projects, my role, paginated
 - [ ] BE · Open-ticket count per project (status ≠ DONE) in the same response — 0 until tickets exist
 - [ ] BE · Optional `q` search by project name or key (used by the project dropdown)
@@ -244,7 +244,7 @@ Sprint 3 · Size M · Status: To do · Depends on PRJ-1
 - [ ] QA · Project dropdown: search finds a project, switching opens its board, keyboard works
 
 ### PRJ-6 · Non-members can't access a project
-Sprint 3 · Size M · Status: In review · Depends on PRJ-1 · **Build before PRJ-3/4/5**
+Sprint 3 · Size M · **Status: Done** — merged into `dev` in [#83](https://github.com/OrelTzarfaty/Mini-Jira/pull/83) (`98f020f`); light QA PASS · Depends on PRJ-1 · **Build before PRJ-3/4/5**
 AC (extra): project missing or caller not a member → `404`; member without rights → `403`.
 - [x] BE · `loadProjectAccess` and `requireOwner` middleware (architecture §6)
 - [x] BE · `GET /api/projects/:projectKey`
