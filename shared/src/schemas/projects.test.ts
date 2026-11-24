@@ -31,7 +31,7 @@ describe('createProjectSchema', () => {
     ).toEqual({ name: 'Website', key: 'WEB', description: 'Our site' });
   });
 
-  it('PRJ-1: uppercases the key before checking its format', () => {
+  it('PRJ-1: accepts a lowercase key and uppercases it', () => {
     expect(createProjectSchema.parse({ ...validInput, key: 'web' }).key).toBe('WEB');
   });
 
@@ -47,6 +47,10 @@ describe('createProjectSchema', () => {
     ['an inner space', 'WE B'],
     ['an accented letter', 'CAFÉ'],
     ['a dash', 'WE-B'],
+    // Uppercasing these gives A-Z ("SSSS", "II"), so the check must run before it.
+    ['a German sharp s', 'ßß'],
+    ['a Turkish dotless i', 'ıı'],
+    ['only accented letters', 'ÉÉÉ'],
   ])('PRJ-1: rejects a key with %s', (_label, key) => {
     expect(messagesFor({ ...validInput, key }, 'key')).toEqual([keyFormatMessage]);
   });

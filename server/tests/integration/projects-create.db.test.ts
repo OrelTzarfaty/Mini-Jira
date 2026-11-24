@@ -110,6 +110,7 @@ describe('POST /api/projects', () => {
     ['digits', 'WEB1', KEY_FORMAT_MESSAGE],
     ['a space inside', 'WE B', KEY_FORMAT_MESSAGE],
     ['an accented letter', 'WÉB', KEY_FORMAT_MESSAGE],
+    ['a non-English letter that uppercases to A-Z', 'ßß', KEY_FORMAT_MESSAGE],
     ['only spaces', '   ', 'Key is required'],
   ])(
     'PRJ-1: a key with %s gets 400 VALIDATION_ERROR on the key field',

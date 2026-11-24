@@ -11,8 +11,10 @@ export const PROJECT_DESCRIPTION_MAX_LENGTH = 2000;
 export const PROJECT_KEY_TAKEN_MESSAGE = 'This key is already taken';
 
 // PRJ-1: a key is only the letters A-Z, because it becomes the prefix of every ticket key (WEB-1).
+// Lowercase ASCII is accepted here and uppercased afterwards. The check must run on the raw
+// input: uppercasing first would turn non-ASCII letters into A-Z ("ßß" -> "SSSS", "ıı" -> "II").
 const PROJECT_KEY_PATTERN = new RegExp(
-  `^[A-Z]{${PROJECT_KEY_MIN_LENGTH},${PROJECT_KEY_MAX_LENGTH}}$`,
+  `^[A-Za-z]{${PROJECT_KEY_MIN_LENGTH},${PROJECT_KEY_MAX_LENGTH}}$`,
 );
 
 // A description may span lines, so tab, line feed and carriage return are allowed; every other
@@ -29,16 +31,16 @@ export const createProjectSchema = z.strictObject({
       (name) => !CONTROL_CHARACTER.test(name),
       "Name contains characters that aren't allowed",
     ),
-  // Trimmed and uppercased before the format check ("web" is stored as "WEB"); zod 4 runs
-  // the steps in order. `abort` stops an empty key from also getting the format message.
+  // Trimmed, checked, then uppercased ("web" is stored as "WEB"); zod 4 runs the steps in
+  // order. `abort` stops an empty key from also getting the format message.
   key: requiredString('Key')
     .trim()
-    .toUpperCase()
     .min(1, { error: 'Key is required', abort: true })
     .regex(
       PROJECT_KEY_PATTERN,
       `Key must be ${PROJECT_KEY_MIN_LENGTH}–${PROJECT_KEY_MAX_LENGTH} letters (A–Z)`,
-    ),
+    )
+    .toUpperCase(),
   // Optional: missing, null, or empty after trimming are all stored as null (one "no description" value).
   description: z
     .string()
