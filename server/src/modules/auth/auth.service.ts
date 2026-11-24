@@ -1,11 +1,11 @@
-import { ErrorCode } from '@mini-jira/shared';
+import { ErrorCode, publicUserSchema } from '@mini-jira/shared';
 import type { LoginInput, PublicUser, RegisterInput } from '@mini-jira/shared';
 
 import { z } from 'zod';
 
 import { Prisma } from '../../generated/prisma/client.js';
 import type { PrismaClient } from '../../generated/prisma/client.js';
-import { ConflictError, InvalidCredentialsError } from '../../lib/errors.js';
+import { ConflictError, InvalidCredentialsError, UnauthenticatedError } from '../../lib/errors.js';
 import { hashPassword, verifyDummyPassword, verifyPassword } from '../../lib/password.js';
 
 // Prisma's code for a unique constraint violation.
@@ -23,6 +23,8 @@ export interface AuthService {
   login(input: LoginInput): Promise<PublicUser>;
   /** Whether a user with this ID still exists (a session token may outlive its user). */
   userExists(userId: string): Promise<boolean>;
+  /** The logged-in user's public fields; throws 401 when the user no longer exists. */
+  getCurrentUser(userId: string): Promise<PublicUser>;
 }
 
 const emailTaken = (): ConflictError =>
@@ -93,6 +95,21 @@ export function createAuthService(prisma: PrismaClient): AuthService {
       const user = await prisma.user.findUnique({ where: { id: userId }, select: { id: true } });
 
       return user !== null;
+    },
+
+    // AUTH-4: requireAuth already checked the user, but the row can be deleted between that
+    // check and this read; that is the same "no session" 401, never a 404 or 500.
+    async getCurrentUser(userId) {
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: PUBLIC_USER_FIELDS,
+      });
+      if (!user) {
+        throw new UnauthenticatedError();
+      }
+
+      // Parsed through the shared schema so only the documented public fields leave the API.
+      return publicUserSchema.parse(user);
     },
   };
 }

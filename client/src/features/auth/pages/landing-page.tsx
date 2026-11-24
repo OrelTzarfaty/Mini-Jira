@@ -1,10 +1,11 @@
 import { useRef } from 'react';
 import type { ReactElement } from 'react';
-import { Link, useOutlet } from 'react-router';
+import { Link, Navigate, useOutlet } from 'react-router';
 
 import { DocumentTitle } from '@/components/document-title';
 import { Button } from '@/components/ui/button';
 import heroPhoto from '@/features/auth/assets/hero-day-desk.webp';
+import { useMe } from '@/features/auth/hooks/use-me';
 
 // The photo's own size. With width and height on the <img>, the browser reserves its space
 // before the file arrives, so nothing jumps when it loads (no layout shift).
@@ -49,12 +50,20 @@ function LandingTopBar(): ReactElement {
  * sits below it on plain white.
  *
  * /login and /register render their popup in the Outlet, over this page (wireframe 01 B and C).
+ * A user who is already logged in goes straight to My Projects (architecture §5.2, AUTH-4).
  */
 export function LandingPage(): ReactElement {
+  // Visitors see the page at once: it doesn't wait for the answer, which only matters if it
+  // turns out someone is logged in. An error is ignored here, so the page stays usable.
+  const { data: user } = useMe();
   // What opened the Log in or Register popup, so focus can return to it on close. It lives
   // here, not in the popup, so it survives a switch from one popup to the other.
   const popupOpenerRef = useRef<HTMLElement | null>(null);
   const popup = useOutlet(popupOpenerRef);
+
+  if (user) {
+    return <Navigate to="/projects" replace />;
+  }
 
   return (
     <div className="flex min-h-svh flex-col">

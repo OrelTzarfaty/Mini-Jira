@@ -1,7 +1,8 @@
 import type { LoginInput, PublicUser, RegisterInput } from '@mini-jira/shared';
-import type { RequestHandler } from 'express';
+import type { Request, RequestHandler } from 'express';
 
 import type { AuthCookie } from '../../lib/auth-cookie.js';
+import { UnauthenticatedError } from '../../lib/errors.js';
 import type { AuthService } from './auth.service.js';
 
 // The body types are safe because validateBody(registerSchema / loginSchema) runs before
@@ -13,6 +14,17 @@ export interface AuthController {
   register: RegisterHandler;
   login: LoginHandler;
   logout: RequestHandler;
+  me: RequestHandler<Record<string, string>, PublicUser>;
+}
+
+// requireAuth sets req.user before this controller runs; a missing user means the route was
+// wired without it, so it fails closed with 401 instead of trusting an undefined ID.
+function requireUserId(req: Request): string {
+  if (!req.user) {
+    throw new UnauthenticatedError();
+  }
+
+  return req.user.id;
 }
 
 export function createAuthController(
@@ -48,6 +60,16 @@ export function createAuthController(
         req.log.info({ userId }, 'User logged out');
       }
       res.status(204).end();
+    },
+
+    // AUTH-4: the web app calls this on every page load to restore the session after a
+    // refresh. requireAuth runs first, so req.user is set here.
+    async me(req, res) {
+      const user = await authService.getCurrentUser(requireUserId(req));
+      // Personal data: no browser or shared cache may keep it (e.g. the back button after
+      // logout, or a proxy serving it to another user).
+      res.set('Cache-Control', 'no-store');
+      res.status(200).json(user);
     },
   };
 }

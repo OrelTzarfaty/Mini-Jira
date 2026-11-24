@@ -203,19 +203,19 @@ AC (extra): one generic `401 INVALID_CREDENTIALS` for unknown email and wrong pa
 - [x] QA · E2E: login → My Projects
 
 ### AUTH-3 · Log out
-Sprint 2 · Size S · **Status: In review** — [#79](https://github.com/OrelTzarfaty/Mini-Jira/pull/79) · Depends on AUTH-2
+Sprint 2 · Size S · **Status: Done** — merged into `dev` in [#79](https://github.com/OrelTzarfaty/Mini-Jira/pull/79) (`3baa1f4`); full QA PASS on `264438c` · Depends on AUTH-2
 - [x] BE · `requireAuth` middleware → `401 UNAUTHENTICATED`
 - [x] BE · `POST /api/auth/logout` clears the cookie
 - [x] FE · "Log out" in the user menu; clear the query cache; redirect to the landing page
 - [x] QA · API calls without the cookie return 401; E2E: Log out → landing page, cookie cleared
 
 ### AUTH-4 · Session survives refresh
-Sprint 2 · Size S · Status: To do · Depends on AUTH-3
-- [ ] BE · `GET /api/auth/me`
-- [ ] FE · `useMe` query loaded on app start
-- [ ] FE · `ProtectedRoute`: loading state, then the page or a redirect to `/login`
-- [ ] QA · E2E: refresh keeps the user logged in; an invalid or expired token sends them to login
-- [ ] QA · E2E: after logout, protected pages redirect to login (moved from AUTH-3 by the owner on 2026-11-23, because the guard is built here)
+Sprint 2 · Size S · **Status: In review** — [#81](https://github.com/OrelTzarfaty/Mini-Jira/pull/81) · Depends on AUTH-3
+- [x] BE · `GET /api/auth/me`
+- [x] FE · `useMe` query loaded on app start
+- [x] FE · `ProtectedRoute`: loading state, then the page or a redirect to `/login`
+- [x] QA · E2E: refresh keeps the user logged in; an invalid or expired token sends them to login
+- [x] QA · E2E: after logout, protected pages redirect to login (moved from AUTH-3 by the owner on 2026-11-23, because the guard is built here)
 
 ---
 

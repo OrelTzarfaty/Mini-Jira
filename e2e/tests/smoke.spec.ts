@@ -1,5 +1,7 @@
 import { expect, test } from '@playwright/test';
 
+import { collectPageErrors } from '../support/page-errors.js';
+
 // Proves that the whole system runs: nginx serves the React app and forwards /api to the API.
 // The real journeys live in their own specs (auth-register, auth-login).
 test.describe('Smoke', () => {
@@ -11,13 +13,7 @@ test.describe('Smoke', () => {
   });
 
   test('SETUP-9: the login page renders without console errors', async ({ page }) => {
-    const consoleErrors: string[] = [];
-    page.on('console', (message) => {
-      if (message.type() === 'error') {
-        consoleErrors.push(message.text());
-      }
-    });
-    page.on('pageerror', (error) => consoleErrors.push(error.message));
+    const consoleErrors = collectPageErrors(page);
 
     await page.goto('/login');
 

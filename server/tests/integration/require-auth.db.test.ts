@@ -50,7 +50,8 @@ describe('requireAuth', () => {
   let app: ReturnType<typeof createTestApp>;
   let handlerCalls: () => number;
 
-  // No real route uses requireAuth yet (AUTH-4's GET /api/auth/me will), so a test route does.
+  // A test route, so every rejection can be checked without any route logic in the way
+  // (the real GET /api/auth/me has its own tests, AUTH-4).
   beforeEach(async () => {
     await resetDatabase();
     // Only the ID matters here, so the row is written directly instead of hashing a password.
