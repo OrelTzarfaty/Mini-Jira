@@ -1,4 +1,4 @@
-import type { RequestHandler } from 'express';
+import type { Request, RequestHandler } from 'express';
 
 import type { AuthCookie } from '../lib/auth-cookie.js';
 import { UnauthenticatedError } from '../lib/errors.js';
@@ -40,4 +40,16 @@ export function createRequireAuth(
     req.user = { id: userId };
     next();
   };
+}
+
+/**
+ * The logged-in user's ID, for handlers behind requireAuth. A missing user means the route was
+ * wired without requireAuth, so it fails closed with 401 instead of trusting an undefined ID.
+ */
+export function requireUserId(req: Request): string {
+  if (!req.user) {
+    throw new UnauthenticatedError();
+  }
+
+  return req.user.id;
 }

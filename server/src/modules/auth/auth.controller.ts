@@ -1,8 +1,8 @@
 import type { LoginInput, PublicUser, RegisterInput } from '@mini-jira/shared';
-import type { Request, RequestHandler } from 'express';
+import type { RequestHandler } from 'express';
 
 import type { AuthCookie } from '../../lib/auth-cookie.js';
-import { UnauthenticatedError } from '../../lib/errors.js';
+import { requireUserId } from '../../middleware/require-auth.js';
 import type { AuthService } from './auth.service.js';
 
 // The body types are safe because validateBody(registerSchema / loginSchema) runs before
@@ -15,16 +15,6 @@ export interface AuthController {
   login: LoginHandler;
   logout: RequestHandler;
   me: RequestHandler<Record<string, string>, PublicUser>;
-}
-
-// requireAuth sets req.user before this controller runs; a missing user means the route was
-// wired without it, so it fails closed with 401 instead of trusting an undefined ID.
-function requireUserId(req: Request): string {
-  if (!req.user) {
-    throw new UnauthenticatedError();
-  }
-
-  return req.user.id;
 }
 
 export function createAuthController(
