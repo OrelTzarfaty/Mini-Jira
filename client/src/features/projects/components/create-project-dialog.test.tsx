@@ -8,6 +8,7 @@ import { describe, expect, it } from 'vitest';
 
 import { createQueryClient } from '@/api/query-client';
 import { PROJECTS_QUERY_KEY } from '@/api/query-keys';
+import { mockProject } from '@/test/project';
 import { renderRoute } from '@/test/render-route';
 import { server } from '@/test/server';
 import { mockLoggedIn } from '@/test/session';
@@ -140,6 +141,8 @@ describe('CreateProjectDialog', () => {
         return HttpResponse.json(NEW_PROJECT, { status: 201 });
       }),
     );
+    // The board loads its project first (PRJ-6).
+    mockProject(NEW_PROJECT);
     const queryClient = createQueryClient();
     queryClient.setQueryData(PROJECTS_QUERY_KEY, []);
     const { popup, router } = await openPopup(queryClient);
@@ -165,6 +168,7 @@ describe('CreateProjectDialog', () => {
         return HttpResponse.json(NEW_PROJECT, { status: 201 });
       }),
     );
+    mockProject(NEW_PROJECT);
     const { popup } = await fillValidForm();
 
     await submit(popup);

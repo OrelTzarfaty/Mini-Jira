@@ -6,3 +6,10 @@ export const ME_QUERY_KEY = ['auth', 'me'] as const;
 
 /** The current user's projects (PRJ-2 lists them); creating a project (PRJ-1) marks them stale. */
 export const PROJECTS_QUERY_KEY = ['projects'] as const;
+
+/** One project by its key (PRJ-6). Under PROJECTS_QUERY_KEY, so marking the projects stale refreshes it too. */
+export function projectQueryKey(
+  projectKey: string,
+): readonly [...typeof PROJECTS_QUERY_KEY, string] {
+  return [...PROJECTS_QUERY_KEY, projectKey];
+}
