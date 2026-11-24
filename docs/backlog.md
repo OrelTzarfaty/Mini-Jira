@@ -232,7 +232,7 @@ AC (extra): key 2–6 uppercase, unique (`409 PROJECT_KEY_TAKEN`), immutable · 
 - [x] QA · Integration: valid/invalid keys, duplicate key, creator is OWNER
 
 ### PRJ-2 · My Projects list
-Sprint 3 · Size M · **Status: In progress** · Depends on PRJ-1
+Sprint 3 · Size M · Status: In review · Depends on PRJ-1
 - [x] BE · `GET /api/projects`: only my projects, my role, paginated
 - [x] BE · Open-ticket count per project (status ≠ DONE) in the same response — 0 until tickets exist
 - [x] BE · Optional `q` search by project name or key (used by the project dropdown)
