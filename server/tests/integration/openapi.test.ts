@@ -111,6 +111,18 @@ describe('GET /api/openapi.json', () => {
     ]);
   });
 
+  it('PRJ-2: documents the my-projects list with its query parameters and responses', async () => {
+    const spec = await getSpec();
+    const operation = spec.paths['/projects']?.get;
+
+    expect(Object.keys(operation?.responses ?? {})).toEqual(['200', '400', '401', '500']);
+    expect(operation?.parameters).toEqual([
+      expect.objectContaining({ name: 'q', in: 'query', required: false }),
+      expect.objectContaining({ name: 'page', in: 'query', required: false }),
+    ]);
+    expect(JSON.stringify(spec.components.schemas.ProjectListPage)).toContain('openTicketCount');
+  });
+
   it('SETUP-3: builds the error schema from the shared error codes', async () => {
     const spec = await getSpec();
 
