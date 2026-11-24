@@ -1,13 +1,37 @@
 import { ErrorCode, PROJECT_KEY_TAKEN_MESSAGE, projectSchema, Role } from '@mini-jira/shared';
 import type { CreateProjectInput, Project } from '@mini-jira/shared';
 
-import type { PrismaClient } from '../../generated/prisma/client.js';
+import type { PrismaClient, Project as ProjectRow } from '../../generated/prisma/client.js';
 import { ConflictError } from '../../lib/errors.js';
 import { isUniqueViolation } from '../../lib/prisma-errors.js';
 
 export interface ProjectsService {
   /** Creates the project with the creator as its OWNER; throws 409 when the key is taken. */
   createProject(userId: string, input: CreateProjectInput): Promise<Project>;
+  /**
+   * PRJ-6: the project with this exact key and the caller's role in it, or null when the
+   * project doesn't exist **or** the caller isn't a member (the caller can't tell which).
+   */
+  findProjectAccess(userId: string, projectKey: string): Promise<ProjectAccess | null>;
+}
+
+/** PRJ-6: what loadProjectAccess puts on the request: the project row and the caller's role. */
+export interface ProjectAccess {
+  project: ProjectRow;
+  role: Role;
+}
+
+/**
+ * The API shape of a project for a caller with this role. Parsed through the shared schema, so
+ * internal fields (ticketCounter) never leave the API.
+ */
+export function toProjectResponse(project: ProjectRow, role: Role): Project {
+  return projectSchema.parse({
+    ...project,
+    role,
+    createdAt: project.createdAt.toISOString(),
+    updatedAt: project.updatedAt.toISOString(),
+  });
 }
 
 // PRJ-1: the client shows this under the Key field (wireframe 02 D).
@@ -33,13 +57,7 @@ export function createProjectsService(prisma: PrismaClient): ProjectsService {
           return created;
         });
 
-        // Parsed through the shared schema, so internal fields (ticketCounter) never leave the API.
-        return projectSchema.parse({
-          ...project,
-          role: Role.OWNER,
-          createdAt: project.createdAt.toISOString(),
-          updatedAt: project.updatedAt.toISOString(),
-        });
+        return toProjectResponse(project, Role.OWNER);
       } catch (error) {
         // No "is the key free?" read first: it would still race with a create at the same
         // moment, so the unique index is the one source of truth. The key is the only unique
@@ -49,6 +67,19 @@ export function createProjectsService(prisma: PrismaClient): ProjectsService {
         }
         throw error;
       }
+    },
+
+    // PRJ-6 (architecture §6): one lookup loads the caller's membership in the project with
+    // this exact key, together with the project row. The unique key index finds the project and
+    // the (projectId, userId) primary key the membership. Prisma sends it as two short SQL
+    // statements (the membership join, then the project row), and both always run, found or not.
+    // A missing project and a non-member both find no row, so they return the same null and the
+    // caller can't tell them apart.
+    async findProjectAccess(userId, projectKey) {
+      return prisma.projectMember.findFirst({
+        where: { userId, project: { key: projectKey } },
+        select: { role: true, project: true },
+      });
     },
   };
 }
