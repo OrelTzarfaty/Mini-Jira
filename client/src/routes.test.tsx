@@ -12,8 +12,8 @@ describe('routes', () => {
     ['/projects/WEB/board', 'WEB board'],
     ['/projects/WEB/list?status=TODO&page=2', 'WEB list'],
     ['/projects/WEB/tickets/WEB-12', 'WEB-12'],
-    ['/projects/WEB/settings', 'WEB settings'],
     ['/my-work', 'My Work'],
+    // /projects/WEB/settings has its own tests: its h1 is the project header (PRJ-3).
   ])('SETUP-5: %s shows the "%s" page with a matching tab title', async (path, title) => {
     mockLoggedIn();
     // The project pages render only after their project loads (PRJ-6).
