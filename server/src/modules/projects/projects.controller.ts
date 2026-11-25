@@ -23,6 +23,7 @@ type UpdateProjectHandler = RequestHandler<
   ProjectDetail,
   UpdateProjectInput
 >;
+type DeleteProjectHandler = RequestHandler<{ projectKey: string }, void>;
 type ListProjectsHandler = RequestHandler<Record<string, string>, Page<ProjectListItem>>;
 
 export interface ProjectsController {
@@ -30,6 +31,7 @@ export interface ProjectsController {
   get: GetProjectHandler;
   list: ListProjectsHandler;
   update: UpdateProjectHandler;
+  remove: DeleteProjectHandler;
 }
 
 export function createProjectsController(projectsService: ProjectsService): ProjectsController {
@@ -64,6 +66,17 @@ export function createProjectsController(projectsService: ProjectsService): Proj
       const project = await projectsService.updateProject(access, req.body);
       req.log.info({ userId: requireUserId(req), projectId: project.id }, 'Project updated');
       res.json(project);
+    },
+
+    // PRJ-5: requireOwner already ran; the project and everything in it are hard-deleted.
+    async remove(req, res) {
+      const { project } = requireProjectAccess(req);
+      await projectsService.deleteProject(project.id);
+      req.log.info(
+        { userId: requireUserId(req), projectId: project.id, projectKey: project.key },
+        'Project deleted',
+      );
+      res.status(204).end();
     },
   };
 }

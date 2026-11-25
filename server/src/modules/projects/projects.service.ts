@@ -40,6 +40,8 @@ export interface ProjectsService {
    * when the project was deleted after loadProjectAccess found it.
    */
   updateProject(access: ProjectAccess, input: UpdateProjectInput): Promise<ProjectDetail>;
+  /** PRJ-5: hard-deletes the project and everything in it; 404 when it is already gone. */
+  deleteProject(projectId: string): Promise<void>;
 }
 
 /** PRJ-6: what loadProjectAccess puts on the request: the project row and the caller's role. */
@@ -77,8 +79,8 @@ function escapeLikePattern(text: string): string {
   return text.replace(/[\\%_]/g, (character) => `\\${character}`);
 }
 
-// PRJ-5: the project was deleted between loadProjectAccess and the write; the caller gets the
-// same 404 a later request would get.
+// PRJ-5: the project was deleted between loadProjectAccess and the write (e.g. two deletes at
+// once); the caller gets the same 404 a later request would get.
 const projectNotFound = (): NotFoundError => new NotFoundError(PROJECT_NOT_FOUND_MESSAGE);
 
 export function createProjectsService(prisma: PrismaClient): ProjectsService {
@@ -247,6 +249,20 @@ export function createProjectsService(prisma: PrismaClient): ProjectsService {
           throw projectNotFound();
         }
         throw error;
+      }
+    },
+
+    // PRJ-5 (architecture §10.5): one DELETE of the project row; PostgreSQL removes the rest
+    // through the ON DELETE CASCADE foreign keys in the same statement, so nothing is left
+    // half-deleted. deleteMany (not delete) so a project already deleted by a parallel request
+    // is a count of 0 → 404, not a Prisma error.
+    // TODO(TKT-1, CMT-1, ACT-1): Ticket.projectId, Comment.ticketId and Activity.ticketId must be
+    // `onDelete: Cascade`, so deleting a project also removes its tickets, comments and history.
+    async deleteProject(projectId) {
+      const { count } = await prisma.project.deleteMany({ where: { id: projectId } });
+
+      if (count === 0) {
+        throw projectNotFound();
       }
     },
   };

@@ -193,6 +193,16 @@ describe('GET /api/openapi.json', () => {
     expect(JSON.stringify(spec.components.schemas.UpdateProjectRequest)).not.toContain('"key"');
   });
 
+  it('PRJ-5: documents the delete-project endpoint with its responses', async () => {
+    const spec = await getSpec();
+    const operation = spec.paths['/projects/{projectKey}']?.delete;
+
+    expect(Object.keys(operation?.responses ?? {})).toEqual(['204', '401', '403', '404', '500']);
+    expect(operation?.parameters).toEqual([
+      expect.objectContaining({ name: 'projectKey', in: 'path', required: true }),
+    ]);
+  });
+
   it('SETUP-3: builds the error schema from the shared error codes', async () => {
     const spec = await getSpec();
 

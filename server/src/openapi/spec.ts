@@ -372,6 +372,31 @@ export function createOpenApiSpec(): Record<string, unknown> {
             '500': jsonResponse('Unexpected server error', 'ErrorResponse'),
           },
         },
+        delete: {
+          tags: ['Projects'],
+          operationId: 'deleteProject',
+          summary: 'Delete a project and everything in it (owner only)',
+          description:
+            "PRJ-5. Only the project owner may delete the project. A hard delete that can't be undone: the project, its memberships, and its tickets, comments and history are removed together. The users' accounts stay. Send no request body. Browsers must send the request from the web app (same origin), or it gets 403.",
+          security: [{ authCookie: [] }],
+          parameters: [PROJECT_KEY_PARAMETER],
+          responses: {
+            '204': { description: 'The project was deleted; no response body' },
+            '401': jsonResponse(
+              'Not logged in (UNAUTHENTICATED): the cookie is missing, invalid or expired, or its user no longer exists',
+              'ErrorResponse',
+            ),
+            '403': jsonResponse(
+              'The caller is a member but not the owner (FORBIDDEN, "Only the project owner can do this"), or a cross-site request (FORBIDDEN)',
+              'ErrorResponse',
+            ),
+            '404': jsonResponse(
+              'No such project, or the caller is not a member of it (NOT_FOUND, "Project not found")',
+              'ErrorResponse',
+            ),
+            '500': jsonResponse('Unexpected server error', 'ErrorResponse'),
+          },
+        },
       },
       '/projects/{projectKey}/members': {
         get: {
