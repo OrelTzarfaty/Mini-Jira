@@ -269,12 +269,13 @@ Sprint 3 · Size S · **Status: Done** — merged into `dev` in [#86](https://gi
 - (Unassigning their tickets is added in TKT-5, when tickets exist.)
 
 ### PRJ-5 · Edit or delete a project
-Sprint 3 · Size M · Status: To do · Depends on PRJ-6, PRJ-3
-- [ ] BE · `PATCH /api/projects/:projectKey` (owner; name and description only)
-- [ ] BE · `DELETE /api/projects/:projectKey` (owner; cascades members, tickets, comments, activity)
-- [ ] FE · Edit form (name, description) in project settings
-- [ ] FE · Delete with a confirmation dialog: shows the ticket count, the owner must type the project key to enable Delete; redirect to My Projects (wireframe 06 D)
-- [ ] QA · Member gets 403 on both; key can't be changed; after delete everything is gone (checked again after tickets exist)
+Sprint 3 · Size M · **Status: Done** — merged into `dev` in [#88](https://github.com/OrelTzarfaty/Mini-Jira/pull/88) (`c5ba042`); light QA PASS · Depends on PRJ-6, PRJ-3
+- [x] BE · `PATCH /api/projects/:projectKey` (owner; name and description only)
+- [x] BE · `DELETE /api/projects/:projectKey` (owner; cascades members, tickets, comments, activity)
+- [x] FE · Edit form (name, description) in project settings
+- [x] FE · Delete with a confirmation dialog: shows the ticket count, the owner must type the project key to enable Delete; redirect to My Projects (wireframe 06 D)
+- [x] QA · Member gets 403 on both; key can't be changed; after delete everything is gone (checked again after tickets exist)
+- (The "everything is gone" check is repeated once tickets, comments, and activity exist.)
 
 ---
 

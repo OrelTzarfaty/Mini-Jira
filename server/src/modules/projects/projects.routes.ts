@@ -1,9 +1,9 @@
-import { createProjectSchema } from '@mini-jira/shared';
+import { createProjectSchema, updateProjectSchema } from '@mini-jira/shared';
 import { Router } from 'express';
 
 import type { PrismaClient } from '../../generated/prisma/client.js';
 import type { AuthCookie } from '../../lib/auth-cookie.js';
-import { createLoadProjectAccess } from '../../middleware/project-access.js';
+import { createLoadProjectAccess, requireOwner } from '../../middleware/project-access.js';
 import { createRequireAuth } from '../../middleware/require-auth.js';
 import { validateBody } from '../../middleware/validate.js';
 import { createAuthService } from '../auth/auth.service.js';
@@ -33,7 +33,21 @@ export function createProjectsRouter({ prisma, authCookie }: ProjectsRouterOptio
   router.get('/projects', requireAuth, controller.list);
 
   // PRJ-6: a member (OWNER or MEMBER) gets the project with their role.
-  router.get('/projects/:projectKey', requireAuth, loadProjectAccess, controller.get);
+  const projectPath = '/projects/:projectKey';
+  router.get(projectPath, requireAuth, loadProjectAccess, controller.get);
+
+  // PRJ-5: only the owner may edit (name, description) or delete the project (403 for a
+  // member). The app-wide origin check blocks cross-site PATCH and DELETE; the body is
+  // validated last, so only the owner learns its rules.
+  router.patch(
+    projectPath,
+    requireAuth,
+    loadProjectAccess,
+    requireOwner,
+    validateBody(updateProjectSchema),
+    controller.update,
+  );
+  router.delete(projectPath, requireAuth, loadProjectAccess, requireOwner, controller.remove);
 
   return router;
 }

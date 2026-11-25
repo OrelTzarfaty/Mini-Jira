@@ -1,7 +1,8 @@
 import type { ProjectListItem } from '@mini-jira/shared';
 import { FolderKanbanIcon, Loader2Icon } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { ReactElement } from 'react';
+import { useLocation, useNavigate } from 'react-router';
 
 import { DocumentTitle } from '@/components/document-title';
 import { EmptyState } from '@/components/empty-state';
@@ -10,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { CreateProjectDialog } from '@/features/projects/components/create-project-dialog';
 import { ProjectCard, ProjectCardSkeleton } from '@/features/projects/components/project-card';
 import { useMyProjects } from '@/features/projects/hooks/use-my-projects';
+import { deletedProjectKeyFrom } from '@/features/projects/lib/deleted-project';
 
 const SKELETON_CARD_COUNT = 3;
 const GRID_CLASSES = 'grid gap-4 sm:grid-cols-2 lg:grid-cols-3';
@@ -37,6 +39,32 @@ function ProjectGridSkeleton(): ReactElement {
   );
 }
 
+/** Moves focus to the message, so screen readers read it right after the page changes. */
+function focusOnMount(element: HTMLElement | null): void {
+  element?.focus();
+}
+
+/**
+ * "Project WEB deleted" after the owner deleted a project in its settings (wireframe 06 D). The
+ * key comes in the history entry's state; it is kept here and cleared from the entry, so a
+ * reload or a later visit doesn't say it again.
+ */
+function useDeletedProjectKey(): string | undefined {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [deletedProjectKey] = useState(() => deletedProjectKeyFrom(location.state));
+  const hasDeletedProjectState = deletedProjectKeyFrom(location.state) !== undefined;
+
+  // The browser's history is outside React: this effect clears the entry's state once read.
+  useEffect(() => {
+    if (hasDeletedProjectState) {
+      void navigate(`${location.pathname}${location.search}`, { replace: true, state: null });
+    }
+  }, [hasDeletedProjectState, location.pathname, location.search, navigate]);
+
+  return deletedProjectKey;
+}
+
 function NoProjects(): ReactElement {
   return (
     <EmptyState
@@ -59,6 +87,7 @@ export function MyProjectsPage(): ReactElement {
     isFetchingNextPage,
     refetch,
   } = useMyProjects();
+  const deletedProjectKey = useDeletedProjectKey();
   // The first card that "Show more" adds gets focus, so focus isn't lost when the button goes.
   const [firstAddedIndex, setFirstAddedIndex] = useState<number | null>(null);
   const projects = data ? uniqueProjects(data.pages) : [];
@@ -134,6 +163,17 @@ export function MyProjectsPage(): ReactElement {
         <h1 className="text-2xl font-semibold">My Projects</h1>
         {hasHeaderButton && <CreateProjectDialog />}
       </div>
+      {deletedProjectKey !== undefined && (
+        // Focusable (tabIndex -1) only so focus can move here from the closed delete dialog.
+        <p
+          ref={focusOnMount}
+          role="status"
+          tabIndex={-1}
+          className="mb-6 rounded-lg border p-3 text-sm"
+        >
+          {`Project ${deletedProjectKey} deleted`}
+        </p>
+      )}
       {renderContent()}
     </>
   );

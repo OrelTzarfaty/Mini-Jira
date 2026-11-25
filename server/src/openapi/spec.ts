@@ -10,6 +10,7 @@ import {
   memberSchema,
   PAGE_SIZE,
   PROJECT_SEARCH_MAX_LENGTH,
+  projectDetailSchema,
   projectListPageSchema,
   projectSchema,
   publicUserSchema,
@@ -17,6 +18,7 @@ import {
   TICKET_DESCRIPTION_MAX_LENGTH,
   TICKET_TITLE_MAX_LENGTH,
   ticketSchema,
+  updateProjectSchema,
 } from '@mini-jira/shared';
 import { z } from 'zod';
 
@@ -319,13 +321,78 @@ export function createOpenApiSpec(): Record<string, unknown> {
           operationId: 'getProject',
           summary: 'Get a project the caller is a member of',
           description:
-            'PRJ-6. Returns the project with the role the caller has in it (OWNER or MEMBER). The key in the URL is matched exactly: it must be the stored uppercase key ("WEB", not "web"). A project that does not exist and a project the caller is not a member of get the same 404, so the answer never reveals whether the project exists.',
+            'PRJ-6. Returns the project with the role the caller has in it (OWNER or MEMBER), and (PRJ-5) ticketCount, the number of its tickets in every status (0 until tickets exist). The key in the URL is matched exactly: it must be the stored uppercase key ("WEB", not "web"). A project that does not exist and a project the caller is not a member of get the same 404, so the answer never reveals whether the project exists.',
           security: [{ authCookie: [] }],
           parameters: [PROJECT_KEY_PARAMETER],
           responses: {
-            '200': jsonResponse("The project; role is the caller's role in it", 'Project'),
+            '200': jsonResponse(
+              "The project; role is the caller's role in it, ticketCount its number of tickets",
+              'ProjectDetail',
+            ),
             '401': jsonResponse(
               'Not logged in (UNAUTHENTICATED): the cookie is missing, invalid or expired, or its user no longer exists',
+              'ErrorResponse',
+            ),
+            '404': jsonResponse(
+              'No such project, or the caller is not a member of it (NOT_FOUND, "Project not found")',
+              'ErrorResponse',
+            ),
+            '500': jsonResponse('Unexpected server error', 'ErrorResponse'),
+          },
+        },
+        patch: {
+          tags: ['Projects'],
+          operationId: 'updateProject',
+          summary: "Edit a project's name and description (owner only)",
+          description:
+            "PRJ-5. Only the project owner may edit the project. Send name, description, or both; a missing field stays as it is, and an empty body is rejected. The name (1-100 characters) and the description (up to 2000) are trimmed like at create; a description that is null or empty after trimming clears it (stored as null). The key can't be changed: key, like any other unknown field, is rejected with 400. Browsers must send the request from the web app (same origin), or it gets 403.",
+          security: [{ authCookie: [] }],
+          parameters: [PROJECT_KEY_PARAMETER],
+          requestBody: jsonRequestBody('UpdateProjectRequest'),
+          responses: {
+            '200': jsonResponse(
+              'The updated project, in the same shape as GET (role OWNER, ticketCount)',
+              'ProjectDetail',
+            ),
+            '400': jsonResponse(
+              'Invalid input (VALIDATION_ERROR): a bad field, an unknown field such as key (details[] per field), or no field at all',
+              'ErrorResponse',
+            ),
+            '401': jsonResponse(
+              'Not logged in (UNAUTHENTICATED): the cookie is missing, invalid or expired, or its user no longer exists',
+              'ErrorResponse',
+            ),
+            '403': jsonResponse(
+              'The caller is a member but not the owner (FORBIDDEN, "Only the project owner can do this"), or a cross-site request (FORBIDDEN)',
+              'ErrorResponse',
+            ),
+            '404': jsonResponse(
+              'No such project, or the caller is not a member of it (NOT_FOUND, "Project not found")',
+              'ErrorResponse',
+            ),
+            '413': jsonResponse(
+              'The request body is over 100 kB (PAYLOAD_TOO_LARGE)',
+              'ErrorResponse',
+            ),
+            '500': jsonResponse('Unexpected server error', 'ErrorResponse'),
+          },
+        },
+        delete: {
+          tags: ['Projects'],
+          operationId: 'deleteProject',
+          summary: 'Delete a project and everything in it (owner only)',
+          description:
+            "PRJ-5. Only the project owner may delete the project. A hard delete that can't be undone: the project, its memberships, and its tickets, comments and history are removed together. The users' accounts stay. Send no request body. Browsers must send the request from the web app (same origin), or it gets 403.",
+          security: [{ authCookie: [] }],
+          parameters: [PROJECT_KEY_PARAMETER],
+          responses: {
+            '204': { description: 'The project was deleted; no response body' },
+            '401': jsonResponse(
+              'Not logged in (UNAUTHENTICATED): the cookie is missing, invalid or expired, or its user no longer exists',
+              'ErrorResponse',
+            ),
+            '403': jsonResponse(
+              'The caller is a member but not the owner (FORBIDDEN, "Only the project owner can do this"), or a cross-site request (FORBIDDEN)',
               'ErrorResponse',
             ),
             '404': jsonResponse(
@@ -487,10 +554,12 @@ export function createOpenApiSpec(): Record<string, unknown> {
         Member: toComponentSchema(memberSchema),
         MemberPage: toComponentSchema(memberPageSchema),
         Project: toComponentSchema(projectSchema),
+        ProjectDetail: toComponentSchema(projectDetailSchema),
         ProjectListPage: toComponentSchema(projectListPageSchema),
         PublicUser: toComponentSchema(publicUserSchema),
         RegisterRequest: toComponentSchema(registerSchema, 'input'),
         Ticket: toComponentSchema(ticketSchema),
+        UpdateProjectRequest: toComponentSchema(updateProjectSchema, 'input'),
       },
     },
   };

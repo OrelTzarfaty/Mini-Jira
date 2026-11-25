@@ -1,6 +1,8 @@
 import {
   ErrorCode,
   PROJECT_KEY_TAKEN_MESSAGE,
+  PROJECT_NOT_FOUND_MESSAGE,
+  projectDetailSchema,
   projectListItemSchema,
   projectSchema,
   Role,
@@ -11,14 +13,16 @@ import type {
   ListProjectsQuery,
   Page,
   Project,
+  ProjectDetail,
   ProjectListItem,
+  UpdateProjectInput,
 } from '@mini-jira/shared';
 
 import { Prisma } from '../../generated/prisma/client.js';
 import type { PrismaClient, Project as ProjectRow } from '../../generated/prisma/client.js';
-import { ConflictError } from '../../lib/errors.js';
+import { ConflictError, NotFoundError } from '../../lib/errors.js';
 import { pageWindow, toPage } from '../../lib/pagination.js';
-import { isUniqueViolation } from '../../lib/prisma-errors.js';
+import { isRecordNotFound, isUniqueViolation } from '../../lib/prisma-errors.js';
 
 export interface ProjectsService {
   /** Creates the project with the creator as its OWNER; throws 409 when the key is taken. */
@@ -30,6 +34,15 @@ export interface ProjectsService {
   findProjectAccess(userId: string, projectKey: string): Promise<ProjectAccess | null>;
   /** PRJ-2: one page of the projects the caller is a member of, with the caller's role in each. */
   listMyProjects(userId: string, query: ListProjectsQuery): Promise<Page<ProjectListItem>>;
+  /** PRJ-5: the project loaded by loadProjectAccess, with the caller's role and its ticket count. */
+  getProjectDetail(access: ProjectAccess): Promise<ProjectDetail>;
+  /**
+   * PRJ-5: changes the name and/or description (a missing field stays as it is). Throws 404
+   * when the project was deleted after loadProjectAccess found it.
+   */
+  updateProject(access: ProjectAccess, input: UpdateProjectInput): Promise<ProjectDetail>;
+  /** PRJ-5: hard-deletes the project and everything in it; 404 when it is already gone. */
+  deleteProject(projectId: string): Promise<void>;
 }
 
 /** PRJ-6: what loadProjectAccess puts on the request: the project row and the caller's role. */
@@ -67,7 +80,28 @@ function escapeLikePattern(text: string): string {
   return text.replace(/[\\%_]/g, (character) => `\\${character}`);
 }
 
+// PRJ-5: the project was deleted between loadProjectAccess and the write (e.g. two deletes at
+// once); the caller gets the same 404 a later request would get.
+const projectNotFound = (): NotFoundError => new NotFoundError(PROJECT_NOT_FOUND_MESSAGE);
+
 export function createProjectsService(prisma: PrismaClient): ProjectsService {
+  /** PRJ-5: the number of tickets in the project (every status), for the delete dialog. */
+  function countTickets(projectId: string): Promise<number> {
+    // TODO(TKT-1): there is no Ticket model yet, so every project has 0 tickets. Replace with
+    // prisma.ticket.count({ where: { projectId } }) once tickets exist (the projectId index
+    // serves it).
+    void projectId;
+
+    return Promise.resolve(0);
+  }
+
+  async function toProjectDetail(project: ProjectRow, role: Role): Promise<ProjectDetail> {
+    return projectDetailSchema.parse({
+      ...toProjectResponse(project, role),
+      ticketCount: await countTickets(project.id),
+    });
+  }
+
   /**
    * PRJ-2: the number of open tickets (status not DONE) in each of these projects, for the
    * project cards. Projects missing from the map have none.
@@ -196,6 +230,47 @@ export function createProjectsService(prisma: PrismaClient): ProjectsService {
         total,
         page,
       );
+    },
+
+    getProjectDetail({ project, role }) {
+      return toProjectDetail(project, role);
+    },
+
+    // PRJ-5: requireOwner already checked the caller. Only the fields the client sent are
+    // written; the key is not in the schema, so it can never change here (architecture §11 #1).
+    // Last write wins: editing project details doesn't use the CON-1 conflict check, which is
+    // for tickets.
+    async updateProject({ project, role }, { name, description }) {
+      try {
+        const updated = await prisma.project.update({
+          where: { id: project.id },
+          data: {
+            ...(name === undefined ? {} : { name }),
+            ...(description === undefined ? {} : { description }),
+          },
+        });
+
+        return await toProjectDetail(updated, role);
+      } catch (error) {
+        if (isRecordNotFound(error)) {
+          throw projectNotFound();
+        }
+        throw error;
+      }
+    },
+
+    // PRJ-5 (architecture §10.5): one DELETE of the project row; PostgreSQL removes the rest
+    // through the ON DELETE CASCADE foreign keys in the same statement, so nothing is left
+    // half-deleted. deleteMany (not delete) so a project already deleted by a parallel request
+    // is a count of 0 → 404, not a Prisma error.
+    // TODO(TKT-1, CMT-1, ACT-1): Ticket.projectId, Comment.ticketId and Activity.ticketId must be
+    // `onDelete: Cascade`, so deleting a project also removes its tickets, comments and history.
+    async deleteProject(projectId) {
+      const { count } = await prisma.project.deleteMany({ where: { id: projectId } });
+
+      if (count === 0) {
+        throw projectNotFound();
+      }
     },
   };
 }
