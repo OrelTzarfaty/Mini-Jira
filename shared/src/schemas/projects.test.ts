@@ -9,9 +9,12 @@ import {
   PROJECT_DESCRIPTION_MAX_LENGTH,
   PROJECT_NAME_MAX_LENGTH,
   PROJECT_SEARCH_MAX_LENGTH,
+  PROJECT_UPDATE_EMPTY_MESSAGE,
+  projectDetailSchema,
   projectListItemSchema,
   projectListPageSchema,
   projectSchema,
+  updateProjectSchema,
 } from './projects.js';
 import type { ProjectListItem, ProjectListPage } from './projects.js';
 
@@ -253,5 +256,74 @@ describe('projectListItemSchema', () => {
         totalPages: 1,
       }),
     ).toEqual({ items: [item], page: 1, pageSize: 20, total: 1, totalPages: 1 });
+  });
+});
+
+describe('updateProjectSchema', () => {
+  /** The messages zod reports for a field ('' for the whole body). */
+  const updateMessagesFor = (input: unknown, field: string): string[] => {
+    const result = updateProjectSchema.safeParse(input);
+    if (result.success) return [];
+
+    return result.error.issues
+      .filter((issue) => (issue.path[0] ?? '') === field)
+      .map((issue) => issue.message);
+  };
+
+  it('PRJ-5: accepts the name alone, trimmed, and leaves the description out (unchanged)', () => {
+    expect(updateProjectSchema.parse({ name: '  Website 2  ' })).toEqual({ name: 'Website 2' });
+  });
+
+  it('PRJ-5: accepts the description alone, trimmed', () => {
+    expect(updateProjectSchema.parse({ description: '  New text ' })).toEqual({
+      description: 'New text',
+    });
+  });
+
+  it.each([null, '', '   '])('PRJ-5: clears the description when it is %j (null)', (value) => {
+    expect(updateProjectSchema.parse({ description: value })).toEqual({ description: null });
+  });
+
+  it('PRJ-5: rejects an empty body with one message for the whole body', () => {
+    expect(updateMessagesFor({}, '')).toEqual([PROJECT_UPDATE_EMPTY_MESSAGE]);
+  });
+
+  it('PRJ-5: rejects the key, so it can never be changed', () => {
+    expect(updateProjectSchema.safeParse({ name: 'Website', key: 'NEW' }).success).toBe(false);
+  });
+
+  it('PRJ-5: uses the create rules for the name and the description', () => {
+    expect(updateMessagesFor({ name: '   ' }, 'name')).toEqual(['Name is required']);
+    expect(updateMessagesFor({ name: null }, 'name')).toHaveLength(1);
+    expect(updateMessagesFor({ name: 'a'.repeat(PROJECT_NAME_MAX_LENGTH + 1) }, 'name')).toEqual([
+      `Name must be at most ${PROJECT_NAME_MAX_LENGTH} characters`,
+    ]);
+    expect(
+      updateMessagesFor(
+        { description: 'a'.repeat(PROJECT_DESCRIPTION_MAX_LENGTH + 1) },
+        'description',
+      ),
+    ).toEqual([`Description must be at most ${PROJECT_DESCRIPTION_MAX_LENGTH} characters`]);
+  });
+});
+
+describe('projectDetailSchema', () => {
+  const detail = {
+    id: '0b6f1c2e-4a3d-4e5f-8a9b-1c2d3e4f5a6b',
+    key: 'WEB',
+    name: 'Website',
+    description: null,
+    role: 'OWNER',
+    createdAt: '2026-11-24T10:00:00.000Z',
+    updatedAt: '2026-11-24T10:00:00.000Z',
+    ticketCount: 48,
+  };
+
+  it('PRJ-5: is a project plus its ticket count, without internal fields', () => {
+    expect(projectDetailSchema.parse({ ...detail, ticketCounter: 50 })).toEqual(detail);
+  });
+
+  it.each([-1, 1.5])('PRJ-5: rejects a ticket count of %s', (ticketCount) => {
+    expect(projectDetailSchema.safeParse({ ...detail, ticketCount }).success).toBe(false);
   });
 });

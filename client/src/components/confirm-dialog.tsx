@@ -22,6 +22,10 @@ interface ConfirmDialogProps {
   title: string;
   /** What will happen, for example "This can't be undone." */
   description: ReactNode;
+  /** Anything the user must do before confirming, such as typing the project key (PRJ-5). */
+  children?: ReactNode;
+  /** Keeps the destructive button disabled, for example until the project key is typed. */
+  isConfirmDisabled?: boolean;
   /** The destructive button's text, for example "Delete ticket". */
   confirmLabel: string;
   onConfirm: () => void;
@@ -50,6 +54,8 @@ export function ConfirmDialog({
   onOpenChange,
   title,
   description,
+  children,
+  isConfirmDisabled = false,
   confirmLabel,
   onConfirm,
   isPending = false,
@@ -89,11 +95,16 @@ export function ConfirmDialog({
           <AlertDialogTitle>{title}</AlertDialogTitle>
           <AlertDialogDescription>{description}</AlertDialogDescription>
         </AlertDialogHeader>
+        {children}
         {error && <FormAlert message={error} />}
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>
           {/* Disabled while sending, so a double click can't send the action twice. */}
-          <Button variant="destructive" disabled={isPending} onClick={onConfirm}>
+          <Button
+            variant="destructive"
+            disabled={isPending || isConfirmDisabled}
+            onClick={onConfirm}
+          >
             {isPending && <Loader2Icon aria-hidden="true" className="animate-spin" />}
             {isPending ? pendingLabel : confirmLabel}
           </Button>

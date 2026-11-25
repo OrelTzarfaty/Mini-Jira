@@ -40,16 +40,33 @@ export function isProjectKey(value: string): boolean {
 // control character is rejected (PostgreSQL can't store U+0000 in a text column).
 const DESCRIPTION_CONTROL_CHARACTER = /(?![\t\n\r])\p{Cc}/u;
 
+// PRJ-1 and PRJ-5: the name rules, shared by create and edit.
+const projectNameSchema = requiredString('Name')
+  .trim()
+  .min(1, 'Name is required')
+  .max(PROJECT_NAME_MAX_LENGTH, `Name must be at most ${PROJECT_NAME_MAX_LENGTH} characters`)
+  .refine((name) => !CONTROL_CHARACTER.test(name), "Name contains characters that aren't allowed");
+
+// PRJ-1 and PRJ-5: the description rules, shared by create and edit. Null is accepted too, and
+// null or empty after trimming both mean "no description", stored as null (one empty value, so
+// the client never has to tell "" from null).
+const projectDescriptionSchema = z
+  .string()
+  .trim()
+  .max(
+    PROJECT_DESCRIPTION_MAX_LENGTH,
+    `Description must be at most ${PROJECT_DESCRIPTION_MAX_LENGTH} characters`,
+  )
+  .refine(
+    (description) => !DESCRIPTION_CONTROL_CHARACTER.test(description),
+    "Description contains characters that aren't allowed",
+  )
+  .nullable()
+  .transform((description) => (description === '' ? null : description));
+
 // PRJ-1: the create-project form and `POST /api/projects` body.
 export const createProjectSchema = z.strictObject({
-  name: requiredString('Name')
-    .trim()
-    .min(1, 'Name is required')
-    .max(PROJECT_NAME_MAX_LENGTH, `Name must be at most ${PROJECT_NAME_MAX_LENGTH} characters`)
-    .refine(
-      (name) => !CONTROL_CHARACTER.test(name),
-      "Name contains characters that aren't allowed",
-    ),
+  name: projectNameSchema,
   // Trimmed, checked, then uppercased ("web" is stored as "WEB"); zod 4 runs the steps in
   // order. `abort` stops an empty key from also getting the format message.
   key: requiredString('Key')
@@ -61,21 +78,7 @@ export const createProjectSchema = z.strictObject({
     )
     .toUpperCase(),
   // Optional: missing, null, or empty after trimming are all stored as null (one "no description" value).
-  description: z
-    .string()
-    .trim()
-    .max(
-      PROJECT_DESCRIPTION_MAX_LENGTH,
-      `Description must be at most ${PROJECT_DESCRIPTION_MAX_LENGTH} characters`,
-    )
-    .refine(
-      (description) => !DESCRIPTION_CONTROL_CHARACTER.test(description),
-      "Description contains characters that aren't allowed",
-    )
-    .nullish()
-    .transform((description) =>
-      description === undefined || description === null || description === '' ? null : description,
-    ),
+  description: projectDescriptionSchema.optional().transform((description) => description ?? null),
 });
 
 /** What the client sends (before trimming and uppercasing). */
@@ -97,6 +100,36 @@ export const projectSchema = z.object({
 });
 
 export type Project = z.infer<typeof projectSchema>;
+
+// PRJ-5: shown when an edit sends neither field.
+export const PROJECT_UPDATE_EMPTY_MESSAGE = 'Change the name or the description';
+
+// PRJ-5: the edit-project form and `PATCH /api/projects/:projectKey` body. Only the name and the
+// description can change: strict, so any other field (`key` included) is a 400, which keeps the
+// key unchangeable (architecture §11 #1). A missing field is left as it is; a description that
+// is null or empty after trimming clears it (stored as null, like create).
+export const updateProjectSchema = z
+  .strictObject({
+    name: projectNameSchema.optional(),
+    description: projectDescriptionSchema.optional(),
+  })
+  .refine((input) => input.name !== undefined || input.description !== undefined, {
+    error: PROJECT_UPDATE_EMPTY_MESSAGE,
+  });
+
+/** What the client sends to edit a project (before trimming). */
+export type UpdateProjectFormValues = z.input<typeof updateProjectSchema>;
+/** What the server works with: a missing field is undefined (unchanged), a cleared description null. */
+export type UpdateProjectInput = z.output<typeof updateProjectSchema>;
+
+// PRJ-5: one project as `GET` and `PATCH /api/projects/:projectKey` return it: the project with
+// the caller's role and the number of its tickets (all statuses), which the delete dialog shows
+// ("its 48 tickets", wireframe 06 D).
+export const projectDetailSchema = projectSchema.extend({
+  ticketCount: z.number().int().min(0),
+});
+
+export type ProjectDetail = z.infer<typeof projectDetailSchema>;
 
 // PRJ-2: the query of `GET /api/projects` (My Projects). Strict, so an unknown parameter is a 400.
 // `q` is an optional search in the project name or key; empty after trimming means no search.

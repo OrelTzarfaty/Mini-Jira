@@ -2,7 +2,7 @@ import {
   ErrorCode,
   PROJECT_NOT_FOUND_MESSAGE,
   PROJECT_OWNER_ONLY_MESSAGE,
-  projectSchema,
+  projectDetailSchema,
   Role,
   UNAUTHENTICATED_MESSAGE,
 } from '@mini-jira/shared';
@@ -70,8 +70,9 @@ describe('GET /api/projects/:projectKey (PRJ-6)', () => {
     const response = await getProject(caller);
 
     expect(response.status).toBe(200);
-    expect(projectSchema.strict().safeParse(response.body).success).toBe(true);
-    expect(response.body).toMatchObject({ ...matrix.project, role });
+    expect(projectDetailSchema.strict().safeParse(response.body).success).toBe(true);
+    // PRJ-5: the ticket count for the delete dialog (0 until tickets exist).
+    expect(response.body).toMatchObject({ ...matrix.project, role, ticketCount: 0 });
     expect(response.text).not.toContain('ticketCounter');
   });
 
