@@ -24,6 +24,11 @@ import { showServerError } from '@/lib/show-server-error';
 // The form's field names, from the shared schema, to match the server's details[].field.
 const CREATE_TICKET_FIELDS = createTicketSchema.keyof().options;
 
+/** A cleared date field gives "", which the API takes as no due date only when sent as null. */
+function emptyToNull(value: string | null): string | null {
+  return value === '' ? null : value;
+}
+
 interface CreateTicketFormProps {
   projectKey: string;
   /** Closes the popup and shows "WEB-13 created". */
@@ -51,6 +56,7 @@ export function CreateTicketForm({ projectKey, onCreated }: CreateTicketFormProp
       description: '',
       type: TicketType.TASK,
       priority: Priority.MEDIUM,
+      dueDate: null,
     },
   });
   const title = useWatch({ control, name: 'title' });
@@ -105,6 +111,18 @@ export function CreateTicketForm({ projectKey, onCreated }: CreateTicketFormProp
                 </NativeSelectOption>
               ))}
             </NativeSelect>
+          )}
+        </FormField>
+        {/* The browser's own date picker: keyboard and screen reader friendly, the phone's
+            native picker, and its value is already the calendar day "YYYY-MM-DD" in the user's
+            own calendar, with no time or time zone that could shift it by a day. */}
+        <FormField label="Due date (optional)" error={errors.dueDate?.message}>
+          {(fieldControl) => (
+            <Input
+              {...fieldControl}
+              {...register('dueDate', { setValueAs: emptyToNull })}
+              type="date"
+            />
           )}
         </FormField>
       </div>

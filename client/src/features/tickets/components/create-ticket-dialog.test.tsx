@@ -135,6 +135,35 @@ describe('CreateTicketDialog', () => {
     expect(screen.getByRole('button', { name: 'Create ticket' })).toHaveFocus();
   });
 
+  it('TKT-1: sends the picked due date as the same calendar day, and a cleared one as null', async () => {
+    const sentBodies = recordCreatedTickets();
+    const popup = await openPopup();
+    await userEvent.type(within(popup).getByLabelText('Title'), 'Ship it');
+    const dueDate = within(popup).getByLabelText('Due date (optional)');
+    await userEvent.type(dueDate, '2026-12-01');
+
+    await submit(popup);
+
+    await waitFor(() => {
+      expect(sentBodies).toHaveLength(1);
+    });
+    expect(sentBodies[0]).toMatchObject({ dueDate: '2026-12-01' });
+
+    await userEvent.click(screen.getByRole('button', { name: 'Create ticket' }));
+    const nextPopup = await screen.findByRole('dialog', { name: 'Create ticket in WEB' });
+    await userEvent.type(within(nextPopup).getByLabelText('Title'), 'No date');
+    const nextDueDate = within(nextPopup).getByLabelText('Due date (optional)');
+    await userEvent.type(nextDueDate, '2026-12-01');
+    await userEvent.clear(nextDueDate);
+
+    await submit(nextPopup);
+
+    await waitFor(() => {
+      expect(sentBodies).toHaveLength(2);
+    });
+    expect(sentBodies[1]).toMatchObject({ dueDate: null });
+  });
+
   it('TKT-1: Create is disabled and says so while the ticket is being created', async () => {
     const { promise: serverCanAnswer, resolve: letServerAnswer } = Promise.withResolvers<void>();
     server.use(
