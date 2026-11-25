@@ -126,7 +126,7 @@ describe('CreateTicketDialog', () => {
 
     await submit(popup);
 
-    expect(await screen.findByRole('status')).toHaveTextContent('WEB-13 created');
+    expect(await screen.findByRole('status')).toHaveTextContent(/^WEB-13 created$/);
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(queryClient.getQueryState([...PROJECTS_QUERY_KEY, 'list'])?.isInvalidated).toBe(true);
     expect(queryClient.getQueryState(projectTicketsKey)?.isInvalidated).toBe(true);
@@ -150,9 +150,10 @@ describe('CreateTicketDialog', () => {
     const message = await screen.findByRole('status');
     expect(message).toHaveTextContent('WEB-13 created');
 
-    await userEvent.click(within(message).getByRole('button', { name: 'Dismiss' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Dismiss' }));
 
     expect(message).toBeEmptyDOMElement();
+    expect(screen.queryByRole('button', { name: 'Dismiss' })).not.toBeInTheDocument();
   });
 
   it('TKT-1: sends the picked due date as the same calendar day, and a cleared one as null', async () => {
