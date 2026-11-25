@@ -36,8 +36,14 @@ function parseInput<Schema extends z.ZodType>(
   }
 
   const details = result.error.issues.flatMap(toErrorDetails);
-  // The first field message leads, like "Email is required".
-  const message = details[0]?.message ?? fallbackMessage;
+  // The first field message leads, like "Email is required". Without one, a rule we wrote for
+  // the whole body (a custom refine, e.g. PRJ-5 "Change the name or the description") gives
+  // the message; zod's own whole-body messages ("expected object") stay hidden behind the
+  // general one.
+  const bodyRuleMessage = result.error.issues.find(
+    (issue) => issue.code === 'custom' && issue.path.length === 0,
+  )?.message;
+  const message = details[0]?.message ?? bodyRuleMessage ?? fallbackMessage;
 
   return {
     success: false,

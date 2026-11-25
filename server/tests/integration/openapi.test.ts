@@ -172,6 +172,27 @@ describe('GET /api/openapi.json', () => {
     ]);
   });
 
+  it('PRJ-5: documents the edit-project endpoint with its responses and ticketCount', async () => {
+    const spec = await getSpec();
+    const operation = spec.paths['/projects/{projectKey}']?.patch;
+
+    expect(Object.keys(operation?.responses ?? {})).toEqual([
+      '200',
+      '400',
+      '401',
+      '403',
+      '404',
+      '413',
+      '500',
+    ]);
+    expect(operation?.parameters).toEqual([
+      expect.objectContaining({ name: 'projectKey', in: 'path', required: true }),
+    ]);
+    expect(JSON.stringify(spec.components.schemas.ProjectDetail)).toContain('ticketCount');
+    // The key can't be edited, so the request body doesn't offer it.
+    expect(JSON.stringify(spec.components.schemas.UpdateProjectRequest)).not.toContain('"key"');
+  });
+
   it('SETUP-3: builds the error schema from the shared error codes', async () => {
     const spec = await getSpec();
 
