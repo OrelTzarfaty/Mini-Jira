@@ -321,7 +321,7 @@ export function createOpenApiSpec(): Record<string, unknown> {
           operationId: 'getProject',
           summary: 'Get a project the caller is a member of',
           description:
-            'PRJ-6. Returns the project with the role the caller has in it (OWNER or MEMBER), and (PRJ-5) ticketCount, the number of its tickets in every status (0 until tickets exist). The key in the URL is matched exactly: it must be the stored uppercase key ("WEB", not "web"). A project that does not exist and a project the caller is not a member of get the same 404, so the answer never reveals whether the project exists.',
+            'PRJ-6. Returns the project with the role the caller has in it (OWNER or MEMBER), and (PRJ-5) ticketCount, the number of its tickets in every status. The key in the URL is matched exactly: it must be the stored uppercase key ("WEB", not "web"). A project that does not exist and a project the caller is not a member of get the same 404, so the answer never reveals whether the project exists.',
           security: [{ authCookie: [] }],
           parameters: [PROJECT_KEY_PARAMETER],
           responses: {

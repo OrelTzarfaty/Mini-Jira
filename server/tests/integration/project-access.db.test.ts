@@ -4,6 +4,7 @@ import {
   PROJECT_OWNER_ONLY_MESSAGE,
   projectDetailSchema,
   Role,
+  Status,
   UNAUTHENTICATED_MESSAGE,
 } from '@mini-jira/shared';
 import { Router } from 'express';
@@ -26,6 +27,7 @@ import {
   type ProjectAccessMatrix,
 } from '../helpers/project-access-matrix.js';
 import { createTestApp, testAuthCookie } from '../helpers/test-app.js';
+import { createTestTickets } from '../helpers/tickets.js';
 
 const NOT_FOUND_BODY = {
   error: { code: ErrorCode.NOT_FOUND, message: PROJECT_NOT_FOUND_MESSAGE },
@@ -71,9 +73,28 @@ describe('GET /api/projects/:projectKey (PRJ-6)', () => {
 
     expect(response.status).toBe(200);
     expect(projectDetailSchema.strict().safeParse(response.body).success).toBe(true);
-    // PRJ-5: the ticket count for the delete dialog (0 until tickets exist).
+    // PRJ-5: the ticket count for the delete dialog (this project has no tickets yet).
     expect(response.body).toMatchObject({ ...matrix.project, role, ticketCount: 0 });
     expect(response.text).not.toContain('ticketCounter');
+  });
+
+  it("PRJ-5, TKT-1: ticketCount counts every ticket of this project, Done ones too, and no other project's", async () => {
+    await createTestTickets(matrix.project, matrix.owner.id, ['One', 'Two', 'Three']);
+    await testPrisma.ticket.updateMany({
+      where: { projectId: matrix.project.id, title: 'Two' },
+      data: { status: Status.DONE },
+    });
+    const other = await createProjectsService(testPrisma).createProject(matrix.owner.id, {
+      key: 'API',
+      name: 'Backend',
+      description: null,
+    });
+    await createTestTickets(other, matrix.owner.id, ['Elsewhere']);
+
+    const response = await getProject('member');
+
+    expect(response.status).toBe(200);
+    expect(response.body).toMatchObject({ key: matrix.project.key, ticketCount: 3 });
   });
 
   it('PRJ-6: an outsider gets 404 and no project data', async () => {

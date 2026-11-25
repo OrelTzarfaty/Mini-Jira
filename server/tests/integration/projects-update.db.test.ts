@@ -20,6 +20,7 @@ import {
   type ProjectAccessMatrix,
 } from '../helpers/project-access-matrix.js';
 import { createTestApp } from '../helpers/test-app.js';
+import { createTestTickets } from '../helpers/tickets.js';
 
 describe('PATCH /api/projects/:projectKey (PRJ-5)', () => {
   let app: ReturnType<typeof createTestApp>;
@@ -48,6 +49,15 @@ describe('PATCH /api/projects/:projectKey (PRJ-5)', () => {
     key: matrix.project.key,
     name: matrix.project.name,
     description: matrix.project.description,
+  });
+
+  it('PRJ-5, TKT-1: the PATCH response counts the project tickets', async () => {
+    await createTestTickets(matrix.project, matrix.owner.id, ['One', 'Two']);
+
+    const response = await updateProject('owner', { name: 'Website 2' });
+
+    expect(response.status).toBe(200);
+    expect(response.body).toMatchObject({ name: 'Website 2', ticketCount: 2 });
   });
 
   it('PRJ-5: the owner edits the name and description (200, same shape as GET)', async () => {

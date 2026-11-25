@@ -275,7 +275,7 @@ Sprint 3 · Size M · **Status: Done** — merged into `dev` in [#88](https://gi
 - [x] FE · Edit form (name, description) in project settings
 - [x] FE · Delete with a confirmation dialog: shows the ticket count, the owner must type the project key to enable Delete; redirect to My Projects (wireframe 06 D)
 - [x] QA · Member gets 403 on both; key can't be changed; after delete everything is gone (checked again after tickets exist)
-- (The "everything is gone" check is repeated once tickets, comments, and activity exist.)
+- (The "everything is gone" check covers tickets since TKT-1 and is repeated once comments and activity exist.)
 
 ---
 

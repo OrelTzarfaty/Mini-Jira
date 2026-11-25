@@ -16,6 +16,7 @@ import {
   type ProjectAccessMatrix,
 } from '../helpers/project-access-matrix.js';
 import { createTestApp } from '../helpers/test-app.js';
+import { createTestTickets } from '../helpers/tickets.js';
 
 const NOT_FOUND_BODY = {
   error: { code: ErrorCode.NOT_FOUND, message: PROJECT_NOT_FOUND_MESSAGE },
@@ -53,6 +54,23 @@ describe('DELETE /api/projects/:projectKey (PRJ-5)', () => {
     // Only the project goes; the users' accounts stay.
     const userIds = [matrix.owner.id, matrix.member.id];
     expect(await testPrisma.user.count({ where: { id: { in: userIds } } })).toBe(2);
+  });
+
+  it("PRJ-5, TKT-1: deleting a project deletes its tickets; another project's tickets stay", async () => {
+    await createTestTickets(matrix.project, matrix.member.id, ['One', 'Two', 'Three']);
+    const other = await createProjectsService(testPrisma).createProject(matrix.owner.id, {
+      key: 'API',
+      name: 'Backend',
+      description: null,
+    });
+    await createTestTickets(other, matrix.owner.id, ['Elsewhere']);
+    expect(await testPrisma.ticket.count({ where: { projectId: matrix.project.id } })).toBe(3);
+
+    const response = await deleteProject('owner');
+
+    expect(response.status).toBe(204);
+    expect(await testPrisma.ticket.count({ where: { projectId: matrix.project.id } })).toBe(0);
+    expect(await testPrisma.ticket.count({ where: { projectId: other.id } })).toBe(1);
   });
 
   it.each(['owner', 'member'] as const)(
