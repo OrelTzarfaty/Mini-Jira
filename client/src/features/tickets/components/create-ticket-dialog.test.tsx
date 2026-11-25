@@ -7,6 +7,7 @@ import { http, HttpResponse } from 'msw';
 import { describe, expect, it } from 'vitest';
 
 import { createQueryClient } from '@/api/query-client';
+import { PROJECTS_QUERY_KEY, projectQueryKey } from '@/api/query-keys';
 import { mockProject, TEST_PROJECT } from '@/test/project';
 import { renderRoute } from '@/test/render-route';
 import { server } from '@/test/server';
@@ -113,16 +114,22 @@ describe('CreateTicketDialog', () => {
     expect(sentBodies).toEqual([]);
   });
 
-  it('TKT-1: sends the cleaned form, closes the popup, and returns focus to the button', async () => {
+  it('TKT-1: sends the cleaned form, closes the popup, says "WEB-13 created", and refreshes the tickets and counts', async () => {
     const sentBodies = recordCreatedTickets();
-    const popup = await openPopup();
+    const queryClient = createQueryClient();
+    // Stand-ins for My Projects' counts (PRJ-2) and the project's ticket queries (BRD-1, LST-1).
+    const projectTicketsKey = [...projectQueryKey(TEST_PROJECT.key), 'tickets'];
+    queryClient.setQueryData([...PROJECTS_QUERY_KEY, 'list'], []);
+    queryClient.setQueryData(projectTicketsKey, []);
+    const popup = await openPopup(queryClient);
     await fillValidForm(popup);
 
     await submit(popup);
 
-    await waitFor(() => {
-      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-    });
+    expect(await screen.findByRole('status')).toHaveTextContent('WEB-13 created');
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(queryClient.getQueryState([...PROJECTS_QUERY_KEY, 'list'])?.isInvalidated).toBe(true);
+    expect(queryClient.getQueryState(projectTicketsKey)?.isInvalidated).toBe(true);
     expect(sentBodies).toEqual([
       {
         title: 'Fix login redirect',
@@ -133,6 +140,19 @@ describe('CreateTicketDialog', () => {
       },
     ]);
     expect(screen.getByRole('button', { name: 'Create ticket' })).toHaveFocus();
+  });
+
+  it('TKT-1: the ✕ on the message hides it', async () => {
+    recordCreatedTickets();
+    const popup = await openPopup();
+    await userEvent.type(within(popup).getByLabelText('Title'), 'Fix login redirect');
+    await submit(popup);
+    const message = await screen.findByRole('status');
+    expect(message).toHaveTextContent('WEB-13 created');
+
+    await userEvent.click(within(message).getByRole('button', { name: 'Dismiss' }));
+
+    expect(message).toBeEmptyDOMElement();
   });
 
   it('TKT-1: sends the picked due date as the same calendar day, and a cleared one as null', async () => {
