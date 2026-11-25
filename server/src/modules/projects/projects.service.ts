@@ -4,6 +4,7 @@ import {
   projectListItemSchema,
   projectSchema,
   Role,
+  Status,
 } from '@mini-jira/shared';
 import type {
   CreateProjectInput,
@@ -71,11 +72,17 @@ export function createProjectsService(prisma: PrismaClient): ProjectsService {
    * PRJ-2: the number of open tickets (status not DONE) in each of these projects, for the
    * project cards. Projects missing from the map have none.
    */
-  function countOpenTickets(projectIds: readonly string[]): Promise<ReadonlyMap<string, number>> {
-    // TODO(TKT-1): there is no Ticket model yet, so every project has 0 open tickets. Replace
-    // with one grouped query once tickets exist:
-    // prisma.ticket.groupBy({ by: ['projectId'], where: { projectId: { in: projectIds }, status: { not: 'DONE' } }, _count: true })
-    return Promise.resolve(new Map(projectIds.map((projectId) => [projectId, 0])));
+  async function countOpenTickets(
+    projectIds: readonly string[],
+  ): Promise<ReadonlyMap<string, number>> {
+    // One grouped query for the whole page. The (projectId, status, rank) index covers it.
+    const groups = await prisma.ticket.groupBy({
+      by: ['projectId'],
+      where: { projectId: { in: [...projectIds] }, status: { not: Status.DONE } },
+      _count: { _all: true },
+    });
+
+    return new Map(groups.map(({ projectId, _count }) => [projectId, _count._all]));
   }
 
   return {

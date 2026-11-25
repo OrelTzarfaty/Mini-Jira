@@ -1,0 +1,38 @@
+import { createTicketSchema } from '@mini-jira/shared';
+import { Router } from 'express';
+
+import type { PrismaClient } from '../../generated/prisma/client.js';
+import type { AuthCookie } from '../../lib/auth-cookie.js';
+import { createLoadProjectAccess } from '../../middleware/project-access.js';
+import { createRequireAuth } from '../../middleware/require-auth.js';
+import { validateBody } from '../../middleware/validate.js';
+import { createAuthService } from '../auth/auth.service.js';
+import { createProjectsService } from '../projects/projects.service.js';
+import { createTicketsController } from './tickets.controller.js';
+import { createTicketsService } from './tickets.service.js';
+
+export interface TicketsRouterOptions {
+  prisma: PrismaClient;
+  authCookie: AuthCookie;
+}
+
+export function createTicketsRouter({ prisma, authCookie }: TicketsRouterOptions): Router {
+  const router = Router();
+  const controller = createTicketsController(createTicketsService(prisma));
+  const requireAuth = createRequireAuth(authCookie, createAuthService(prisma));
+  // PRJ-6: requireAuth (401) → loadProjectAccess (404 for a missing project or a non-member)
+  // run before anything else, so an outsider learns nothing, not even the body rules.
+  const loadProjectAccess = createLoadProjectAccess(createProjectsService(prisma));
+
+  // TKT-1: any member (OWNER or MEMBER) may create a ticket. The app-wide origin check blocks
+  // cross-site POSTs; the body is validated last.
+  router.post(
+    '/projects/:projectKey/tickets',
+    requireAuth,
+    loadProjectAccess,
+    validateBody(createTicketSchema),
+    controller.create,
+  );
+
+  return router;
+}
