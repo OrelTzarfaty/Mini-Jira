@@ -232,7 +232,7 @@ AC (extra): key 2–6 uppercase, unique (`409 PROJECT_KEY_TAKEN`), immutable · 
 - [x] QA · Integration: valid/invalid keys, duplicate key, creator is OWNER
 
 ### PRJ-2 · My Projects list
-Sprint 3 · Size M · Status: In review · Depends on PRJ-1
+Sprint 3 · Size M · **Status: Done** — merged into `dev` in [#85](https://github.com/OrelTzarfaty/Mini-Jira/pull/85) (`7d19506`); full QA PASS · Depends on PRJ-1
 - [x] BE · `GET /api/projects`: only my projects, my role, paginated
 - [x] BE · Open-ticket count per project (status ≠ DONE) in the same response — 0 until tickets exist
 - [x] BE · Optional `q` search by project name or key (used by the project dropdown)
@@ -262,14 +262,14 @@ Sprint 3 · Size M · **Status: Done** — merged into `dev` in [#84](https://gi
 - [x] QA · Owner can add; member gets 403; unknown email; already a member
 
 ### PRJ-4 · Remove a member
-Sprint 3 · Size S · Status: In progress · Depends on PRJ-3
+Sprint 3 · Size S · **Status: Done** — merged into `dev` in [#86](https://github.com/OrelTzarfaty/Mini-Jira/pull/86) (`3082f4f`); light QA PASS · Depends on PRJ-3
 - [x] BE · `DELETE /api/projects/:projectKey/members/:userId` (owner only); owner can't remove themselves (`409 CANNOT_REMOVE_OWNER`)
 - [x] FE · Remove button with a confirmation dialog
-- [ ] QA · Owner removes a member; member gets 403; owner can't remove themselves
+- [x] QA · Owner removes a member; member gets 403; owner can't remove themselves
 - (Unassigning their tickets is added in TKT-5, when tickets exist.)
 
 ### PRJ-5 · Edit or delete a project
-Sprint 3 · Size M · Status: To do · Depends on PRJ-6, PRJ-3
+Sprint 3 · Size M · Status: In progress · Depends on PRJ-6, PRJ-3
 - [ ] BE · `PATCH /api/projects/:projectKey` (owner; name and description only)
 - [ ] BE · `DELETE /api/projects/:projectKey` (owner; cascades members, tickets, comments, activity)
 - [ ] FE · Edit form (name, description) in project settings
