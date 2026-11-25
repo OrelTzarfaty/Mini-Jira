@@ -281,7 +281,7 @@ Sprint 3 · Size M · Status: To do · Depends on PRJ-6, PRJ-3
 ## E4 · Tickets — Sprint 4
 
 ### TKT-1 · Create a ticket
-Sprint 4 · Size L · Status: In progress (API done; FE tasks open; the Estimate tasks wait for the mentor's OK, DOC-5) · Depends on PRJ-6
+Sprint 4 · Size L · Status: In review (API and web form done; the Estimate tasks wait for the mentor's OK, DOC-5) · Depends on PRJ-6
 AC (extra): key from the atomic `ticketCounter` (architecture §10.1) · new ticket goes to the end of To Do.
 - [x] BE · Migration: `Ticket` + indexes (architecture §8.1), including the optional `estimateMinutes` (`estimateMinutes` not added yet: it waits for DOC-5)
 - [ ] BE · Shared `parseEstimate` / `formatEstimate`: `30m`, `4h`, `2d`, `1d 4h` ↔ minutes (1d = 8h)
@@ -289,10 +289,10 @@ AC (extra): key from the atomic `ticketCounter` (architecture §10.1) · new tic
 - [x] BE · `lib/rank.ts`: fractional-indexing wrapper
 - [x] BE · Shared `createTicketSchema`
 - [x] BE · `POST /api/projects/:projectKey/tickets` in one transaction: increment counter → rank → insert
-- [ ] FE · "Create ticket" dialog: title, description, type, priority, inline errors
-- [ ] FE · Due date field (date picker)
+- [x] FE · "Create ticket" dialog: title, description, type, priority, inline errors
+- [x] FE · Due date field (date picker)
 - [ ] FE · Estimate field (optional, `30m` / `4h` / `2d`, inline format error)
-- [ ] FE · After create: refresh the board/list and show the new key
+- [x] FE · After create: refresh the board/list and show the new key
 - [ ] QA · Unit: key format/parse, rank helper, estimate parse/format (valid and invalid inputs) (key and rank done; estimate waits for DOC-5)
 - [x] QA · Integration: 20 parallel creates → unique, contiguous keys
 - (The assignee field is added in TKT-5. "Numbers are never reused" is tested in TKT-4, once delete exists.)
