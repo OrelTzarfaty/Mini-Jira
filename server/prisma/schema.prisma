@@ -18,7 +18,10 @@ model User {
   updatedAt    DateTime @updatedAt
 
   // PRJ-1: a user's memberships; deleting the user removes them (architecture §8).
-  memberships ProjectMember[]
+  memberships     ProjectMember[]
+  // TKT-1: tickets this user created (reporter) and tickets assigned to them (TKT-5).
+  reportedTickets Ticket[]        @relation("TicketReporter")
+  assignedTickets Ticket[]        @relation("TicketAssignee")
 }
 
 // PRJ-1: the roles a user can have in a project (architecture §8). Exactly one OWNER per
@@ -42,6 +45,7 @@ model Project {
   updatedAt     DateTime @updatedAt
 
   members ProjectMember[]
+  tickets Ticket[]
 }
 
 model ProjectMember {
@@ -60,4 +64,71 @@ model ProjectMember {
   // My Projects lists the caller's projects by userId (architecture §8.1); the PK can't serve
   // it because userId is its second column.
   @@index([userId])
+}
+
+// TKT-1: the fixed values of a ticket (architecture §8). PostgreSQL sorts an enum in the order
+// its values are declared, so sorting by priority or status follows these lists.
+enum TicketType {
+  TASK
+  BUG
+  STORY
+}
+
+enum TicketPriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum TicketStatus {
+  TODO
+  IN_PROGRESS
+  IN_REVIEW
+  DONE
+}
+
+model Ticket {
+  id          String         @id @default(uuid()) @db.Uuid
+  projectId   String         @db.Uuid
+  // The ticket key (WEB-12) is the project key + this number; it is not stored. The number
+  // comes from Project.ticketCounter (architecture §10.1); CHECK >= 1 in the migration.
+  number      Int
+  // Max 120 characters (CHECK constraint in the migration, like the API rule).
+  title       String
+  description String?
+  type        TicketType     @default(TASK)
+  priority    TicketPriority @default(MEDIUM)
+  status      TicketStatus   @default(TODO)
+  // Fractional index (fractional-indexing) that orders the cards in a status column
+  // (architecture §10.2). The migration gives it COLLATE "C", so PostgreSQL compares ranks
+  // byte by byte, the same order the library uses, on every database server.
+  rank        String
+  assigneeId  String?        @db.Uuid
+  reporterId  String         @db.Uuid
+  // A calendar day without a time or time zone.
+  dueDate     DateTime?      @db.Date
+  createdAt   DateTime       @default(now())
+  // Also the edit-conflict check (CON-1, architecture §10.3): keep Prisma's default
+  // timestamp(3) precision, the same as a JavaScript Date.
+  updatedAt   DateTime       @updatedAt
+
+  // Hard delete (architecture §10.5): deleting a project removes its tickets.
+  project  Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  // Restrict: a user who reported tickets can't be deleted, so a ticket never loses its
+  // reporter (it is required, and TKT-4 lets the reporter delete the ticket). There is no
+  // delete-account feature; if one comes, it must decide what happens to these tickets first.
+  reporter User    @relation("TicketReporter", fields: [reporterId], references: [id], onDelete: Restrict)
+  // SetNull: if an assigned user is deleted, the ticket stays and becomes unassigned, the same
+  // result as removing them from the project (PRJ-4).
+  assignee User?   @relation("TicketAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+
+  // Ticket lookup by key (WEB-12) and the safety net for key generation (architecture §10.1).
+  @@unique([projectId, number])
+  // Board columns in rank order, and "the last card in To Do" when a ticket is created.
+  @@index([projectId, status, rank])
+  // List view default sort (newest change first).
+  @@index([projectId, updatedAt])
+  // My Work (MY-1) and unassigning a removed member's tickets (PRJ-4, TKT-5).
+  @@index([assigneeId])
 }
