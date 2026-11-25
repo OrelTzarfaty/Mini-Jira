@@ -6,3 +6,4 @@ export * from './schemas/health.js';
 export * from './schemas/members.js';
 export * from './schemas/pagination.js';
 export * from './schemas/projects.js';
+export * from './schemas/tickets.js';

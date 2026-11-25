@@ -1,7 +1,12 @@
 import { z } from 'zod';
 
 import { Role } from '../enums.js';
-import { CONTROL_CHARACTER, requiredString } from './common.js';
+import {
+  blankToNull,
+  CONTROL_CHARACTER,
+  DESCRIPTION_CONTROL_CHARACTER,
+  requiredString,
+} from './common.js';
 import { pageSchema, paginationQuerySchema } from './pagination.js';
 
 export const PROJECT_KEY_MIN_LENGTH = 2;
@@ -36,10 +41,6 @@ export function isProjectKey(value: string): boolean {
   return STORED_PROJECT_KEY_PATTERN.test(value);
 }
 
-// A description may span lines, so tab, line feed and carriage return are allowed; every other
-// control character is rejected (PostgreSQL can't store U+0000 in a text column).
-const DESCRIPTION_CONTROL_CHARACTER = /(?![\t\n\r])\p{Cc}/u;
-
 // PRJ-1: the create-project form and `POST /api/projects` body.
 export const createProjectSchema = z.strictObject({
   name: requiredString('Name')
@@ -73,9 +74,7 @@ export const createProjectSchema = z.strictObject({
       "Description contains characters that aren't allowed",
     )
     .nullish()
-    .transform((description) =>
-      description === undefined || description === null || description === '' ? null : description,
-    ),
+    .transform(blankToNull),
 });
 
 /** What the client sends (before trimming and uppercasing). */
