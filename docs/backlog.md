@@ -269,12 +269,13 @@ Sprint 3 · Size S · **Status: Done** — merged into `dev` in [#86](https://gi
 - (Unassigning their tickets is added in TKT-5, when tickets exist.)
 
 ### PRJ-5 · Edit or delete a project
-Sprint 3 · Size M · Status: In progress · Depends on PRJ-6, PRJ-3
+Sprint 3 · Size M · Status: In review — all tasks built (API, settings edit form, delete dialog, component and E2E tests) · Depends on PRJ-6, PRJ-3
 - [x] BE · `PATCH /api/projects/:projectKey` (owner; name and description only)
 - [x] BE · `DELETE /api/projects/:projectKey` (owner; cascades members, tickets, comments, activity)
 - [x] FE · Edit form (name, description) in project settings
 - [x] FE · Delete with a confirmation dialog: shows the ticket count, the owner must type the project key to enable Delete; redirect to My Projects (wireframe 06 D)
-- [ ] QA · Member gets 403 on both; key can't be changed; after delete everything is gone (checked again after tickets exist)
+- [x] QA · Member gets 403 on both; key can't be changed; after delete everything is gone (checked again after tickets exist)
+- (The "everything is gone" check is repeated once tickets, comments, and activity exist.)
 
 ---
 
