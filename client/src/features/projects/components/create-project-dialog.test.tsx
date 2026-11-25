@@ -142,7 +142,7 @@ describe('CreateProjectDialog', () => {
       }),
     );
     // The board loads its project first (PRJ-6).
-    mockProject(NEW_PROJECT);
+    mockProject({ ...NEW_PROJECT, ticketCount: 0 });
     const queryClient = createQueryClient();
     queryClient.setQueryData(PROJECTS_QUERY_KEY, []);
     const { popup, router } = await openPopup(queryClient);
@@ -168,7 +168,7 @@ describe('CreateProjectDialog', () => {
         return HttpResponse.json(NEW_PROJECT, { status: 201 });
       }),
     );
-    mockProject(NEW_PROJECT);
+    mockProject({ ...NEW_PROJECT, ticketCount: 0 });
     const { popup } = await fillValidForm();
 
     await submit(popup);

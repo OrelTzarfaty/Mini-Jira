@@ -47,13 +47,11 @@ describe('Project header and settings page', () => {
     renderRoute('/projects/WEB/settings');
 
     const details = await screen.findByRole('region', { name: 'Project details' });
-    expect(within(details).getByText('Website Redesign')).toBeInTheDocument();
-    expect(within(details).getByText('New company website')).toBeInTheDocument();
+    expect(within(details).getByLabelText('Name')).toHaveValue('Website Redesign');
+    expect(within(details).getByLabelText('Description')).toHaveValue('New company website');
     expect(
       within(details).getByText("Can't be changed — it's part of every ticket key (WEB-12)"),
     ).toBeInTheDocument();
-    // Read-only until PRJ-5: nothing to type in.
-    expect(within(details).queryByRole('textbox')).not.toBeInTheDocument();
     expect(await screen.findByRole('region', { name: 'Members (2)' })).toBeInTheDocument();
     const dangerZone = screen.getByRole('region', { name: 'Danger zone' });
     expect(within(dangerZone).getByText('Delete this project')).toBeInTheDocument();

@@ -1,11 +1,11 @@
-import { ErrorCode, PAGE_SIZE, Role } from '@mini-jira/shared';
-import type { Project, ProjectListItem } from '@mini-jira/shared';
+import { ErrorCode, PAGE_SIZE, projectSchema, Role } from '@mini-jira/shared';
+import type { ProjectDetail, ProjectListItem } from '@mini-jira/shared';
 import { http, HttpResponse } from 'msw';
 
 import { server } from './server';
 
 /** The project that project-page tests open (wireframe 03 uses WEB). */
-export const TEST_PROJECT: Project = {
+export const TEST_PROJECT: ProjectDetail = {
   id: '2b7e4c1a-9d3f-4a6b-8c5e-1f0a2b3c4d5e',
   key: 'WEB',
   name: 'Website Redesign',
@@ -13,10 +13,11 @@ export const TEST_PROJECT: Project = {
   role: Role.OWNER,
   createdAt: '2026-11-20T09:00:00.000Z',
   updatedAt: '2026-11-20T09:00:00.000Z',
+  ticketCount: 0,
 };
 
 /** Makes GET /api/projects/:projectKey answer with the project, as for a member (PRJ-6). */
-export function mockProject(project: Project = TEST_PROJECT): void {
+export function mockProject(project: ProjectDetail = TEST_PROJECT): void {
   server.use(http.get(`/api/projects/${project.key}`, () => HttpResponse.json(project)));
 }
 
@@ -37,7 +38,8 @@ export function mockProjectNotFound(): void {
 
 /** A project as My Projects lists it (PRJ-2), based on TEST_PROJECT. */
 export function buildProjectListItem(overrides: Partial<ProjectListItem> = {}): ProjectListItem {
-  return { ...TEST_PROJECT, openTicketCount: 0, ...overrides };
+  // Parsed, so the detail's ticketCount is dropped: the list has open tickets instead.
+  return { ...projectSchema.parse(TEST_PROJECT), openTicketCount: 0, ...overrides };
 }
 
 /** `count` projects with keys AA, AB, ... and names "Project 1", "Project 2", ... */

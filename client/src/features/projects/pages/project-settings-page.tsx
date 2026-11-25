@@ -1,51 +1,14 @@
 import { Role } from '@mini-jira/shared';
-import type { Project } from '@mini-jira/shared';
-import { ArrowLeftIcon, LockIcon } from 'lucide-react';
+import { ArrowLeftIcon } from 'lucide-react';
 import type { ReactElement } from 'react';
 import { Link } from 'react-router';
 
 import { DocumentTitle } from '@/components/document-title';
 import { Button } from '@/components/ui/button';
 import { MembersSection } from '@/features/members/components/members-section';
+import { ProjectDetailsForm } from '@/features/projects/components/project-details-form';
 import { SettingsSection } from '@/features/projects/components/settings-section';
 import { useCurrentProject } from '@/features/projects/hooks/use-project';
-import { cn } from '@/lib/utils';
-
-/**
- * Name, key, and description, read-only for now: editing them comes in PRJ-5. The key never
- * changes (architecture §11), so it keeps the lock note even then.
- */
-function ProjectDetails({ project }: { project: Project }): ReactElement {
-  return (
-    <dl className="grid gap-4">
-      <div className="grid gap-1">
-        <dt className="text-sm font-medium">Name</dt>
-        <dd className="break-words">{project.name}</dd>
-      </div>
-      <div className="grid gap-1">
-        <dt className="text-sm font-medium">Key</dt>
-        <dd className="flex flex-wrap items-center gap-x-2 gap-y-1">
-          {project.key}
-          <span className="inline-flex items-center gap-1 text-sm text-muted-foreground">
-            <LockIcon aria-hidden="true" className="size-3.5 shrink-0" />
-            {`Can't be changed — it's part of every ticket key (${project.key}-12)`}
-          </span>
-        </dd>
-      </div>
-      <div className="grid gap-1">
-        <dt className="text-sm font-medium">Description</dt>
-        <dd
-          className={cn(
-            'break-words whitespace-pre-line',
-            !project.description && 'text-muted-foreground',
-          )}
-        >
-          {project.description ?? 'No description'}
-        </dd>
-      </div>
-    </dl>
-  );
-}
 
 /** What a member sees on the settings URL: the page is the owner's only (wireframe 06 E). */
 function OwnerOnlyMessage({ projectKey }: { projectKey: string }): ReactElement {
@@ -81,7 +44,7 @@ export function ProjectSettingsPage(): ReactElement {
     <div className="grid max-w-3xl gap-8">
       <DocumentTitle title={title} />
       <SettingsSection title="Project details">
-        <ProjectDetails project={project} />
+        <ProjectDetailsForm project={project} />
       </SettingsSection>
       <MembersSection projectKey={project.key} />
       {/* The red frame marks the only destructive part of the page; the Delete project button
