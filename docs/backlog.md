@@ -273,7 +273,7 @@ Sprint 3 · Size M · Status: In progress · Depends on PRJ-6, PRJ-3
 - [x] BE · `PATCH /api/projects/:projectKey` (owner; name and description only)
 - [x] BE · `DELETE /api/projects/:projectKey` (owner; cascades members, tickets, comments, activity)
 - [x] FE · Edit form (name, description) in project settings
-- [ ] FE · Delete with a confirmation dialog: shows the ticket count, the owner must type the project key to enable Delete; redirect to My Projects (wireframe 06 D)
+- [x] FE · Delete with a confirmation dialog: shows the ticket count, the owner must type the project key to enable Delete; redirect to My Projects (wireframe 06 D)
 - [ ] QA · Member gets 403 on both; key can't be changed; after delete everything is gone (checked again after tickets exist)
 
 ---
