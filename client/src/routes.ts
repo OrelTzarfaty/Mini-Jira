@@ -4,28 +4,34 @@ import { AppShell } from '@/components/app-shell';
 import { NotFoundPage } from '@/components/not-found-page';
 import { PublicLayout } from '@/components/public-layout';
 import { RootErrorBoundary, RouteErrorBoundary } from '@/components/route-error-boundary';
+import { ProtectedRoute } from '@/features/auth/components/protected-route';
 import { LandingPage } from '@/features/auth/pages/landing-page';
 import { LoginPage } from '@/features/auth/pages/login-page';
 import { RegisterPage } from '@/features/auth/pages/register-page';
 import { BoardPage } from '@/features/board/pages/board-page';
 import { ListPage } from '@/features/list/pages/list-page';
 import { MyWorkPage } from '@/features/my-work/pages/my-work-page';
+import { ProjectLayout } from '@/features/projects/components/project-layout';
+import { ProjectTabsLayout } from '@/features/projects/components/project-tabs-layout';
 import { MyProjectsPage } from '@/features/projects/pages/my-projects-page';
 import { ProjectSettingsPage } from '@/features/projects/pages/project-settings-page';
 import { TicketPage } from '@/features/tickets/pages/ticket-page';
 
-// Every screen's URL (docs/architecture.md §5.2). The login guard comes in AUTH-4.
+// Every screen's URL (docs/architecture.md §5.2).
 export const routes: RouteObject[] = [
   {
     ErrorBoundary: RootErrorBoundary,
     children: [
       // The landing page draws its own top bar, full-screen photo, and footer (wireframe 01),
       // so it sits outside PublicLayout. A crash in it falls back to RootErrorBoundary.
-      // /register is its child: the page stays mounted under the popup (AUTH-1).
+      // /login and /register are its children: the page stays mounted under the popup (AUTH-1/2).
       {
         path: '/',
         Component: LandingPage,
-        children: [{ path: 'register', Component: RegisterPage }],
+        children: [
+          { path: 'login', Component: LoginPage },
+          { path: 'register', Component: RegisterPage },
+        ],
       },
       {
         Component: PublicLayout,
@@ -33,25 +39,44 @@ export const routes: RouteObject[] = [
           {
             // Errors inside a page show up inside the layout, which keeps working.
             ErrorBoundary: RouteErrorBoundary,
-            children: [
-              { path: '/login', Component: LoginPage },
-              { path: '*', Component: NotFoundPage },
-            ],
+            children: [{ path: '*', Component: NotFoundPage }],
           },
         ],
       },
       {
-        Component: AppShell,
+        // Every screen after login: a visitor goes to /login (AUTH-4).
+        Component: ProtectedRoute,
         children: [
           {
-            ErrorBoundary: RouteErrorBoundary,
+            Component: AppShell,
             children: [
-              { path: '/projects', Component: MyProjectsPage },
-              { path: '/projects/:projectKey/board', Component: BoardPage },
-              { path: '/projects/:projectKey/list', Component: ListPage },
-              { path: '/projects/:projectKey/tickets/:ticketKey', Component: TicketPage },
-              { path: '/projects/:projectKey/settings', Component: ProjectSettingsPage },
-              { path: '/my-work', Component: MyWorkPage },
+              {
+                ErrorBoundary: RouteErrorBoundary,
+                children: [
+                  { path: '/projects', Component: MyProjectsPage },
+                  {
+                    // Loads the project before any of its pages: a non-member or a missing
+                    // project gets "Project not found" (PRJ-6).
+                    path: '/projects/:projectKey',
+                    Component: ProjectLayout,
+                    children: [
+                      // /projects/WEB alone is no screen (architecture §5.2).
+                      { index: true, Component: NotFoundPage },
+                      {
+                        // The project header with the Board · List · Settings tabs (wireframe 03).
+                        Component: ProjectTabsLayout,
+                        children: [
+                          { path: 'board', Component: BoardPage },
+                          { path: 'list', Component: ListPage },
+                          { path: 'settings', Component: ProjectSettingsPage },
+                        ],
+                      },
+                      { path: 'tickets/:ticketKey', Component: TicketPage },
+                    ],
+                  },
+                  { path: '/my-work', Component: MyWorkPage },
+                ],
+              },
             ],
           },
         ],

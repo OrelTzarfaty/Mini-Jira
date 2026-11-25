@@ -1,5 +1,8 @@
+import { Loader2Icon } from 'lucide-react';
 import { useRef } from 'react';
-import type { ReactElement, ReactNode } from 'react';
+import type { ReactElement, ReactNode, RefObject } from 'react';
+
+import { FormAlert } from '@/components/form-alert';
 
 import {
   AlertDialog,
@@ -22,6 +25,17 @@ interface ConfirmDialogProps {
   /** The destructive button's text, for example "Delete ticket". */
   confirmLabel: string;
   onConfirm: () => void;
+  /** While the action is being sent: the destructive button is disabled and shows a spinner. */
+  isPending?: boolean;
+  /** The destructive button's text while sending, for example "Removing…". */
+  pendingLabel?: string;
+  /** Why the action failed, shown in the dialog so the user can try again or cancel. */
+  error?: string;
+  /**
+   * Where focus goes after closing when the button that opened the dialog is gone, for example
+   * because the action removed its row.
+   */
+  fallbackFocusRef?: RefObject<HTMLElement | null>;
 }
 
 /**
@@ -38,6 +52,10 @@ export function ConfirmDialog({
   description,
   confirmLabel,
   onConfirm,
+  isPending = false,
+  pendingLabel = confirmLabel,
+  error,
+  fallbackFocusRef,
 }: ConfirmDialogProps): ReactElement {
   const openerRef = useRef<HTMLElement | null>(null);
 
@@ -50,7 +68,13 @@ export function ConfirmDialog({
 
   function handleCloseAutoFocus(event: Event): void {
     event.preventDefault();
-    openerRef.current?.focus();
+    const opener = openerRef.current;
+
+    if (opener?.isConnected) {
+      opener.focus();
+    } else {
+      fallbackFocusRef?.current?.focus();
+    }
   }
 
   return (
@@ -65,10 +89,13 @@ export function ConfirmDialog({
           <AlertDialogTitle>{title}</AlertDialogTitle>
           <AlertDialogDescription>{description}</AlertDialogDescription>
         </AlertDialogHeader>
+        {error && <FormAlert message={error} />}
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <Button variant="destructive" onClick={onConfirm}>
-            {confirmLabel}
+          {/* Disabled while sending, so a double click can't send the action twice. */}
+          <Button variant="destructive" disabled={isPending} onClick={onConfirm}>
+            {isPending && <Loader2Icon aria-hidden="true" className="animate-spin" />}
+            {isPending ? pendingLabel : confirmLabel}
           </Button>
         </AlertDialogFooter>
       </AlertDialogContent>

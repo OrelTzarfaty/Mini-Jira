@@ -89,6 +89,15 @@ Endpoints so far (full details in Swagger at `/api/docs`):
 | `GET` | `/api/openapi.json` | The OpenAPI description of the API |
 | `GET` | `/api/docs` | Swagger UI |
 | `POST` | `/api/auth/register` | Create an account and log in (sets the auth cookie) |
+| `POST` | `/api/auth/login` | Log in (sets the auth cookie); generic `401 INVALID_CREDENTIALS`, failed logins limited per email + IP and per IP (`429 RATE_LIMITED`) |
+| `POST` | `/api/auth/logout` | Log out: always `204` and clears the auth cookie (public, so a missing or expired session never gets `401`) |
+| `GET` | `/api/auth/me` | The logged-in user (`id`, `name`, `email`), `Cache-Control: no-store`; `401 UNAUTHENTICATED` without a valid session. The web app calls it on start to restore the session |
+| `GET` | `/api/projects?q&page` | My Projects: only projects the caller is a member of, with their `role` and `openTicketCount` (status ≠ Done; 0 until tickets exist), sorted by name then key, page size 20 (`{ items, page, pageSize, total, totalPages }`). Optional `q` searches name or key (case-insensitive; `%`/`_` literal). `Cache-Control: no-store`; unknown params → `400` |
+| `POST` | `/api/projects` | Create a project (`name`, `key`, optional `description`); the key is uppercased, must be 2–6 letters and can't be changed later. The creator becomes Owner in the same transaction. `201` with the project and `role`; `409 PROJECT_KEY_TAKEN` |
+| `GET` | `/api/projects/:projectKey` | One project with the caller's `role` (members only). A missing project and a non-member get the same `404 NOT_FOUND` ("Project not found"), so the response never reveals that a project exists. All project routes use `loadProjectAccess` (404) and owner-only ones add `requireOwner` (403) |
+| `GET` | `/api/projects/:projectKey/members?page=` | The project's members (any member), 20 per page: owner first, then by join time. Each item: `userId`, `name`, `email`, `role`, `joinedAt` |
+| `POST` | `/api/projects/:projectKey/members` | Add a registered user by `email` (owner only, `403` for members). `201` with the member (role `MEMBER`); `404 USER_NOT_FOUND` for an unknown email, `409 ALREADY_MEMBER` if already in the project (both with `details` on `email`) |
+| `DELETE` | `/api/projects/:projectKey/members/:userId` | Remove a member (owner only, `403` for members). `204` no body; `409 CANNOT_REMOVE_OWNER` for the owner, `404 NOT_FOUND` ("Member not found") if the user isn't in the project, `400` if `userId` isn't a UUID. Ticket unassignment comes with TKT-5 |
 
 ## Features
 
@@ -96,8 +105,8 @@ Summary only — task-level status lives in [docs/backlog.md](docs/backlog.md).
 
 | Area | IDs | Priority | Status |
 |---|---|---|---|
-| Authentication | AUTH-1..4 | P0 | In progress — AUTH-1 (register) done; AUTH-2..4 not started |
-| Projects & members | PRJ-1..6 | P0 | Not started |
+| Authentication | AUTH-1..4 | P0 | Done — AUTH-1..4 done (register, log in, log out, session survives refresh) |
+| Projects & members | PRJ-1..6 | P0 | In progress — PRJ-1 (create project), PRJ-3 (add member) and PRJ-6 (non-member access) done; PRJ-2 (My Projects list) built, in review |
 | Tickets | TKT-1..5 | P0 | Not started |
 | Board | BRD-1..4 | P0 | Not started |
 | Comments & activity | CMT-1..2, ACT-1 | P1 | Not started |
@@ -112,21 +121,21 @@ Out of scope unless the user asks: email, password reset, attachments, OAuth, sp
 Agents live in `.claude/agents/`:
 - **`backend-developer`** — Express API, PostgreSQL schema/migrations, auth, permissions, validation, seed script, backend tests.
 - **`frontend-developer`** — React client, board, forms, states, accessibility, frontend tests. Uses the design skills below.
-- **`qa-engineer`** — verifies acceptance criteria, writes API and E2E tests, reports bugs. Does not change app code.
+- **`qa-engineer`** — verifies acceptance criteria, writes API and E2E tests on full-QA missions (on light-QA missions the developer agents write them), reports bugs. Does not change app code.
 
 **Every mission uses the agents:**
 1. `backend-developer` does all `BE` tasks, and `frontend-developer` does all `FE` tasks.
 2. The pull request is opened into `dev`.
-3. **QA check (required):** `qa-engineer` tests the final commit of **every** pull request and gives a **PASS** or **FAIL** verdict. Three levels (the owner's decision, 2026-11-22, to save usage):
-   - **Light:** a pull request that changes only Markdown files. CI result, a line-by-line content review, and a security review of agent instruction files.
-   - **Standard:** most code pull requests. Tests only that pull request's change, with a browser pass only for UI changes.
-   - **Full:** every **5th** code pull request into `dev` (counted with the `qa:standard` / `qa:full` labels), or whenever the owner asks. Tests **the whole app** from a clean `docker compose up`.
+3. **QA check (required):** `qa-engineer` tests the final commit of **every** pull request and gives a **PASS** or **FAIL** verdict. Two levels (the owner's decision of 2026-11-22, changed 2026-11-23, to save usage):
+   - **Light** for a pull request that changes only Markdown files: CI result, a line-by-line content review, and a security review of agent instruction files.
+   - **Light** for a code pull request: the CI result and a quick review of the diff, label `qa:light`. The developer agents write the backlog's `QA` test tasks (API tests: `backend-developer`, E2E tests: `frontend-developer`).
+   - **Full:** every **5th** code pull request into `dev` (counted with the `qa:light` / `qa:full` labels; the old `qa:standard` label still counts), or whenever the owner asks. Tests **the whole app** from a clean `docker compose up`.
 4. On **FAIL**, the owning agent fixes the root cause and `qa-engineer` re-checks **only the fix**. The same applies to a finding fixed after a PASS.
 5. A pull request is merged only after a QA **PASS** on its final commit **and** the project owner's approval.
 
 **Browser checks:** `frontend-developer` and `qa-engineer` use the **Chrome DevTools MCP** (`chrome-devtools`, configured in the user's Claude settings, not in this repo) to check features in a real browser: console and network errors, multi-user scenarios via isolated contexts, phone width, slow/offline network, and Lighthouse accessibility. Only local URLs and seed test accounts. QA screenshots go in `qa-evidence/` (not committed).
 
-**E2E testing (Playwright):** `qa-engineer` writes, runs, and heals the Playwright E2E tests with the **`playwright-cli` skill** (`.claude/skills/playwright-cli`; CLI installed globally via `npm install -g @playwright/cli`), and explores features interactively with the **Playwright MCP** (`playwright`, user settings, runs with `--isolated`). Tests live in `e2e/tests/` and run with `npm run test:e2e` against their own copy of the system (ports 8180 and 5434, in-memory database), so the run never touches development data. Playwright output folders (`.playwright/`, `.playwright-cli/`, `test-results/`, `playwright-report/`, `blob-report/`) are not committed.
+**E2E testing (Playwright):** `qa-engineer` writes, runs, and heals the Playwright E2E tests on full-QA missions with the **`playwright-cli` skill** (`.claude/skills/playwright-cli`; CLI installed globally via `npm install -g @playwright/cli`), and explores features interactively with the **Playwright MCP** (`playwright`, user settings, runs with `--isolated`). On light-QA missions, `frontend-developer` writes the E2E tests. Tests live in `e2e/tests/` and run with `npm run test:e2e` against their own copy of the system (ports 8180 and 5434, in-memory database), so the run never touches development data. Playwright output folders (`.playwright/`, `.playwright-cli/`, `test-results/`, `playwright-report/`, `blob-report/`) are not committed.
 
 ## Design skills
 

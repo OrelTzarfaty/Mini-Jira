@@ -1,0 +1,101 @@
+import type { BrowserContext, Locator, Page } from '@playwright/test';
+
+import { AUTH_COOKIE_NAME, logInAsNewUser } from '../support/auth-api.js';
+import { expect, test } from '../support/fixtures.js';
+import { collectPageErrors } from '../support/page-errors.js';
+
+// AUTH-3 (wireframe 02 F and H): a logged-in user logs out from the user menu (the ☰ menu on
+// phones), the browser drops the session cookie, and the landing page opens. Afterwards the
+// protected pages send them to the login popup (AUTH-4, where the guard is built; the owner's
+// decision of 2026-11-23). Each test logs in as its own new account (logInAsNewUser).
+
+/** Whether the browser still holds the session cookie (it is HTTP-only, so only the context sees it). */
+async function hasSessionCookie(context: BrowserContext): Promise<boolean> {
+  const cookies = await context.cookies();
+
+  return cookies.some((cookie) => cookie.name === AUTH_COOKIE_NAME);
+}
+
+/** Clicks Log out in the menu and returns the status of the logout request it sent. */
+async function logOutFrom(page: Page, menu: Locator): Promise<number> {
+  const logoutResponse = page.waitForResponse('**/api/auth/logout');
+  await menu.getByRole('button', { name: 'Log out' }).click();
+
+  return (await logoutResponse).status();
+}
+
+/** The landing page for visitors: its top bar offers Log in again (wireframe 01 A). */
+async function expectLandingPage(page: Page): Promise<void> {
+  await expect(page).toHaveURL('/');
+  await expect(page).toHaveTitle(/Welcome/);
+  await expect(
+    page.getByRole('navigation', { name: 'Account' }).getByRole('link', { name: 'Log in' }),
+  ).toBeVisible();
+}
+
+test.describe('Log out (AUTH-3)', () => {
+  test('AUTH-3: a user logs out from the account menu, the session cookie is removed, and the landing page opens', async ({
+    page,
+    context,
+  }) => {
+    await logInAsNewUser(context);
+    await page.goto('/projects');
+    expect(await hasSessionCookie(context)).toBe(true);
+    await page.getByRole('button', { name: 'Account menu' }).click();
+    const menu = page.getByRole('dialog', { name: 'Account menu' });
+
+    const status = await logOutFrom(page, menu);
+
+    expect(status).toBe(204);
+    await expectLandingPage(page);
+    // The API's Set-Cookie matched the cookie's name and path, so the browser really deleted it.
+    expect(await hasSessionCookie(context)).toBe(false);
+  });
+
+  test.describe('on a phone', () => {
+    test.use({ viewport: { width: 375, height: 812 } });
+
+    test('AUTH-3: a user logs out from the ☰ menu and the landing page opens', async ({
+      page,
+      context,
+    }) => {
+      await logInAsNewUser(context);
+      await page.goto('/projects');
+      // On phones the account menu moves into the ☰ menu (wireframe 02 H).
+      await expect(page.getByRole('button', { name: 'Account menu' })).toBeHidden();
+      await page.getByRole('button', { name: 'Menu', exact: true }).click();
+      const menu = page.getByRole('dialog', { name: 'Menu' });
+
+      const status = await logOutFrom(page, menu);
+
+      expect(status).toBe(204);
+      await expectLandingPage(page);
+      await expect(menu).toBeHidden();
+      expect(await hasSessionCookie(context)).toBe(false);
+    });
+  });
+});
+
+test.describe('After logout (AUTH-4)', () => {
+  test('AUTH-4: protected pages send the logged-out user to the login popup, without errors', async ({
+    page,
+    context,
+  }) => {
+    await logInAsNewUser(context);
+    const pageErrors = collectPageErrors(page);
+    await page.goto('/projects');
+    await page.getByRole('button', { name: 'Account menu' }).click();
+    await logOutFrom(page, page.getByRole('dialog', { name: 'Account menu' }));
+    await expectLandingPage(page);
+
+    for (const path of ['/projects', '/projects/WEB/board', '/my-work']) {
+      await page.goto(path);
+      await expect(page).toHaveURL('/login');
+      await expect(page.getByRole('dialog', { name: 'Log in to Mini-Jira' })).toBeVisible();
+      await expect(page.getByRole('navigation', { name: 'Main' })).toBeHidden();
+    }
+
+    // Logged out, /api/auth/me answers 401 by design; nothing else may fail or crash.
+    expect(pageErrors).toEqual([]);
+  });
+});

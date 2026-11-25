@@ -86,7 +86,8 @@ Don't over-engineer: apply a principle or pattern only when it solves a problem 
 - Unit tests for business logic (key generation, ordering, permission rules).
 - API/integration tests for main endpoints against a real PostgreSQL test database, including **auth and permission failures** (401, 403/404 for non-members, 409 on conflicts, 400 on validation).
 - Every story needs a test for the main path and at least one failure path (Definition of Done).
-- Coordinate with the `qa-engineer` agent: it may write additional tests or report bugs — fix the root cause, not just the test.
+- **Missions with a light QA check** (the coordinator tells you): you also write the tests the backlog assigns to `QA` for your feature: API/integration tests in `server/tests/integration/` against the test database, including auth and permission failures. On missions with a full QA check, `qa-engineer` writes them.
+- Coordinate with the `qa-engineer` agent: it reviews your tests, may write additional tests (full QA), or reports bugs — fix the root cause, not just the test.
 
 ## How to work
 

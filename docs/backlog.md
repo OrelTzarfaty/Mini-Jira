@@ -7,6 +7,7 @@
 
 - **Epics → stories → tasks.** Functional stories keep their requirement IDs (`AUTH-1`, `TKT-4`, …). Enabler stories use `DOC-`, `SETUP-`, `HARD-`, `SHIP-`.
 - **Task owners:** `BE` = backend-developer · `FE` = frontend-developer · `QA` = qa-engineer · `Claude` = the main Claude Code session · `You` = the project owner.
+- **Who does `QA ·` test-writing tasks:** `qa-engineer` on missions with a full QA check; on missions with a light QA check, the developer agent building the feature (API/integration tests → backend-developer, E2E tests → frontend-developer). Review tasks, such as "Review the change against the project rules", stay with `qa-engineer`.
 - **Task size rule:** every task should take **about one day of work or less**. If a task turns out bigger, split it before starting.
 - **Story size** is relative effort, not hours: **S** small · **M** medium · **L** large.
 - **Status:** tick a task's box when it's merged; a story is done when all its boxes are ticked **and** it meets the Definition of Done. Also update the story's status line and the Features table in `CLAUDE.md`.
@@ -170,6 +171,7 @@ Sprint 2 · Size S · **Status: Done** — merged into `dev` in [#63](https://gi
 - [x] Claude · Light QA for pull requests that change only Markdown files, full QA for all others (`qa-engineer`, `/mission`, `CLAUDE.md`, engineering standards §11)
 - [x] QA · Review the change against the project rules
 - Follow-up (owner's decision, 2026-11-22): three QA levels — light, standard, and a full check of the whole app every 5th code PR — on branch `chore/SETUP-11-qa-every-5th-pr` ([#71](https://github.com/OrelTzarfaty/Mini-Jira/pull/71))
+- Follow-up (owner's decision, 2026-11-23): light QA (CI + a quick diff review) for code PRs between the full checks, the standard level removed, label `qa:light`, and the developer agents write the QA test tasks on light-QA missions — on branch `docs/SETUP-11-qa-light-code` ([#80](https://github.com/OrelTzarfaty/Mini-Jira/pull/80))
 
 ---
 
@@ -190,78 +192,79 @@ AC (extra): email stored lowercase · `409 EMAIL_TAKEN` · register logs the use
 - [x] QA · E2E: register → lands on My Projects
 
 ### AUTH-2 · Log in
-Sprint 2 · Size M · Status: To do · Depends on AUTH-1
+Sprint 2 · Size M · **Status: Done** — merged into `dev` in [#78](https://github.com/OrelTzarfaty/Mini-Jira/pull/78) (`fb1c517`) · Depends on AUTH-1
 AC (extra): one generic `401 INVALID_CREDENTIALS` for unknown email and wrong password · rate-limited (`429`).
-- [ ] BE · `POST /api/auth/login`: verify the password, set the auth cookie (helper from AUTH-1), generic 401 on failure; an unknown email still runs a hash
-- [ ] BE · Login rate limits (`429 RATE_LIMITED`): failed attempts per email + IP (5 per 15 minutes) and per IP (100 per day)
-- [ ] FE · Log in popup with a generic error message (wireframe 01; `/login` opens the landing page with it open)
-- [ ] QA · Integration: same error for unknown email vs. wrong password; cookie flags
-- [ ] QA · Integration: both rate limits kick in (email + IP, and IP)
-- [ ] QA · E2E login fixtures: log in as owner / member / outsider (used by all later E2E tests)
-- [ ] QA · E2E: login → My Projects
+- [x] BE · `POST /api/auth/login`: verify the password, set the auth cookie (helper from AUTH-1), generic 401 on failure; an unknown email still runs a hash
+- [x] BE · Login rate limits (`429 RATE_LIMITED`): failed attempts per email + IP (5 per 15 minutes) and per IP (100 per day)
+- [x] FE · Log in popup with a generic error message (wireframe 01; `/login` opens the landing page with it open)
+- [x] QA · Integration: same error for unknown email vs. wrong password; cookie flags
+- [x] QA · Integration: both rate limits kick in (email + IP, and IP)
+- [x] QA · E2E login fixtures: log in as owner / member / outsider (used by all later E2E tests)
+- [x] QA · E2E: login → My Projects
 
 ### AUTH-3 · Log out
-Sprint 2 · Size S · Status: To do · Depends on AUTH-2
-- [ ] BE · `requireAuth` middleware → `401 UNAUTHENTICATED`
-- [ ] BE · `POST /api/auth/logout` clears the cookie
-- [ ] FE · "Log out" in the user menu; clear the query cache; redirect to the landing page
-- [ ] QA · After logout, protected pages redirect to login; API calls without the cookie return 401
+Sprint 2 · Size S · **Status: Done** — merged into `dev` in [#79](https://github.com/OrelTzarfaty/Mini-Jira/pull/79) (`3baa1f4`); full QA PASS on `264438c` · Depends on AUTH-2
+- [x] BE · `requireAuth` middleware → `401 UNAUTHENTICATED`
+- [x] BE · `POST /api/auth/logout` clears the cookie
+- [x] FE · "Log out" in the user menu; clear the query cache; redirect to the landing page
+- [x] QA · API calls without the cookie return 401; E2E: Log out → landing page, cookie cleared
 
 ### AUTH-4 · Session survives refresh
-Sprint 2 · Size S · Status: To do · Depends on AUTH-3
-- [ ] BE · `GET /api/auth/me`
-- [ ] FE · `useMe` query loaded on app start
-- [ ] FE · `ProtectedRoute`: loading state, then the page or a redirect to `/login`
-- [ ] QA · E2E: refresh keeps the user logged in; an invalid or expired token sends them to login
+Sprint 2 · Size S · **Status: Done** — merged into `dev` in [#81](https://github.com/OrelTzarfaty/Mini-Jira/pull/81) (`d51868b`); light QA PASS · Depends on AUTH-3
+- [x] BE · `GET /api/auth/me`
+- [x] FE · `useMe` query loaded on app start
+- [x] FE · `ProtectedRoute`: loading state, then the page or a redirect to `/login`
+- [x] QA · E2E: refresh keeps the user logged in; an invalid or expired token sends them to login
+- [x] QA · E2E: after logout, protected pages redirect to login (moved from AUTH-3 by the owner on 2026-11-23, because the guard is built here)
 
 ---
 
 ## E3 · Projects & members — Sprint 3
 
 ### PRJ-1 · Create project
-Sprint 3 · Size M · Status: To do · Depends on AUTH-4
+Sprint 3 · Size M · **Status: Done** — merged into `dev` in [#82](https://github.com/OrelTzarfaty/Mini-Jira/pull/82) (`8b550ba`); light QA PASS · Depends on AUTH-4
 AC (extra): key 2–6 uppercase, unique (`409 PROJECT_KEY_TAKEN`), immutable · creator gets an OWNER membership in the same transaction.
-- [ ] BE · Migration: `Project` (with `ticketCounter`), `ProjectMember` (role) + indexes
-- [ ] BE · Shared `createProjectSchema` (key 2–6 uppercase letters)
-- [ ] BE · `POST /api/projects` (transaction: project + owner membership)
-- [ ] FE · "Create project" dialog: name, description, key (auto-uppercase), inline errors
-- [ ] FE · Suggest the key from the name while typing (initials, or first 3 letters of one word); stop once edited by hand (wireframe 02 D)
-- [ ] QA · Integration: valid/invalid keys, duplicate key, creator is OWNER
+- [x] BE · Migration: `Project` (with `ticketCounter`), `ProjectMember` (role) + indexes
+- [x] BE · Shared `createProjectSchema` (key 2–6 uppercase letters)
+- [x] BE · `POST /api/projects` (transaction: project + owner membership)
+- [x] FE · "Create project" dialog: name, description, key (auto-uppercase), inline errors
+- [x] FE · Suggest the key from the name while typing (initials, or first 3 letters of one word); stop once edited by hand (wireframe 02 D)
+- [x] QA · Integration: valid/invalid keys, duplicate key, creator is OWNER
 
 ### PRJ-2 · My Projects list
-Sprint 3 · Size M · Status: To do · Depends on PRJ-1
-- [ ] BE · `GET /api/projects`: only my projects, my role, paginated
-- [ ] BE · Open-ticket count per project (status ≠ DONE) in the same response — 0 until tickets exist
-- [ ] BE · Optional `q` search by project name or key (used by the project dropdown)
-- [ ] FE · `/projects` page: project cards (key, name, role, open tickets) + "Show more" (wireframe 02)
-- [ ] FE · Loading, empty (with a "Create project" call to action), and error states
-- [ ] FE · Project dropdown in the top bar: search, current project ✓, "View all projects", "+ Create project" (wireframe 02 E)
-- [ ] FE · User menu in the top bar: name, email, Log out (wireframe 02 F)
-- [ ] QA · Only my projects appear; role and counts are right; empty state shows
-- [ ] QA · Project dropdown: search finds a project, switching opens its board, keyboard works
+Sprint 3 · Size M · Status: In review · Depends on PRJ-1
+- [x] BE · `GET /api/projects`: only my projects, my role, paginated
+- [x] BE · Open-ticket count per project (status ≠ DONE) in the same response — 0 until tickets exist
+- [x] BE · Optional `q` search by project name or key (used by the project dropdown)
+- [x] FE · `/projects` page: project cards (key, name, role, open tickets) + "Show more" (wireframe 02)
+- [x] FE · Loading, empty (with a "Create project" call to action), and error states
+- [x] FE · Project dropdown in the top bar: search, current project ✓, "View all projects", "+ Create project" (wireframe 02 E)
+- [x] FE · User menu in the top bar: name, email, Log out (wireframe 02 F) — built in AUTH-3, checked against the wireframe
+- [x] QA · Only my projects appear; role and counts are right; empty state shows (E2E covers Owner and "0 open"; the Member label is in component tests until PRJ-3 can add members)
+- [x] QA · Project dropdown: search finds a project, switching opens its board, keyboard works
 
 ### PRJ-6 · Non-members can't access a project
-Sprint 3 · Size M · Status: To do · Depends on PRJ-1 · **Build before PRJ-3/4/5**
+Sprint 3 · Size M · **Status: Done** — merged into `dev` in [#83](https://github.com/OrelTzarfaty/Mini-Jira/pull/83) (`98f020f`); light QA PASS · Depends on PRJ-1 · **Build before PRJ-3/4/5**
 AC (extra): project missing or caller not a member → `404`; member without rights → `403`.
-- [ ] BE · `loadProjectAccess` and `requireOwner` middleware (architecture §6)
-- [ ] BE · `GET /api/projects/:projectKey`
-- [ ] FE · Project 404 page ("Project not found") for direct URLs
-- [ ] QA · Reusable **authorization-matrix test helper** (owner / member / outsider) that every later story uses
-- [ ] QA · Outsider gets 404 and no project data, through the API and the UI
+- [x] BE · `loadProjectAccess` and `requireOwner` middleware (architecture §6)
+- [x] BE · `GET /api/projects/:projectKey`
+- [x] FE · Project 404 page ("Project not found") for direct URLs
+- [x] QA · Reusable **authorization-matrix test helper** (owner / member / outsider) that every later story uses
+- [x] QA · Outsider gets 404 and no project data, through the API and the UI
 
 ### PRJ-3 · Add a member by email
-Sprint 3 · Size M · Status: To do · Depends on PRJ-6
-- [ ] BE · `GET /api/projects/:projectKey/members`
-- [ ] BE · `POST /api/projects/:projectKey/members` `{ email }` (owner only): `404 USER_NOT_FOUND`, `409 ALREADY_MEMBER`
-- [ ] FE · Project settings page layout (sections: details, members, danger zone) — reused by PRJ-4 and PRJ-5. **Owner only:** the Settings tab is hidden from members; a member opening the URL sees "Only the project owner can open settings" (wireframe 03)
-- [ ] FE · Members list
-- [ ] FE · "Add by email" form with clear errors
-- [ ] QA · Owner can add; member gets 403; unknown email; already a member
+Sprint 3 · Size M · **Status: Done** — merged into `dev` in [#84](https://github.com/OrelTzarfaty/Mini-Jira/pull/84) (`abda93f`); light QA PASS · Depends on PRJ-6
+- [x] BE · `GET /api/projects/:projectKey/members`
+- [x] BE · `POST /api/projects/:projectKey/members` `{ email }` (owner only): `404 USER_NOT_FOUND`, `409 ALREADY_MEMBER`
+- [x] FE · Project settings page layout (sections: details, members, danger zone) — reused by PRJ-4 and PRJ-5. **Owner only:** the Settings tab is hidden from members; a member opening the URL sees "Only the project owner can open settings" (wireframe 03)
+- [x] FE · Members list
+- [x] FE · "Add by email" form with clear errors
+- [x] QA · Owner can add; member gets 403; unknown email; already a member
 
 ### PRJ-4 · Remove a member
-Sprint 3 · Size S · Status: To do · Depends on PRJ-3
-- [ ] BE · `DELETE /api/projects/:projectKey/members/:userId` (owner only); owner can't remove themselves (`409 CANNOT_REMOVE_OWNER`)
-- [ ] FE · Remove button with a confirmation dialog
+Sprint 3 · Size S · Status: In progress · Depends on PRJ-3
+- [x] BE · `DELETE /api/projects/:projectKey/members/:userId` (owner only); owner can't remove themselves (`409 CANNOT_REMOVE_OWNER`)
+- [x] FE · Remove button with a confirmation dialog
 - [ ] QA · Owner removes a member; member gets 403; owner can't remove themselves
 - (Unassigning their tickets is added in TKT-5, when tickets exist.)
 

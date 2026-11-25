@@ -151,7 +151,8 @@ client/src/
 ├─ main.tsx · App.tsx           providers + router
 ├─ api/
 │  ├─ client.ts                 fetch wrapper: credentials 'include', parses the error format,
-│  │                            401 → redirect to /login
+│  │                            401 UNAUTHENTICATED → current user set to null (query-client.ts)
+│  │                            → ProtectedRoute redirects to /login (AUTH-4)
 │  └─ query-keys.ts
 ├─ features/
 │  ├─ auth/  projects/  members/  tickets/  board/  list/  comments/  activity/  my-work/

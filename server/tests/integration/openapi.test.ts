@@ -6,7 +6,10 @@ import { createTestApp } from '../helpers/test-app.js';
 
 interface OpenApiSpec {
   openapi: string;
-  paths: Record<string, Record<string, { responses: Record<string, unknown> }>>;
+  paths: Record<
+    string,
+    Record<string, { responses: Record<string, unknown>; parameters?: unknown[] }>
+  >;
   components: {
     schemas: Record<
       string,
@@ -45,6 +48,127 @@ describe('GET /api/openapi.json', () => {
       '409',
       '413',
       '500',
+    ]);
+  });
+
+  it('AUTH-2: documents the login endpoint with its responses', async () => {
+    const spec = await getSpec();
+
+    expect(Object.keys(spec.paths['/auth/login']?.post?.responses ?? {})).toEqual([
+      '200',
+      '400',
+      '401',
+      '403',
+      '413',
+      '429',
+      '500',
+    ]);
+  });
+
+  it('AUTH-3: documents the logout endpoint with its responses', async () => {
+    const spec = await getSpec();
+
+    expect(Object.keys(spec.paths['/auth/logout']?.post?.responses ?? {})).toEqual([
+      '204',
+      '403',
+      '500',
+    ]);
+  });
+
+  it('AUTH-4: documents the current-user endpoint with its responses', async () => {
+    const spec = await getSpec();
+
+    expect(Object.keys(spec.paths['/auth/me']?.get?.responses ?? {})).toEqual([
+      '200',
+      '401',
+      '500',
+    ]);
+  });
+
+  it('PRJ-1: documents the create-project endpoint with its responses', async () => {
+    const spec = await getSpec();
+
+    expect(Object.keys(spec.paths['/projects']?.post?.responses ?? {})).toEqual([
+      '201',
+      '400',
+      '401',
+      '403',
+      '409',
+      '413',
+      '500',
+    ]);
+    // The internal counter is never part of the documented response.
+    expect(JSON.stringify(spec.components.schemas.Project)).not.toContain('ticketCounter');
+  });
+
+  it('PRJ-6: documents the get-project endpoint with its path parameter and responses', async () => {
+    const spec = await getSpec();
+    const operation = spec.paths['/projects/{projectKey}']?.get;
+
+    expect(Object.keys(operation?.responses ?? {})).toEqual(['200', '401', '404', '500']);
+    expect(operation?.parameters).toEqual([
+      expect.objectContaining({ name: 'projectKey', in: 'path', required: true }),
+    ]);
+  });
+
+  it('PRJ-2: documents the my-projects list with its query parameters and responses', async () => {
+    const spec = await getSpec();
+    const operation = spec.paths['/projects']?.get;
+
+    expect(Object.keys(operation?.responses ?? {})).toEqual(['200', '400', '401', '500']);
+    expect(operation?.parameters).toEqual([
+      expect.objectContaining({ name: 'q', in: 'query', required: false }),
+      expect.objectContaining({ name: 'page', in: 'query', required: false }),
+    ]);
+    expect(JSON.stringify(spec.components.schemas.ProjectListPage)).toContain('openTicketCount');
+  });
+
+  it('PRJ-3: documents the list-members endpoint with its parameters and responses', async () => {
+    const spec = await getSpec();
+    const operation = spec.paths['/projects/{projectKey}/members']?.get;
+
+    expect(Object.keys(operation?.responses ?? {})).toEqual(['200', '400', '401', '404', '500']);
+    expect(operation?.parameters).toEqual([
+      expect.objectContaining({ name: 'projectKey', in: 'path', required: true }),
+      expect.objectContaining({ name: 'page', in: 'query', required: false }),
+    ]);
+  });
+
+  it('PRJ-3: documents the add-member endpoint with its responses', async () => {
+    const spec = await getSpec();
+    const operation = spec.paths['/projects/{projectKey}/members']?.post;
+
+    expect(Object.keys(operation?.responses ?? {})).toEqual([
+      '201',
+      '400',
+      '401',
+      '403',
+      '404',
+      '409',
+      '413',
+      '500',
+    ]);
+    expect(operation?.parameters).toEqual([
+      expect.objectContaining({ name: 'projectKey', in: 'path', required: true }),
+    ]);
+  });
+
+  it('PRJ-4: documents the remove-member endpoint with its parameters and responses', async () => {
+    const spec = await getSpec();
+    const operation = spec.paths['/projects/{projectKey}/members/{userId}']?.delete;
+
+    expect(Object.keys(operation?.responses ?? {})).toEqual([
+      '204',
+      '400',
+      '401',
+      '403',
+      '404',
+      '409',
+      '500',
+    ]);
+    expect(operation?.parameters).toEqual([
+      expect.objectContaining({ name: 'projectKey', in: 'path', required: true }),
+      expect.objectContaining({ name: 'userId', in: 'path', required: true }),
     ]);
   });
 

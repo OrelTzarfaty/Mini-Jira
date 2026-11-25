@@ -8,7 +8,11 @@ import argon2 from 'argon2';
 import request from 'supertest';
 import { afterAll, beforeEach, describe, expect, it } from 'vitest';
 
-import { AUTH_COOKIE_NAME } from '../../src/lib/auth-cookie.js';
+import {
+  readAuthCookie,
+  readAuthCookieAttributes,
+  readTokenPayload,
+} from '../helpers/auth-response.js';
 import { resetDatabase, testPrisma } from '../helpers/database.js';
 import { createMemoryLogger, createTestApp, testAuthCookie } from '../helpers/test-app.js';
 
@@ -22,27 +26,6 @@ const NEW_USER = {
 /** A register request as the web app sends it (same origin, so the CSRF check passes). */
 const register = (body: object, app = createTestApp()): request.Test =>
   request(app).post(REGISTER_URL).set('Sec-Fetch-Site', 'same-origin').send(body);
-
-/** The whole `Set-Cookie` header of the auth cookie (value and attributes). */
-function findAuthCookieHeader(response: request.Response): string | undefined {
-  const cookies = response.get('Set-Cookie') ?? [];
-
-  return cookies.find((value) => value.startsWith(`${AUTH_COOKIE_NAME}=`));
-}
-
-function readAuthCookie(response: request.Response): string | undefined {
-  return findAuthCookieHeader(response)
-    ?.split(';')[0]
-    ?.slice(AUTH_COOKIE_NAME.length + 1);
-}
-
-/** The cookie attributes after the value, e.g. `['Max-Age=604800', 'Path=/', 'HttpOnly']`. */
-function readAuthCookieAttributes(response: request.Response): string[] {
-  return (findAuthCookieHeader(response) ?? '')
-    .split(';')
-    .slice(1)
-    .map((attribute) => attribute.trim());
-}
 
 /** The `field` of every `details[]` entry in an error response. */
 function detailFields(response: request.Response): string[] {
@@ -282,16 +265,6 @@ describe('POST /api/auth/register', () => {
       const { passwordHash } = await testPrisma.user.findUniqueOrThrow({ where: { email } });
 
       return passwordHash;
-    }
-
-    /** The JSON payload of the session JWT (readable by anyone holding the cookie). */
-    function readTokenPayload(response: request.Response): Record<string, unknown> {
-      const payload = (readAuthCookie(response) ?? '').split('.')[1] ?? '';
-
-      return JSON.parse(Buffer.from(payload, 'base64url').toString('utf8')) as Record<
-        string,
-        unknown
-      >;
     }
 
     it('AUTH-1: the stored password is an Argon2id hash that verifies only the right password', async () => {
