@@ -270,6 +270,17 @@ describe('GET /api/openapi.json', () => {
     expect(request.additionalProperties).toBe(false);
   });
 
+  it('TKT-4: documents the delete-ticket endpoint with its parameters and responses', async () => {
+    const spec = await getSpec();
+    const operation = spec.paths['/projects/{projectKey}/tickets/{ticketKey}']?.delete;
+
+    expect(Object.keys(operation?.responses ?? {})).toEqual(['204', '401', '403', '404', '500']);
+    expect(operation?.parameters).toEqual([
+      expect.objectContaining({ name: 'projectKey', in: 'path', required: true }),
+      expect.objectContaining({ name: 'ticketKey', in: 'path', required: true }),
+    ]);
+  });
+
   it('SETUP-3: builds the error schema from the shared error codes', async () => {
     const spec = await getSpec();
 

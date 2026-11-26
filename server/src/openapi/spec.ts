@@ -682,6 +682,31 @@ export function createOpenApiSpec(): Record<string, unknown> {
             '500': jsonResponse('Unexpected server error', 'ErrorResponse'),
           },
         },
+        delete: {
+          tags: ['Tickets'],
+          operationId: 'deleteTicket',
+          summary: 'Delete a ticket (reporter or project owner only)',
+          description:
+            'TKT-4. Only the ticket\'s reporter or the project owner may delete it; any other member gets 403. A hard delete that can\'t be undone: the ticket and its comments and history are removed together. Its number is never given to another ticket. The key rules are the same as for reading a ticket: a key whose prefix is not the project key in the URL, a malformed key, and a number the project has no ticket with (also one that was already deleted) all get the 404 "Ticket not found". A project that does not exist and a project the caller is not a member of get the 404 "Project not found". Send no request body. Browsers must send the request from the web app (same origin), or it gets 403.',
+          security: [{ authCookie: [] }],
+          parameters: [PROJECT_KEY_PARAMETER, TICKET_KEY_PARAMETER],
+          responses: {
+            '204': { description: 'The ticket was deleted; no response body' },
+            '401': jsonResponse(
+              'Not logged in (UNAUTHENTICATED): the cookie is missing, invalid or expired, or its user no longer exists',
+              'ErrorResponse',
+            ),
+            '403': jsonResponse(
+              'The caller is a member but neither the reporter nor the project owner (FORBIDDEN, "Only the reporter or the project owner can delete this ticket"), or a cross-site request (FORBIDDEN)',
+              'ErrorResponse',
+            ),
+            '404': jsonResponse(
+              'No such project or the caller is not a member of it (NOT_FOUND, "Project not found"), or no such ticket in the project (NOT_FOUND, "Ticket not found")',
+              'ErrorResponse',
+            ),
+            '500': jsonResponse('Unexpected server error', 'ErrorResponse'),
+          },
+        },
       },
     },
     components: {
