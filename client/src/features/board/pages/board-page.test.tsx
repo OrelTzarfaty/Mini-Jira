@@ -2,22 +2,7 @@ import { Status } from '@mini-jira/shared';
 import { screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
-import { createQueryClient } from '@/api/query-client';
-import { PROJECTS_QUERY_KEY } from '@/api/query-keys';
-import { buildBoard, buildBoardCard, buildBoardColumn, mockBoard } from '@/test/board';
-import { mockProject, TEST_PROJECT } from '@/test/project';
-import { renderRoute } from '@/test/render-route';
-import { mockLoggedIn } from '@/test/session';
-
-function openBoard(): ReturnType<typeof renderRoute> {
-  mockLoggedIn();
-  mockProject();
-  // The app retries a 5xx three times with growing waits; the tests check the error state now.
-  const queryClient = createQueryClient();
-  queryClient.setQueryDefaults(PROJECTS_QUERY_KEY, { retry: false });
-
-  return renderRoute(`/projects/${TEST_PROJECT.key}/board`, undefined, { queryClient });
-}
+import { buildBoard, buildBoardCard, buildBoardColumn, mockBoard, renderBoard } from '@/test/board';
 
 async function findColumn(name: RegExp): Promise<HTMLElement> {
   return screen.findByRole('region', { name });
@@ -31,21 +16,21 @@ describe('BoardPage', () => {
         [Status.DONE]: buildBoardColumn(Status.DONE, [buildBoardCard(2, { status: Status.DONE })]),
       }),
     );
-    openBoard();
+    renderBoard();
 
     await findColumn(/^To Do/);
     const headings = screen.getAllByRole('heading', { level: 2 });
 
     expect(headings.map((heading) => heading.textContent)).toEqual([
-      'To Do12 tickets',
-      'In Progress0 tickets',
-      'In Review0 tickets',
-      'Done1 ticket',
+      'To Do 12 tickets',
+      'In Progress 0 tickets',
+      'In Review 0 tickets',
+      'Done 1 ticket',
     ]);
   });
 
   it('BRD-1: the board sits under the project header and names itself in the tab title', async () => {
-    openBoard();
+    renderBoard();
 
     expect(
       await screen.findByRole('heading', { level: 1, name: 'WEB Website Redesign' }),
@@ -59,7 +44,7 @@ describe('BoardPage', () => {
         [Status.TODO]: buildBoardColumn(Status.TODO, [buildBoardCard(7), buildBoardCard(3)]),
       }),
     );
-    openBoard();
+    renderBoard();
 
     const cards = within(await findColumn(/^To Do/)).getAllByRole('link');
 

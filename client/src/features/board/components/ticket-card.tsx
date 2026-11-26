@@ -12,7 +12,7 @@ import {
   SquareCheckBigIcon,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
-import type { ReactElement } from 'react';
+import type { ReactElement, Ref } from 'react';
 import { Link } from 'react-router';
 
 import { Avatar } from '@/components/avatar';
@@ -38,6 +38,8 @@ const PRIORITY_ICONS: Record<Priority, LucideIcon> = {
 interface TicketCardProps {
   projectKey: string;
   card: BoardCard;
+  /** Lets "Load more" move focus to the first card it added. */
+  ref?: Ref<HTMLAnchorElement>;
 }
 
 /**
@@ -45,12 +47,13 @@ interface TicketCardProps {
  * most), priority, due date, and assignee. The whole card opens the ticket page (TKT-2). The
  * estimate waits for the mentor's OK (DOC-5), and the ⋯ menu comes with BRD-2/3.
  */
-export function TicketCard({ projectKey, card }: TicketCardProps): ReactElement {
+export function TicketCard({ projectKey, card, ref }: TicketCardProps): ReactElement {
   const TypeIcon = TYPE_ICONS[card.type];
   const PriorityIcon = PRIORITY_ICONS[card.priority];
 
   return (
     <Link
+      ref={ref}
       to={`/projects/${projectKey}/tickets/${card.key}`}
       // The {' '} between the parts keep the link's name readable for screen readers ("Bug
       // WEB-12 Fix login redirect High ..."); in a grid or flex box they take no space.

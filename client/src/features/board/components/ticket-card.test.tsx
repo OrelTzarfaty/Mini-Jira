@@ -3,20 +3,15 @@ import type { BoardCard } from '@mini-jira/shared';
 import { screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { buildBoard, buildBoardCard, buildBoardColumn, mockBoard } from '@/test/board';
-import { mockProject, TEST_PROJECT } from '@/test/project';
-import { renderRoute } from '@/test/render-route';
-import { mockLoggedIn } from '@/test/session';
+import { buildBoard, buildBoardCard, buildBoardColumn, mockBoard, renderBoard } from '@/test/board';
 
 // Noon local time, so "today" is the same day in every time zone.
 const TODAY = new Date(2026, 10, 26, 12);
 
 /** Opens the board with the one card in its column and returns the card's link. */
 async function renderCard(card: BoardCard): Promise<HTMLElement> {
-  mockLoggedIn();
-  mockProject();
   mockBoard(buildBoard({ [card.status]: buildBoardColumn(card.status, [card]) }));
-  renderRoute(`/projects/${TEST_PROJECT.key}/board`);
+  renderBoard();
 
   return screen.findByRole('link', { name: new RegExp(card.key) });
 }

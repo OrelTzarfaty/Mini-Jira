@@ -343,7 +343,7 @@ AC (extra): up to 50 cards per column ordered by rank, "load more" per column; c
 - [x] BE · "Load more" for one column with a rank cursor
 - [x] FE · `/projects/:projectKey/board` layout: 4 columns with headers and counts
 - [x] FE · TicketCard: key, title, type icon, priority, estimate, assignee initials, due date (estimate waits for DOC-5)
-- [ ] FE · "Load more" button per column
+- [x] FE · "Load more" button per column
 - [ ] FE · Loading, empty, and error states
 - [ ] FE · Phone width: the board scrolls horizontally
 - [ ] QA · Counts and card order are right

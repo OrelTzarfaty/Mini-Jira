@@ -2,8 +2,13 @@ import { BOARD_STATUSES, ErrorCode, Priority, Status, TicketType } from '@mini-j
 import type { Board, BoardCard, BoardColumn } from '@mini-jira/shared';
 import { http, HttpResponse } from 'msw';
 
-import { TEST_PROJECT } from './project';
+import { createQueryClient } from '@/api/query-client';
+import { PROJECTS_QUERY_KEY } from '@/api/query-keys';
+
+import { mockProject, TEST_PROJECT } from './project';
+import { renderRoute } from './render-route';
 import { server } from './server';
+import { mockLoggedIn } from './session';
 
 export const BOARD_URL = `/api/projects/${TEST_PROJECT.key}/board`;
 
@@ -55,4 +60,46 @@ export function mockBoardError(): void {
       ),
     ),
   );
+}
+
+/**
+ * Makes GET /api/projects/WEB/board/columns/:status answer with the page the test gives for each
+ * cursor ("load more", BRD-1); an unknown cursor fails with a server error. Returns the cursors
+ * it was asked for.
+ */
+export function mockColumnPages(
+  status: Status,
+  pagesByCursor: Record<string, BoardColumn>,
+): string[] {
+  const cursors: string[] = [];
+
+  server.use(
+    http.get(`${BOARD_URL}/columns/${status}`, ({ request }) => {
+      const cursor = new URL(request.url).searchParams.get('cursor') ?? '';
+      cursors.push(cursor);
+      const page = pagesByCursor[cursor];
+
+      return page
+        ? HttpResponse.json(page)
+        : HttpResponse.json(
+            { error: { code: ErrorCode.INTERNAL_ERROR, message: 'Something went wrong' } },
+            { status: 500 },
+          );
+    }),
+  );
+
+  return cursors;
+}
+
+/**
+ * Opens the WEB board as a logged-in owner. The app retries a 5xx three times with growing
+ * waits; the board's queries don't here, so the tests check the error states at once.
+ */
+export function renderBoard(): ReturnType<typeof renderRoute> {
+  mockLoggedIn();
+  mockProject();
+  const queryClient = createQueryClient();
+  queryClient.setQueryDefaults(PROJECTS_QUERY_KEY, { retry: false });
+
+  return renderRoute(`/projects/${TEST_PROJECT.key}/board`, undefined, { queryClient });
 }
