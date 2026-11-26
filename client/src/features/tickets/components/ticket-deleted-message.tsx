@@ -2,9 +2,12 @@ import { useEffect } from 'react';
 import type { ReactElement } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 
-import { TicketMessage } from '@/features/tickets/components/ticket-message';
-import { useTicketMessage } from '@/features/tickets/hooks/use-ticket-message';
+import { ToastMessage } from '@/components/toast-message';
 import { deletedTicketKeyFrom } from '@/features/tickets/lib/deleted-ticket';
+import { useAutoClearState } from '@/lib/use-auto-clear-state';
+
+// Long enough to read the key, as "WEB-13 created".
+const DELETED_MESSAGE_DURATION_MS = 6000;
 
 /**
  * "WEB-12 deleted" on the board after the ticket page deleted a ticket (TKT-4, wireframe 04 D).
@@ -14,21 +17,33 @@ import { deletedTicketKeyFrom } from '@/features/tickets/lib/deleted-ticket';
 export function TicketDeletedMessage(): ReactElement {
   const location = useLocation();
   const navigate = useNavigate();
-  const message = useTicketMessage();
+  const [shownTicketKey, setShownTicketKey] = useAutoClearState<string>(
+    DELETED_MESSAGE_DURATION_MS,
+  );
   const deletedTicketKey = deletedTicketKeyFrom(location.state);
-  const { show } = message;
 
   // The browser's history is outside React: this effect reads the entry's state once and clears
   // it. The key is shown from here, after the first render, so the status region is already in
   // the page and screen readers announce the change (WCAG 4.1.3).
   useEffect(() => {
     if (deletedTicketKey !== undefined) {
-      show(deletedTicketKey);
+      setShownTicketKey(deletedTicketKey);
       void navigate(`${location.pathname}${location.search}`, { replace: true, state: null });
     }
-  }, [deletedTicketKey, location.pathname, location.search, navigate, show]);
+  }, [deletedTicketKey, location.pathname, location.search, navigate, setShownTicketKey]);
 
   return (
-    <TicketMessage ticketKey={message.ticketKey} action="deleted" onDismiss={message.dismiss} />
+    <ToastMessage
+      message={
+        shownTicketKey && (
+          <>
+            <strong className="font-semibold">{shownTicketKey}</strong> deleted
+          </>
+        )
+      }
+      onDismiss={() => {
+        setShownTicketKey(null);
+      }}
+    />
   );
 }

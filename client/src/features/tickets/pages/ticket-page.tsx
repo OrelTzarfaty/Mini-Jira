@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { useCurrentProject } from '@/features/projects/hooks/use-project';
 import { AssignToMeButton } from '@/features/tickets/components/assign-to-me-button';
 import { CopyLinkButton } from '@/features/tickets/components/copy-link-button';
+import { DeleteTicketDialog } from '@/features/tickets/components/delete-ticket-dialog';
 import { EditTicketForm } from '@/features/tickets/components/edit-ticket-form';
 import { TicketDetails } from '@/features/tickets/components/ticket-details';
 import {
@@ -31,8 +32,9 @@ const SAVED_MESSAGE_DURATION_MS = 4000;
  * The ticket page, /projects/WEB/tickets/WEB-12 (TKT-2, wireframe 04 A and H): the title, the
  * description, and the details panel. Its own URL, so a link to it works after a reload or when
  * shared. Edit switches the page to edit mode (TKT-3, wireframe 04 B); "Assign to me" in the
- * details panel saves the logged-in user as the assignee (TKT-5). Delete and the status
- * dropdown come with TKT-4 and BRD-2; comments and activity with CMT-1 and ACT-1.
+ * details panel saves the logged-in user as the assignee (TKT-5). Delete shows for the reporter
+ * and the project owner (TKT-4). The status dropdown comes with BRD-2; comments and activity
+ * with CMT-1 and ACT-1.
  */
 export function TicketPage(): ReactElement {
   const project = useCurrentProject();
@@ -113,6 +115,9 @@ export function TicketPage(): ReactElement {
               <span className="sr-only sm:not-sr-only">Edit</span>
             </Button>
           )}
+          {/* Only for the reporter or the owner (TKT-4). Hidden in edit mode, like Edit, so a
+              delete never happens with unsaved changes on screen. */}
+          {!isEditing && <DeleteTicketDialog ticket={ticket} project={project} />}
         </div>
       </div>
 

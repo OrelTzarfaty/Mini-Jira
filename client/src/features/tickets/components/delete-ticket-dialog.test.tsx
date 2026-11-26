@@ -82,6 +82,18 @@ describe('Delete a ticket (TKT-4)', () => {
     expect(screen.queryByRole('button', { name: 'Delete' })).not.toBeInTheDocument();
   });
 
+  it('TKT-4: Delete is hidden in edit mode, like Edit, and comes back after Cancel', async () => {
+    await openTicketPage();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Edit' }));
+
+    expect(screen.queryByRole('button', { name: 'Delete' })).not.toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+
+    expect(screen.getByRole('button', { name: 'Delete' })).toBeInTheDocument();
+  });
+
   it('TKT-4: the dialog names the ticket and focuses Cancel first', async () => {
     await openTicketPage();
 

@@ -46,7 +46,7 @@ export function CreateTicketDialog({ projectKey }: { projectKey: string }): Reac
         onCloseAutoFocus={() => {
           // Runs after the popup is gone and the page is visible to screen readers again.
           if (keyToAnnounceRef.current !== null) {
-            createdMessage.show(keyToAnnounceRef.current);
+            setCreatedTicketKey(keyToAnnounceRef.current);
             keyToAnnounceRef.current = null;
           }
         }}
