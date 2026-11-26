@@ -112,7 +112,7 @@ Summary only — task-level status lives in [docs/backlog.md](docs/backlog.md).
 |---|---|---|---|
 | Authentication | AUTH-1..4 | P0 | Done — AUTH-1..4 done (register, log in, log out, session survives refresh) |
 | Projects & members | PRJ-1..6 | P0 | Done — PRJ-1..6 done (create project, My Projects list, add and remove members, edit or delete a project, non-member access) |
-| Tickets | TKT-1..5 | P0 | In progress — TKT-1 (create a ticket) and TKT-2 (ticket page with its own URL, Copy link) done; TKT-3 (edit a ticket): API built, edit form to do; the Estimate field waits for the mentor (DOC-5) |
+| Tickets | TKT-1..5 | P0 | In progress — TKT-1 (create a ticket) and TKT-2 (ticket page with its own URL, Copy link) done; TKT-3 (edit a ticket: API and edit mode on the ticket page) built, in review; the Estimate field waits for the mentor (DOC-5) |
 | Board | BRD-1..4 | P0 | Not started |
 | Comments & activity | CMT-1..2, ACT-1 | P1 | Not started |
 | List, search, pagination | LST-1..4 | P1 | Not started |

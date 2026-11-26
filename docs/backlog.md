@@ -307,12 +307,12 @@ Sprint 4 · Size M · **Status: Done** — merged into `dev` in [#90](https://gi
 - [x] QA · Direct URL works after refresh; `WEB-3` under another project's URL → 404
 
 ### TKT-3 · Edit a ticket
-Sprint 4 · Size M · Status: In progress · Depends on TKT-2
+Sprint 4 · Size M · **Status: In review** · Depends on TKT-2
 AC (extra): the PATCH body includes the `updatedAt` the client loaded; the conditional update (architecture §10.3) is built now, the conflict UX comes in CON-1.
 - [x] BE · Shared `updateTicketSchema` (includes `updatedAt`)
 - [x] BE · `PATCH /api/projects/:projectKey/tickets/:ticketKey` with validation and the `updatedAt` check
-- [ ] FE · Edit mode on the ticket page (all fields)
-- [ ] FE · Save: inline errors next to fields, button disabled while saving, input kept on error
+- [x] FE · Edit mode on the ticket page (all fields)
+- [x] FE · Save: inline errors next to fields, button disabled while saving, input kept on error
 - [x] QA · Integration: valid edit, title > 120 chars, invalid enum values
 - [x] QA · Integration: stale `updatedAt` → 409
 
