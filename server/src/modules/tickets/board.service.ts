@@ -12,6 +12,15 @@ import type { TicketProject } from './tickets.service.js';
 export interface BoardService {
   /** BRD-1: all four columns in workflow order, each with its total and its first 50 cards. */
   getBoard(project: TicketProject): Promise<Board>;
+  /**
+   * BRD-1 "load more": the next 50 cards of one column after the cursor (from the top when
+   * there is none), with the column's total.
+   */
+  getColumn(
+    project: TicketProject,
+    status: Status,
+    after: BoardCursor | null,
+  ): Promise<BoardColumn>;
 }
 
 // What a card needs, plus the rank for the cursor (stripped from the response).
@@ -117,6 +126,17 @@ export function createBoardService(prisma: PrismaClient): BoardService {
           toColumnResponse(project.key, status, totals.get(status) ?? 0, pages[index] ?? []),
         ),
       };
+    },
+
+    async getColumn(project, status, after) {
+      const { total, rows } = await prisma.$transaction(async (tx) => {
+        const columnTotal = await tx.ticket.count({ where: { projectId: project.id, status } });
+        const page = await findColumnPage(tx, project.id, status, after);
+
+        return { total: columnTotal, rows: page };
+      }, SNAPSHOT);
+
+      return toColumnResponse(project.key, status, total, rows);
     },
   };
 }

@@ -203,15 +203,24 @@ describe('GET /api/openapi.json', () => {
     ]);
   });
 
-  it('BRD-1: documents the board endpoint with its parameters and responses', async () => {
+  it('BRD-1: documents the board and load-more endpoints with their parameters and responses', async () => {
     const spec = await getSpec();
     const board = spec.paths['/projects/{projectKey}/board']?.get;
+    const column = spec.paths['/projects/{projectKey}/board/columns/{status}']?.get;
 
     expect(Object.keys(board?.responses ?? {})).toEqual(['200', '400', '401', '404', '500']);
     expect(board?.parameters).toEqual([
       expect.objectContaining({ name: 'projectKey', in: 'path', required: true }),
     ]);
-    expect(Object.keys(spec.components.schemas)).toEqual(expect.arrayContaining(['Board']));
+    expect(Object.keys(column?.responses ?? {})).toEqual(['200', '400', '401', '404', '500']);
+    expect(column?.parameters).toEqual([
+      expect.objectContaining({ name: 'projectKey', in: 'path', required: true }),
+      expect.objectContaining({ name: 'status', in: 'path', required: true }),
+      expect.objectContaining({ name: 'cursor', in: 'query', required: false }),
+    ]);
+    expect(Object.keys(spec.components.schemas)).toEqual(
+      expect.arrayContaining(['Board', 'BoardColumn']),
+    );
   });
 
   it('TKT-1: documents the create-ticket endpoint with its parameters and responses', async () => {

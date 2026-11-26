@@ -1,8 +1,11 @@
 import {
   BOARD_COLUMN_LIMIT,
   BOARD_STATUSES,
+  boardColumnSchema,
   boardSchema,
   ErrorCode,
+  INVALID_BOARD_CURSOR_MESSAGE,
+  INVALID_BOARD_STATUS_MESSAGE,
   PROJECT_NOT_FOUND_MESSAGE,
   Status,
   UNAUTHENTICATED_MESSAGE,
@@ -13,6 +16,7 @@ import { generateNKeysBetween } from 'fractional-indexing';
 import type request from 'supertest';
 import { afterAll, beforeEach, describe, expect, it } from 'vitest';
 
+import { encodeBoardCursor } from '../../src/lib/board-cursor.js';
 import { resetDatabase, testPrisma } from '../helpers/database.js';
 import {
   createProjectAccessMatrix,
@@ -77,8 +81,12 @@ describe('GET /api/projects/:projectKey/board (BRD-1)', () => {
   });
 
   const boardUrl = (query = ''): string => `/api/projects/${matrix.project.key}/board${query}`;
+  const columnUrl = (status: string, query = ''): string =>
+    `/api/projects/${matrix.project.key}/board/columns/${status}${query}`;
   const getBoard = (caller: Caller = 'member', query = ''): request.Test =>
     requestAs(app, matrix, caller, 'get', boardUrl(query));
+  const getColumn = (status: string, query = '', caller: Caller = 'member'): request.Test =>
+    requestAs(app, matrix, caller, 'get', columnUrl(status, query));
 
   describe('the board', () => {
     it.each(['owner', 'member'] as const)(
@@ -237,6 +245,149 @@ describe('GET /api/projects/:projectKey/board (BRD-1)', () => {
           details: [{ field: 'assignee', message: 'Unknown field' }],
         },
       });
+    });
+  });
+
+  describe('load more for one column', () => {
+    it(`BRD-1: pages through a long column ${BOARD_COLUMN_LIMIT} cards at a time, without gaps or repeats`, async () => {
+      const count = BOARD_COLUMN_LIMIT * 2 + 20;
+      const ids = await insertTickets(
+        matrix,
+        generateNKeysBetween(null, null, count).map((rank) => ({ status: Status.IN_REVIEW, rank })),
+      );
+
+      const first = (await getBoard()).body as Board;
+      const review = first.columns[2];
+      const seen = (review?.items ?? []).map(({ id }) => id);
+      let cursor = review?.nextCursor ?? null;
+      const pageSizes = [review?.items.length];
+
+      while (cursor !== null) {
+        const response = await getColumn(Status.IN_REVIEW, `?cursor=${cursor}`);
+
+        expect(response.status).toBe(200);
+        expect(response.headers['cache-control']).toBe('no-store');
+        expect(boardColumnSchema.strict().safeParse(response.body).success).toBe(true);
+        const column = response.body as BoardColumn;
+        expect(column).toMatchObject({ status: Status.IN_REVIEW, total: count });
+        seen.push(...column.items.map(({ id }) => id));
+        pageSizes.push(column.items.length);
+        cursor = column.nextCursor;
+      }
+
+      expect(pageSizes).toEqual([BOARD_COLUMN_LIMIT, BOARD_COLUMN_LIMIT, 20]);
+      expect(seen).toEqual(ids);
+    });
+
+    it('BRD-1: cards with the same rank are ordered by id, and the cursor pages through them', async () => {
+      // Two concurrent moves into the same gap (BRD-2) can give cards the same rank.
+      const ids = await insertTickets(
+        matrix,
+        Array.from({ length: BOARD_COLUMN_LIMIT + 5 }, () => ({ status: Status.DONE, rank: 'a0' })),
+      );
+      const byId = [...ids].sort();
+
+      const board = (await getBoard()).body as Board;
+      const done = board.columns[3];
+      const next = (await getColumn(Status.DONE, `?cursor=${done?.nextCursor ?? ''}`))
+        .body as BoardColumn;
+
+      expect(done?.items.map(({ id }) => id)).toEqual(byId.slice(0, BOARD_COLUMN_LIMIT));
+      expect(next.items.map(({ id }) => id)).toEqual(byId.slice(BOARD_COLUMN_LIMIT));
+      expect(next.nextCursor).toBeNull();
+    });
+
+    it('BRD-1: without a cursor it returns the column from the top', async () => {
+      await insertTickets(matrix, [
+        { status: Status.TODO, rank: 'a1' },
+        { status: Status.TODO, rank: 'a0' },
+        { status: Status.DONE, rank: 'a0' },
+      ]);
+
+      const response = await getColumn(Status.TODO);
+
+      expect(response.status).toBe(200);
+      expect(response.body).toMatchObject({ status: Status.TODO, total: 2, nextCursor: null });
+      expect(keysOf(response.body as BoardColumn)).toEqual(['WEB-2', 'WEB-1']);
+    });
+
+    it('BRD-1: a cursor after the last card returns no cards', async () => {
+      const [id] = await insertTickets(matrix, [{ status: Status.TODO, rank: 'a0' }]);
+      const cursor = encodeBoardCursor({ rank: 'a0', id: id ?? '' });
+
+      const response = await getColumn(Status.TODO, `?cursor=${cursor}`);
+
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual({ status: Status.TODO, total: 1, items: [], nextCursor: null });
+    });
+
+    it.each(['todo', 'BLOCKED', 'In_Progress'])('BRD-1: the status %s gets 400', async (status) => {
+      const response = await getColumn(status);
+
+      expect(response.status).toBe(400);
+      expect(response.body).toEqual({
+        error: {
+          code: ErrorCode.VALIDATION_ERROR,
+          message: INVALID_BOARD_STATUS_MESSAGE,
+          details: [{ field: 'status', message: INVALID_BOARD_STATUS_MESSAGE }],
+        },
+      });
+    });
+
+    it.each([
+      ['not a cursor', '?cursor=abc'],
+      ['empty', '?cursor='],
+      ['too long', `?cursor=${'a'.repeat(600)}`],
+      ['sent twice', '?cursor=abc&cursor=def'],
+      [
+        'with an id that is not a UUID',
+        `?cursor=${Buffer.from(JSON.stringify(['a0', '1'])).toString('base64url')}`,
+      ],
+    ])('BRD-1: a cursor that is %s gets 400', async (_label, query) => {
+      const response = await getColumn(Status.TODO, query);
+
+      expect(response.status).toBe(400);
+      expect(response.body).toEqual({
+        error: {
+          code: ErrorCode.VALIDATION_ERROR,
+          message: INVALID_BOARD_CURSOR_MESSAGE,
+          details: [{ field: 'cursor', message: INVALID_BOARD_CURSOR_MESSAGE }],
+        },
+      });
+    });
+
+    it('BRD-1: unknown query parameters get 400', async () => {
+      const response = await getColumn(Status.TODO, '?page=2');
+
+      expect(response.status).toBe(400);
+      expect(response.body).toMatchObject({
+        error: {
+          code: ErrorCode.VALIDATION_ERROR,
+          details: [{ field: 'page', message: 'Unknown field' }],
+        },
+      });
+    });
+
+    it('BRD-1: a visitor without a session gets 401', async () => {
+      const response = await getColumn(Status.TODO, '', 'visitor');
+
+      expect(response.status).toBe(401);
+      expect(response.body).toEqual({
+        error: { code: ErrorCode.UNAUTHENTICATED, message: UNAUTHENTICATED_MESSAGE },
+      });
+    });
+
+    it('BRD-1: an outsider gets 404 and no cards, even with a bad status', async () => {
+      await insertTickets(matrix, [{ status: Status.TODO, rank: 'a0' }]);
+
+      for (const status of [Status.TODO, 'BLOCKED']) {
+        const response = await getColumn(status, '', 'outsider');
+
+        expect(response.status).toBe(404);
+        expect(response.body).toEqual({
+          error: { code: ErrorCode.NOT_FOUND, message: PROJECT_NOT_FOUND_MESSAGE },
+        });
+      }
     });
   });
 });

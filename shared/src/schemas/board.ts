@@ -15,6 +15,12 @@ export const BOARD_STATUSES = [
   Status.DONE,
 ] as const satisfies readonly Status[];
 
+// The cursor is opaque to the client (it only sends back what the API gave it). The limit keeps
+// a pasted or forged value small; real cursors are far shorter.
+export const BOARD_CURSOR_MAX_LENGTH = 512;
+export const INVALID_BOARD_CURSOR_MESSAGE = 'Cursor is invalid';
+export const INVALID_BOARD_STATUS_MESSAGE = 'Status must be TODO, IN_PROGRESS, IN_REVIEW or DONE';
+
 // BRD-1: one card on the board: what the card shows and what the client needs to open or move
 // it. Picked from the ticket, so the fields mean the same everywhere; no description, and never
 // the rank (an internal sort value).
@@ -54,3 +60,23 @@ export type Board = z.infer<typeof boardSchema>;
 // BRD-1: the query of `GET /api/projects/:projectKey/board`. No parameters yet (the filters come
 // with BRD-4); strict, so an unknown parameter is a 400 instead of being silently ignored.
 export const boardQuerySchema = z.strictObject({});
+
+// BRD-1: the path parameters of `GET /api/projects/:projectKey/board/columns/:status`. A plain
+// (stripping) object: `projectKey` was already checked by loadProjectAccess.
+export const boardColumnParamsSchema = z.object({
+  status: z.enum(Status, INVALID_BOARD_STATUS_MESSAGE),
+});
+
+export type BoardColumnParams = z.infer<typeof boardColumnParamsSchema>;
+
+// BRD-1: the query of the "load more" request. `cursor` is the `nextCursor` of the column;
+// without it the column starts from the top. Strict: unknown parameters are a 400.
+export const boardColumnQuerySchema = z.strictObject({
+  cursor: z
+    .string(INVALID_BOARD_CURSOR_MESSAGE)
+    .min(1, INVALID_BOARD_CURSOR_MESSAGE)
+    .max(BOARD_CURSOR_MAX_LENGTH, INVALID_BOARD_CURSOR_MESSAGE)
+    .optional(),
+});
+
+export type BoardColumnQuery = z.infer<typeof boardColumnQuerySchema>;

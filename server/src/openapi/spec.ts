@@ -1,6 +1,9 @@
 import {
   addMemberSchema,
   BOARD_COLUMN_LIMIT,
+  BOARD_CURSOR_MAX_LENGTH,
+  BOARD_STATUSES,
+  boardColumnSchema,
   boardSchema,
   createProjectSchema,
   createTicketSchema,
@@ -123,6 +126,25 @@ const PROJECT_SEARCH_PARAMETER = {
   description:
     'Keeps only projects whose name or key contains this text, in any letter case. Trimmed; empty means no search. % and _ are plain characters, not wildcards',
   schema: { type: 'string', maxLength: PROJECT_SEARCH_MAX_LENGTH, example: 'web' },
+};
+
+// BRD-1: the column of a "load more" request.
+const BOARD_STATUS_PARAMETER = {
+  name: 'status',
+  in: 'path',
+  required: true,
+  description: 'The column: one of the four statuses, in uppercase',
+  schema: { type: 'string', enum: [...BOARD_STATUSES], example: 'IN_PROGRESS' },
+};
+
+// BRD-1: where a "load more" request continues.
+const BOARD_CURSOR_PARAMETER = {
+  name: 'cursor',
+  in: 'query',
+  required: false,
+  description:
+    "The column's nextCursor from the previous answer, sent back as it is (an opaque value). Without it, the column starts from the top",
+  schema: { type: 'string', minLength: 1, maxLength: BOARD_CURSOR_MAX_LENGTH },
 };
 
 const BOARD_NO_STORE_HEADER = {
@@ -538,6 +560,35 @@ export function createOpenApiSpec(): Record<string, unknown> {
           },
         },
       },
+      '/projects/{projectKey}/board/columns/{status}': {
+        get: {
+          tags: ['Board'],
+          operationId: 'getBoardColumn',
+          summary: 'Load more cards of one board column',
+          description: `BRD-1. Any member of the project may load more cards: the next ${BOARD_COLUMN_LIMIT} cards of the column after the cursor, in board order, with the column's total and the next cursor (null when there are no more). The cursor marks the last card the client has, so cards added or moved higher up in the meantime don't shift the next cards: none is skipped or shown twice. Unknown query parameters are rejected. A project that does not exist and a project the caller is not a member of get the same 404.`,
+          security: [{ authCookie: [] }],
+          parameters: [PROJECT_KEY_PARAMETER, BOARD_STATUS_PARAMETER, BOARD_CURSOR_PARAMETER],
+          responses: {
+            '200': {
+              ...jsonResponse('The next cards of the column', 'BoardColumn'),
+              headers: BOARD_NO_STORE_HEADER,
+            },
+            '400': jsonResponse(
+              'An unknown status, a cursor the API did not produce, or an unknown query parameter (VALIDATION_ERROR), with details[] on it',
+              'ErrorResponse',
+            ),
+            '401': jsonResponse(
+              'Not logged in (UNAUTHENTICATED): the cookie is missing, invalid or expired, or its user no longer exists',
+              'ErrorResponse',
+            ),
+            '404': jsonResponse(
+              'No such project, or the caller is not a member of it (NOT_FOUND, "Project not found")',
+              'ErrorResponse',
+            ),
+            '500': jsonResponse('Unexpected server error', 'ErrorResponse'),
+          },
+        },
+      },
       '/projects/{projectKey}/tickets': {
         post: {
           tags: ['Tickets'],
@@ -583,6 +634,7 @@ export function createOpenApiSpec(): Record<string, unknown> {
       schemas: {
         AddMemberRequest: toComponentSchema(addMemberSchema, 'input'),
         Board: toComponentSchema(boardSchema),
+        BoardColumn: toComponentSchema(boardColumnSchema),
         ErrorResponse: toComponentSchema(errorResponseSchema),
         CreateProjectRequest: toComponentSchema(createProjectSchema, 'input'),
         CreateTicketRequest: toComponentSchema(createTicketSchema, 'input'),

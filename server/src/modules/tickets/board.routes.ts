@@ -22,8 +22,14 @@ export function createBoardRouter({ prisma, authCookie }: BoardRouterOptions): R
   // run before anything else, so an outsider learns nothing, not even the query rules.
   const loadProjectAccess = createLoadProjectAccess(createProjectsService(prisma));
 
-  // BRD-1: any member (OWNER or MEMBER) may see the board.
+  // BRD-1: any member (OWNER or MEMBER) may see the board and load more cards of a column.
   router.get('/projects/:projectKey/board', requireAuth, loadProjectAccess, controller.getBoard);
+  router.get(
+    '/projects/:projectKey/board/columns/:status',
+    requireAuth,
+    loadProjectAccess,
+    controller.getColumn,
+  );
 
   return router;
 }
