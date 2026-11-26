@@ -282,7 +282,7 @@ Sprint 3 · Size M · **Status: Done** — merged into `dev` in [#88](https://gi
 ## E4 · Tickets — Sprint 4
 
 ### TKT-1 · Create a ticket
-Sprint 4 · Size L · Status: In review (API and web form done; the Estimate tasks wait for the mentor's OK, DOC-5) · Depends on PRJ-6
+Sprint 4 · Size L · Status: Merged (Estimate tasks open) — merged into `dev` in [#89](https://github.com/OrelTzarfaty/Mini-Jira/pull/89) (`231016a`); light QA PASS; the Estimate tasks wait for the mentor's OK, DOC-5 · Depends on PRJ-6
 AC (extra): key from the atomic `ticketCounter` (architecture §10.1) · new ticket goes to the end of To Do.
 - [x] BE · Migration: `Ticket` + indexes (architecture §8.1), including the optional `estimateMinutes` (`estimateMinutes` not added yet: it waits for DOC-5)
 - [ ] BE · Shared `parseEstimate` / `formatEstimate`: `30m`, `4h`, `2d`, `1d 4h` ↔ minutes (1d = 8h)
