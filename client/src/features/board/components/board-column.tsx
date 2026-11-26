@@ -1,7 +1,7 @@
 import type { BoardCard, BoardColumn as BoardColumnData } from '@mini-jira/shared';
 import { Loader2Icon } from 'lucide-react';
 import { useId, useState } from 'react';
-import type { ReactElement } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { TicketCard } from '@/features/board/components/ticket-card';
@@ -11,6 +11,8 @@ import { STATUS_LABELS } from '@/features/tickets/lib/ticket-labels';
 interface BoardColumnProps {
   projectKey: string;
   column: BoardColumnData;
+  /** Shown in place of the cards when the column has none (the empty board, wireframe 03 G). */
+  emptyState?: ReactNode;
 }
 
 /**
@@ -28,7 +30,7 @@ function uniqueCards(pages: readonly BoardCard[][]): BoardCard[] {
  * tickets in it, then its cards in rank order. The cards scroll on their own, so the header
  * stays visible in a long column. "Load more" adds the next 50 cards when there are more.
  */
-export function BoardColumn({ projectKey, column }: BoardColumnProps): ReactElement {
+export function BoardColumn({ projectKey, column, emptyState }: BoardColumnProps): ReactElement {
   const headingId = useId();
   const [isMoreRequested, setIsMoreRequested] = useState(false);
   // The first card that "Load more" adds gets focus, so focus isn't lost when the button goes.
@@ -79,17 +81,21 @@ export function BoardColumn({ projectKey, column }: BoardColumnProps): ReactElem
         </span>
       </h2>
       <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-3 pt-1 pb-3">
-        <ul className="flex flex-col gap-2">
-          {cards.map((card, index) => (
-            <li key={card.id}>
-              <TicketCard
-                projectKey={projectKey}
-                card={card}
-                ref={index === firstAddedIndex ? focusFirstAddedCard : undefined}
-              />
-            </li>
-          ))}
-        </ul>
+        {cards.length === 0 ? (
+          emptyState
+        ) : (
+          <ul className="flex flex-col gap-2">
+            {cards.map((card, index) => (
+              <li key={card.id}>
+                <TicketCard
+                  projectKey={projectKey}
+                  card={card}
+                  ref={index === firstAddedIndex ? focusFirstAddedCard : undefined}
+                />
+              </li>
+            ))}
+          </ul>
+        )}
         {more.isError && (
           <p role="alert" className="text-center text-sm">
             Couldn&apos;t load more tickets. Try again.
