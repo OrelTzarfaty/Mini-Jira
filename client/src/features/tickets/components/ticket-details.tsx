@@ -71,7 +71,7 @@ export function TicketDetails({
     <dl className="grid gap-3 md:gap-4">
       <Detail label="Status">{STATUS_LABELS[ticket.status]}</Detail>
       <Detail label="Assigned to">
-        <span className="grid gap-1">
+        <div className="grid gap-1">
           {ticket.assignee ? (
             <Person user={ticket.assignee} />
           ) : (
@@ -81,7 +81,7 @@ export function TicketDetails({
             </span>
           )}
           {assigneeAction}
-        </span>
+        </div>
       </Detail>
       <Detail label="Created by">
         <Person user={ticket.reporter} />
