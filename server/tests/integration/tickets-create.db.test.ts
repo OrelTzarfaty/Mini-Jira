@@ -280,7 +280,7 @@ describe('POST /api/projects/:projectKey/tickets (TKT-1)', () => {
       expect(await ticketCounter()).toBe(0);
     });
 
-    it.each(['status', 'number', 'assigneeId', 'rank', 'reporterId', 'estimateMinutes'])(
+    it.each(['status', 'number', 'rank', 'reporterId', 'estimateMinutes'])(
       'TKT-1: the field %s can not be set (400 Unknown field)',
       async (field) => {
         const response = await createTicket('member', { title: 'T', [field]: 'x' });

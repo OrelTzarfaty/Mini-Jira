@@ -190,7 +190,7 @@ describe('PATCH /api/projects/:projectKey/tickets/:ticketKey (TKT-3)', () => {
       });
     });
 
-    it.each(['assigneeId', 'estimateMinutes', 'number', 'rank', 'reporterId', 'key'])(
+    it.each(['estimateMinutes', 'number', 'rank', 'reporterId', 'key'])(
       'TKT-3: the field %s is rejected with 400 "Unknown field"',
       async (field) => {
         const response = await edit({ title: 'Renamed', [field]: 'x' });

@@ -1,5 +1,6 @@
 import {
   addMemberSchema,
+  ASSIGNEE_NOT_MEMBER_MESSAGE,
   createProjectSchema,
   createTicketSchema,
   EDIT_CONFLICT_MESSAGE,
@@ -132,6 +133,18 @@ const TICKET_KEY_PARAMETER = {
   description:
     'The ticket key: the project key, a dash and the ticket number (e.g. WEB-12). The prefix must be the project key in the same URL.',
   schema: { type: 'string', example: 'WEB-12' },
+};
+
+// TKT-5: the 400 for an assignee who is not a member of the project (create and edit a ticket).
+const ASSIGNEE_NOT_MEMBER_EXAMPLE = {
+  summary: 'An assignee who is not a project member',
+  value: {
+    error: {
+      code: ErrorCode.VALIDATION_ERROR,
+      message: ASSIGNEE_NOT_MEMBER_MESSAGE,
+      details: [{ field: 'assigneeId', message: ASSIGNEE_NOT_MEMBER_MESSAGE }],
+    },
+  },
 };
 
 // LST-4: the query parameter of every paginated list.
@@ -537,15 +550,15 @@ export function createOpenApiSpec(): Record<string, unknown> {
           tags: ['Tickets'],
           operationId: 'createTicket',
           summary: 'Create a ticket in the project',
-          description: `TKT-1. Any member of the project (OWNER or MEMBER) may create a ticket; the caller becomes its reporter. The ticket always starts in To Do, at the bottom of the column, with no assignee. Its key is the project key and the next number of the project (WEB-13): numbers are handed out one at a time even when several tickets are created at the same moment, and a number is never reused. The title (1-${TICKET_TITLE_MAX_LENGTH} characters) and the description (optional, up to ${TICKET_DESCRIPTION_MAX_LENGTH}) are trimmed; a missing, null or empty description is stored as null. type defaults to TASK and priority to MEDIUM. dueDate is an optional calendar day (YYYY-MM-DD) or null. Fields the server sets (status, number, rank, assignee, reporter) and any other unknown fields are rejected. A project that does not exist and a project the caller is not a member of get the same 404. Browsers must send the request from the web app (same origin), or it gets 403.`,
+          description: `TKT-1. Any member of the project (OWNER or MEMBER) may create a ticket; the caller becomes its reporter. The ticket always starts in To Do, at the bottom of the column. assigneeId is optional (TKT-5): a user id of a project member, or missing or null for no assignee; a user who is not a member of the project, or an id no user has, gets 400 VALIDATION_ERROR with details[] on assigneeId ("Assignee must be a project member"). Its key is the project key and the next number of the project (WEB-13): numbers are handed out one at a time even when several tickets are created at the same moment, and a number is never reused. The title (1-${TICKET_TITLE_MAX_LENGTH} characters) and the description (optional, up to ${TICKET_DESCRIPTION_MAX_LENGTH}) are trimmed; a missing, null or empty description is stored as null. type defaults to TASK and priority to MEDIUM. dueDate is an optional calendar day (YYYY-MM-DD) or null. Fields the server sets (status, number, rank, reporter) and any other unknown fields are rejected. A project that does not exist and a project the caller is not a member of get the same 404. Browsers must send the request from the web app (same origin), or it gets 403.`,
           security: [{ authCookie: [] }],
           parameters: [PROJECT_KEY_PARAMETER],
           requestBody: jsonRequestBody('CreateTicketRequest'),
           responses: {
             '201': jsonResponse('The ticket was created, with its key (e.g. WEB-13)', 'Ticket'),
-            '400': jsonResponse(
-              'Invalid input (VALIDATION_ERROR), with one entry in details[] per field',
-              'ErrorResponse',
+            '400': jsonErrorResponse(
+              'Invalid input (VALIDATION_ERROR), with one entry in details[] per field, also when the assignee is not a project member',
+              { assigneeNotMember: ASSIGNEE_NOT_MEMBER_EXAMPLE },
             ),
             '401': jsonResponse(
               'Not logged in (UNAUTHENTICATED): the cookie is missing, invalid or expired, or its user no longer exists',
@@ -593,7 +606,7 @@ export function createOpenApiSpec(): Record<string, unknown> {
           tags: ['Tickets'],
           operationId: 'updateTicket',
           summary: 'Edit a ticket',
-          description: `TKT-3. Any member of the project (OWNER or MEMBER) may edit a ticket of the project. Send updatedAt exactly as GET returned it, plus at least one field to change: title, description, type, priority, status, dueDate. A missing field stays as it is; a null or blank description and a null dueDate clear them. The rules are the same as at create (title 1-${TICKET_TITLE_MAX_LENGTH} characters, description up to ${TICKET_DESCRIPTION_MAX_LENGTH}, both trimmed). If someone else saved the ticket after updatedAt (an edit or a board move), nothing is saved and the answer is 409 EDIT_CONFLICT (CON-1): reload the ticket and apply the change again. A new status puts the ticket at the bottom of that column. The assignee (TKT-5), the key, the number, the reporter and any other unknown fields are rejected. The key rules and the 404 answers are the same as for GET. Browsers must send the request from the web app (same origin), or it gets 403.`,
+          description: `TKT-3. Any member of the project (OWNER or MEMBER) may edit a ticket of the project. Send updatedAt exactly as GET returned it, plus at least one field to change: title, description, type, priority, status, dueDate, assigneeId. A missing field stays as it is; a null or blank description and a null dueDate clear them. assigneeId (TKT-5) assigns the ticket to a project member (the caller or anyone else in the project), and null unassigns it; a user who is not a member of the project, or an id no user has, gets 400 VALIDATION_ERROR with details[] on assigneeId, and nothing is saved. The rules are the same as at create (title 1-${TICKET_TITLE_MAX_LENGTH} characters, description up to ${TICKET_DESCRIPTION_MAX_LENGTH}, both trimmed). If someone else saved the ticket after updatedAt (an edit or a board move), nothing is saved and the answer is 409 EDIT_CONFLICT (CON-1): reload the ticket and apply the change again. A new status puts the ticket at the bottom of that column. The estimate, the key, the number, the reporter and any other unknown fields are rejected. The key rules and the 404 answers are the same as for GET. Browsers must send the request from the web app (same origin), or it gets 403.`,
           security: [{ authCookie: [] }],
           parameters: [PROJECT_KEY_PARAMETER, TICKET_KEY_PARAMETER],
           requestBody: jsonRequestBody('UpdateTicketRequest'),
@@ -603,7 +616,7 @@ export function createOpenApiSpec(): Record<string, unknown> {
               'Ticket',
             ),
             '400': jsonErrorResponse(
-              'Invalid input (VALIDATION_ERROR): a bad field or an unknown field (details[] per field), or no field to change',
+              'Invalid input (VALIDATION_ERROR): a bad field or an unknown field (details[] per field), an assignee who is not a project member, or no field to change',
               {
                 titleTooLong: {
                   summary: 'A title over the limit',
@@ -626,10 +639,11 @@ export function createOpenApiSpec(): Record<string, unknown> {
                     error: {
                       code: ErrorCode.VALIDATION_ERROR,
                       message: 'Unknown field',
-                      details: [{ field: 'assigneeId', message: 'Unknown field' }],
+                      details: [{ field: 'estimateMinutes', message: 'Unknown field' }],
                     },
                   },
                 },
+                assigneeNotMember: ASSIGNEE_NOT_MEMBER_EXAMPLE,
                 nothingToChange: {
                   summary: 'Only updatedAt was sent',
                   value: {

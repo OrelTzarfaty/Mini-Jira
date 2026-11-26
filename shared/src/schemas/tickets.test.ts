@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   createTicketSchema,
   DUE_DATE_FORMAT_MESSAGE,
+  INVALID_ASSIGNEE_ID_MESSAGE,
   TICKET_DESCRIPTION_MAX_LENGTH,
   TICKET_TITLE_MAX_LENGTH,
   TICKET_UPDATE_EMPTY_MESSAGE,
@@ -12,6 +13,8 @@ import {
 } from './tickets.js';
 
 /** The messages zod reports for a field, so tests check the exact text the user sees. */
+const USER_ID = '0b6f2c1e-8f4a-4c3b-9a7d-2e5f1a3b4c6d';
+
 const messagesFor = (input: unknown, field: string): string[] => {
   const result = createTicketSchema.safeParse(input);
   if (result.success) return [];
@@ -40,6 +43,7 @@ describe('createTicketSchema', () => {
         type: 'BUG',
         priority: 'CRITICAL',
         dueDate: '2026-12-01',
+        assigneeId: USER_ID,
       }),
     ).toEqual({
       title: 'Fix login',
@@ -47,7 +51,18 @@ describe('createTicketSchema', () => {
       type: 'BUG',
       priority: 'CRITICAL',
       dueDate: '2026-12-01',
+      assigneeId: USER_ID,
     });
+  });
+
+  it('TKT-5: a null assigneeId means unassigned', () => {
+    expect(createTicketSchema.parse({ title: 'T', assigneeId: null }).assigneeId).toBeNull();
+  });
+
+  it.each(['not-a-uuid', '', 42])('TKT-5: rejects the assigneeId %j', (assigneeId) => {
+    expect(messagesFor({ title: 'T', assigneeId }, 'assigneeId')).toEqual([
+      INVALID_ASSIGNEE_ID_MESSAGE,
+    ]);
   });
 
   it.each([
@@ -122,7 +137,7 @@ describe('createTicketSchema', () => {
     expect(messagesFor({ title: 'T', dueDate }, 'dueDate')).toEqual([DUE_DATE_FORMAT_MESSAGE]);
   });
 
-  it.each(['status', 'number', 'rank', 'assigneeId', 'reporterId', 'projectId'])(
+  it.each(['status', 'number', 'rank', 'reporterId', 'projectId'])(
     'TKT-1: rejects the server-owned field %s',
     (field) => {
       const result = createTicketSchema.safeParse({ title: 'T', [field]: 'x' });
@@ -188,7 +203,26 @@ describe('updateTicketSchema', () => {
     ]);
   });
 
-  it.each(['assigneeId', 'estimateMinutes', 'number', 'rank', 'reporterId', 'key'])(
+  it('TKT-5: an assigneeId alone is a change: a user id assigns, null unassigns', () => {
+    expect(updateTicketSchema.parse({ updatedAt, assigneeId: USER_ID })).toEqual({
+      updatedAt,
+      assigneeId: USER_ID,
+    });
+    expect(updateTicketSchema.parse({ updatedAt, assigneeId: null })).toEqual({
+      updatedAt,
+      assigneeId: null,
+    });
+  });
+
+  it('TKT-5: rejects an assigneeId that is not a UUID', () => {
+    expect(
+      updateTicketSchema
+        .safeParse({ updatedAt, assigneeId: 'x' })
+        .error?.issues.map((issue) => [issue.path[0], issue.message]),
+    ).toEqual([['assigneeId', INVALID_ASSIGNEE_ID_MESSAGE]]);
+  });
+
+  it.each(['estimateMinutes', 'number', 'rank', 'reporterId', 'key'])(
     'TKT-3: rejects the field %s, which is not editable here',
     (field) => {
       const result = updateTicketSchema.safeParse({ updatedAt, title: 'T', [field]: 'x' });

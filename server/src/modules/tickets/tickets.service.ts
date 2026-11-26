@@ -1,4 +1,5 @@
 import {
+  ASSIGNEE_NOT_MEMBER_MESSAGE,
   EDIT_CONFLICT_MESSAGE,
   ErrorCode,
   PROJECT_NOT_FOUND_MESSAGE,
@@ -8,8 +9,8 @@ import {
 } from '@mini-jira/shared';
 import type { CreateTicketInput, Ticket, UpdateTicketInput } from '@mini-jira/shared';
 
-import type { PrismaClient } from '../../generated/prisma/client.js';
-import { ConflictError, NotFoundError } from '../../lib/errors.js';
+import type { Prisma, PrismaClient } from '../../generated/prisma/client.js';
+import { ConflictError, NotFoundError, ValidationError } from '../../lib/errors.js';
 import { isRecordNotFound } from '../../lib/prisma-errors.js';
 import { rankBetween } from '../../lib/rank.js';
 import { formatTicketKey, parseTicketKey } from '../../lib/ticket-key.js';
@@ -23,7 +24,8 @@ export interface TicketProject {
 export interface TicketsService {
   /**
    * TKT-1: creates a ticket in To Do, at the bottom of the column, with the project's next
-   * number (never reused). Throws 404 when the project was deleted in the meantime.
+   * number (never reused). Throws 404 when the project was deleted in the meantime, and 400 on
+   * `assigneeId` when the assignee isn't a member of the project (TKT-5).
    */
   createTicket(
     project: TicketProject,
@@ -40,7 +42,8 @@ export interface TicketsService {
   /**
    * TKT-3: saves the sent fields if the ticket is still at the `updatedAt` the client loaded
    * (CON-1, architecture §10.3). Throws 404 like getTicket (also when the ticket is deleted while
-   * saving) and 409 EDIT_CONFLICT when someone else changed the ticket in the meantime.
+   * saving), 409 EDIT_CONFLICT when someone else changed the ticket in the meantime, and 400 on
+   * `assigneeId` when the new assignee isn't a member of the project (TKT-5).
    */
   updateTicket(
     project: TicketProject,
@@ -113,6 +116,31 @@ function ticketNumberIn(project: TicketProject, ticketKey: string): number {
 const toDueDateColumn = (dueDate: string | null): Date | null =>
   dueDate === null ? null : new Date(dueDate);
 
+/**
+ * TKT-5: the assignee must be a member of this project. Call it inside the transaction that
+ * writes the ticket. `FOR SHARE` locks the membership row until that transaction ends, so a
+ * member removal at the same moment (PRJ-4, which deletes the row and then unassigns the user's
+ * tickets) either waits and then also unassigns this ticket, or commits first, and then this
+ * finds no row. Without the lock, a ticket could stay assigned to a removed member.
+ * A user of another project and an id no user has get the same 400, so the answer never says
+ * whether the user exists.
+ */
+async function assertAssigneeIsMember(
+  tx: Prisma.TransactionClient,
+  projectId: string,
+  assigneeId: string,
+): Promise<void> {
+  const membership = await tx.$queryRaw<unknown[]>`
+    SELECT 1 FROM "ProjectMember"
+    WHERE "projectId" = ${projectId}::uuid AND "userId" = ${assigneeId}::uuid
+    FOR SHARE`;
+  if (membership.length === 0) {
+    throw new ValidationError(ASSIGNEE_NOT_MEMBER_MESSAGE, [
+      { field: 'assigneeId', message: ASSIGNEE_NOT_MEMBER_MESSAGE },
+    ]);
+  }
+}
+
 export function createTicketsService(prisma: PrismaClient): TicketsService {
   return {
     // TKT-1 (architecture §10.1, §10.2): one transaction, three steps, in this order.
@@ -125,9 +153,17 @@ export function createTicketsService(prisma: PrismaClient): TicketsService {
     //    and goes below it. The (projectId, status, rank) index finds the last To Do card.
     // 3. The insert, with picked fields only: the request body never reaches Prisma as it is.
     // If any step fails, all three roll back, so no number is spent on a ticket that wasn't saved.
-    async createTicket(project, reporterId, { title, description, type, priority, dueDate }) {
+    // TKT-5: an assignee is checked first, in the same transaction (see assertAssigneeIsMember).
+    async createTicket(
+      project,
+      reporterId,
+      { title, description, type, priority, dueDate, assigneeId },
+    ) {
       try {
         const ticket = await prisma.$transaction(async (tx) => {
+          if (typeof assigneeId === 'string') {
+            await assertAssigneeIsMember(tx, project.id, assigneeId);
+          }
           const { ticketCounter } = await tx.project.update({
             where: { id: project.id },
             data: { ticketCounter: { increment: 1 } },
@@ -150,6 +186,8 @@ export function createTicketsService(prisma: PrismaClient): TicketsService {
               status: Status.TODO,
               rank: rankBetween(lastInTodo?.rank ?? null, null),
               reporterId,
+              // Missing or null: unassigned.
+              assigneeId: assigneeId ?? null,
               dueDate: toDueDateColumn(dueDate),
             },
             select: TICKET_FIELDS,
@@ -185,14 +223,15 @@ export function createTicketsService(prisma: PrismaClient): TicketsService {
 
     // TKT-3 (architecture §10.3): one transaction.
     // 1. Find the ticket by key, scoped by the project like getTicket.
-    // 2. A new status puts the ticket at the bottom of the new column, like a /position move
+    // 2. TKT-5: a new assignee must be a member of the project (null unassigns, no check).
+    // 3. A new status puts the ticket at the bottom of the new column, like a /position move
     //    without neighbours (§10.2), so the (projectId, status, rank) order stays valid.
-    // 3. The conditional update: `WHERE id AND updatedAt = <the client's updatedAt>`. In READ
+    // 4. The conditional update: `WHERE id AND updatedAt = <the client's updatedAt>`. In READ
     //    COMMITTED a concurrent save that commits first changes updatedAt (@updatedAt sets it on
     //    every update), so PostgreSQL re-checks the row and this update matches 0 rows: no lost
     //    update. 0 rows means the ticket was deleted (404) or changed (409); either way nothing
     //    was written. Only the picked fields reach Prisma; a missing field (undefined) stays as it is.
-    async updateTicket(project, ticketKey, { updatedAt, dueDate, status, ...fields }) {
+    async updateTicket(project, ticketKey, { updatedAt, dueDate, status, assigneeId, ...fields }) {
       const number = ticketNumberIn(project, ticketKey);
 
       const ticket = await prisma.$transaction(async (tx) => {
@@ -202,6 +241,10 @@ export function createTicketsService(prisma: PrismaClient): TicketsService {
         });
         if (!current) {
           throw ticketNotFound();
+        }
+
+        if (typeof assigneeId === 'string') {
+          await assertAssigneeIsMember(tx, project.id, assigneeId);
         }
 
         let rank: string | undefined;
@@ -223,6 +266,7 @@ export function createTicketsService(prisma: PrismaClient): TicketsService {
             priority: fields.priority,
             status,
             rank,
+            assigneeId,
             dueDate: dueDate === undefined ? undefined : toDueDateColumn(dueDate),
           },
         });

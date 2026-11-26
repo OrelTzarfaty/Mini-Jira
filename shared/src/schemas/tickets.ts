@@ -17,6 +17,12 @@ export const TICKET_DESCRIPTION_MAX_LENGTH = 10_000;
 // with another project's prefix, or a malformed key.
 export const TICKET_NOT_FOUND_MESSAGE = 'Ticket not found';
 export const DUE_DATE_FORMAT_MESSAGE = 'Due date must be a real date in the format YYYY-MM-DD';
+// TKT-5: the assignee is a user id (a UUID); anything else is a 400 before it reaches the database
+// (a uuid column would reject it with a 500).
+export const INVALID_ASSIGNEE_ID_MESSAGE = 'Assignee must be a valid user id (UUID)';
+// TKT-5: one message for a user who isn't in this project and an id no user has, so the answer
+// never says whether the user exists elsewhere.
+export const ASSIGNEE_NOT_MEMBER_MESSAGE = 'Assignee must be a project member';
 
 // The years PostgreSQL's DATE column and a JavaScript Date agree on. Year 0000 is a valid
 // ISO 8601 year but not a PostgreSQL date, so the insert would fail with a 500.
@@ -57,11 +63,14 @@ const ticketDescriptionSchema = z
 const ticketTypeSchema = z.enum(TicketType, 'Type must be TASK, BUG or STORY');
 const ticketPrioritySchema = z.enum(Priority, 'Priority must be LOW, MEDIUM, HIGH or CRITICAL');
 const ticketStatusSchema = z.enum(Status, 'Status must be TODO, IN_PROGRESS, IN_REVIEW or DONE');
+// TKT-5: a user id, or null for "nobody". That the user is a member of the project is a service
+// rule (it needs the database), checked in the same transaction as the write.
+const ticketAssigneeIdSchema = z.uuid(INVALID_ASSIGNEE_ID_MESSAGE).nullable();
 
 // TKT-1: the create-ticket form and `POST /api/projects/:projectKey/tickets` body. Strict, so
-// fields the server decides (status, number, rank, reporter, assignee) can't be sent: a new ticket
-// always starts in To Do, at the bottom of the column, reported by the caller. The assignee comes
-// with TKT-5.
+// fields the server decides (status, number, rank, reporter) can't be sent: a new ticket always
+// starts in To Do, at the bottom of the column, reported by the caller. TKT-5: an optional
+// assignee, who must be a project member.
 export const createTicketSchema = z.strictObject({
   title: ticketTitleSchema,
   // Optional: missing, null, or empty after trimming are all stored as null.
@@ -70,6 +79,9 @@ export const createTicketSchema = z.strictObject({
   priority: ticketPrioritySchema.default(Priority.MEDIUM),
   // Optional: missing or null means no due date.
   dueDate: dueDateField.nullish().transform((date) => date ?? null),
+  // TKT-5: optional; missing or null means unassigned. A missing one stays missing (no default),
+  // so the create form's request body doesn't gain a field it never shows.
+  assigneeId: ticketAssigneeIdSchema.optional(),
 });
 
 /** What the client sends (before trimming and defaults). */
@@ -119,8 +131,9 @@ export const TICKET_UPDATED_AT_MESSAGE =
 // can tell that someone else saved the ticket in the meantime (409 EDIT_CONFLICT, architecture
 // §10.3). Every other field is optional: a missing field stays as it is, and at least one must
 // be sent. The text rules are the same as at create; a null or blank description and a null due
-// date clear them. Strict, so fields the server decides (number, rank, reporter, ...) and fields
-// that aren't editable yet (assignee: TKT-5; estimate: waits for DOC-5) are a 400.
+// date clear them, and a null assigneeId unassigns the ticket (TKT-5). Strict, so fields the
+// server decides (number, rank, reporter, ...) and fields that aren't editable yet (estimate:
+// waits for DOC-5) are a 400.
 export const updateTicketSchema = z
   .strictObject({
     updatedAt: z.iso.datetime({
@@ -133,6 +146,7 @@ export const updateTicketSchema = z
     priority: ticketPrioritySchema.optional(),
     status: ticketStatusSchema.optional(),
     dueDate: dueDateField.nullable().optional(),
+    assigneeId: ticketAssigneeIdSchema.optional(),
   })
   .refine(
     (input) =>
