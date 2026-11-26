@@ -102,6 +102,7 @@ Endpoints so far (full details in Swagger at `/api/docs`):
 | `DELETE` | `/api/projects/:projectKey/members/:userId` | Remove a member (owner only, `403` for members). `204` no body; `409 CANNOT_REMOVE_OWNER` for the owner, `404 NOT_FOUND` ("Member not found") if the user isn't in the project, `400` if `userId` isn't a UUID. Ticket unassignment comes with TKT-5 |
 | `POST` | `/api/projects/:projectKey/tickets` | Create a ticket (any member): `title` (1–120), optional `description` (≤ 10,000), `type` (default `TASK`), `priority` (default `MEDIUM`), optional `dueDate` (`YYYY-MM-DD`). Always starts in To Do at the bottom of the column, reporter = caller, no assignee. `201` with the ticket: `id`, `key` (`WEB-13`), `number`, `title`, `description`, `type`, `priority`, `status`, `reporter {id,name}`, `assignee` (null), `dueDate`, `createdAt`, `updatedAt` (no `rank`). Unknown fields (also `status`, `number`, `assigneeId`) → `400`; non-member → `404`. Key from the atomic `ticketCounter` in one transaction, never reused |
 | `GET` | `/api/projects/:projectKey/tickets/:ticketKey` | One ticket by its key (any member), same shape as the create response, `Cache-Control: no-store`. The key prefix must match the project: `WEB-3` under `/projects/API/...`, a malformed key, or an unknown number → `404 NOT_FOUND` ("Ticket not found"); non-member or missing project → `404` ("Project not found"); no session → `401`. Query scoped by project id + number |
+| `PATCH` | `/api/projects/:projectKey/tickets/:ticketKey` | Edit a ticket (any member). Body: required `updatedAt` (exactly as GET returned it) plus at least one of `title`, `description`, `type`, `priority`, `status`, `dueDate`; a missing field stays, `null`/blank clears `description`, `null` clears `dueDate`. Same rules as create; unknown fields (also `assigneeId`, estimate, `number`, `rank`) or only `updatedAt` → `400`. Conditional update on `updatedAt` in one transaction: someone else saved first → `409 EDIT_CONFLICT` ("This ticket was updated by someone else"), nothing saved. A new `status` puts the ticket at the bottom of that column. `200` with the GET shape and the new `updatedAt`; same `404`s as GET; no session → `401`. No activity entries yet (ACT-1) |
 
 ## Features
 
@@ -111,7 +112,7 @@ Summary only — task-level status lives in [docs/backlog.md](docs/backlog.md).
 |---|---|---|---|
 | Authentication | AUTH-1..4 | P0 | Done — AUTH-1..4 done (register, log in, log out, session survives refresh) |
 | Projects & members | PRJ-1..6 | P0 | Done — PRJ-1..6 done (create project, My Projects list, add and remove members, edit or delete a project, non-member access) |
-| Tickets | TKT-1..5 | P0 | In progress — TKT-1 (create a ticket) and TKT-2 (ticket page with its own URL, Copy link) done; TKT-3 (edit a ticket) in progress; the Estimate field waits for the mentor (DOC-5) |
+| Tickets | TKT-1..5 | P0 | In progress — TKT-1 (create a ticket) and TKT-2 (ticket page with its own URL, Copy link) done; TKT-3 (edit a ticket): API built, edit form to do; the Estimate field waits for the mentor (DOC-5) |
 | Board | BRD-1..4 | P0 | Not started |
 | Comments & activity | CMT-1..2, ACT-1 | P1 | Not started |
 | List, search, pagination | LST-1..4 | P1 | Not started |

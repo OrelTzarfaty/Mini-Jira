@@ -309,12 +309,12 @@ Sprint 4 · Size M · **Status: Done** — merged into `dev` in [#90](https://gi
 ### TKT-3 · Edit a ticket
 Sprint 4 · Size M · Status: In progress · Depends on TKT-2
 AC (extra): the PATCH body includes the `updatedAt` the client loaded; the conditional update (architecture §10.3) is built now, the conflict UX comes in CON-1.
-- [ ] BE · Shared `updateTicketSchema` (includes `updatedAt`)
-- [ ] BE · `PATCH /api/projects/:projectKey/tickets/:ticketKey` with validation and the `updatedAt` check
+- [x] BE · Shared `updateTicketSchema` (includes `updatedAt`)
+- [x] BE · `PATCH /api/projects/:projectKey/tickets/:ticketKey` with validation and the `updatedAt` check
 - [ ] FE · Edit mode on the ticket page (all fields)
 - [ ] FE · Save: inline errors next to fields, button disabled while saving, input kept on error
-- [ ] QA · Integration: valid edit, title > 120 chars, invalid enum values
-- [ ] QA · Integration: stale `updatedAt` → 409
+- [x] QA · Integration: valid edit, title > 120 chars, invalid enum values
+- [x] QA · Integration: stale `updatedAt` → 409
 
 ### TKT-4 · Delete a ticket
 Sprint 4 · Size S · Status: To do · Depends on TKT-2
