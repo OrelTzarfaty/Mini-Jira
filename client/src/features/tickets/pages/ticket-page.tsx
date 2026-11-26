@@ -8,6 +8,7 @@ import { isNotFoundError } from '@/api/api-error';
 import type { Ticket } from '@mini-jira/shared';
 import { DocumentTitle } from '@/components/document-title';
 import { ErrorState } from '@/components/error-state';
+import { ToastMessage } from '@/components/toast-message';
 import { Button } from '@/components/ui/button';
 import { useCurrentProject } from '@/features/projects/hooks/use-project';
 import { CopyLinkButton } from '@/features/tickets/components/copy-link-button';
@@ -19,7 +20,11 @@ import {
 } from '@/features/tickets/components/ticket-page-states';
 import { useTicket } from '@/features/tickets/hooks/use-ticket';
 import { TICKET_TYPE_LABELS } from '@/features/tickets/lib/ticket-labels';
+import { useAutoClearState } from '@/lib/use-auto-clear-state';
 import { useRouteParam } from '@/lib/use-route-param';
+
+// Long enough to read; the page shows the saved values anyway.
+const SAVED_MESSAGE_DURATION_MS = 4000;
 
 /**
  * The ticket page, /projects/WEB/tickets/WEB-12 (TKT-2, wireframe 04 A and H): the title, the
@@ -33,6 +38,7 @@ export function TicketPage(): ReactElement {
   const { data: ticket, error, isError, isFetching, refetch } = useTicket(project.key, ticketKey);
   const [isEditing, setIsEditing] = useState(false);
   const editButtonRef = useRef<HTMLButtonElement>(null);
+  const [savedMessage, setSavedMessage] = useAutoClearState<string>(SAVED_MESSAGE_DURATION_MS);
   const boardPath = `/projects/${project.key}/board`;
 
   // Back to view mode, with focus back on Edit (the form that had it is gone). flushSync puts
@@ -109,10 +115,24 @@ export function TicketPage(): ReactElement {
       </div>
 
       {isEditing ? (
-        <EditTicketForm ticket={ticket} onCancel={closeEditMode} />
+        <EditTicketForm
+          projectKey={project.key}
+          ticket={ticket}
+          onCancel={closeEditMode}
+          onSaved={() => {
+            closeEditMode();
+            setSavedMessage('Changes saved');
+          }}
+        />
       ) : (
         <TicketView ticket={ticket} />
       )}
+      <ToastMessage
+        message={savedMessage}
+        onDismiss={() => {
+          setSavedMessage(null);
+        }}
+      />
     </article>
   );
 }
