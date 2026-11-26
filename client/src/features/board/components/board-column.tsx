@@ -1,8 +1,8 @@
 import type { BoardColumn as BoardColumnData } from '@mini-jira/shared';
 import { useId } from 'react';
 import type { ReactElement } from 'react';
-import { Link } from 'react-router';
 
+import { TicketCard } from '@/features/board/components/ticket-card';
 import { STATUS_LABELS } from '@/features/tickets/lib/ticket-labels';
 
 interface BoardColumnProps {
@@ -33,9 +33,7 @@ export function BoardColumn({ projectKey, column }: BoardColumnProps): ReactElem
       <ul className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-3 pt-1 pb-3">
         {column.items.map((card) => (
           <li key={card.id}>
-            <Link to={`/projects/${projectKey}/tickets/${card.key}`}>
-              {card.key} {card.title}
-            </Link>
+            <TicketCard projectKey={projectKey} card={card} />
           </li>
         ))}
       </ul>
