@@ -29,37 +29,45 @@ const dueDateField = z.iso
   .date({ error: DUE_DATE_FORMAT_MESSAGE, abort: true })
   .refine((date) => Number(date.slice(0, 4)) >= DUE_DATE_MIN_YEAR, DUE_DATE_FORMAT_MESSAGE);
 
+// TKT-1 and TKT-3: the field rules, shared by create and edit.
+const ticketTitleSchema = requiredString('Title')
+  .trim()
+  .min(1, 'Title is required')
+  .max(TICKET_TITLE_MAX_LENGTH, `Title must be at most ${TICKET_TITLE_MAX_LENGTH} characters`)
+  .refine(
+    (title) => !CONTROL_CHARACTER.test(title),
+    "Title contains characters that aren't allowed",
+  );
+
+// Null is accepted too: null or empty after trimming both mean "no description", stored as null.
+const ticketDescriptionSchema = z
+  .string()
+  .trim()
+  .max(
+    TICKET_DESCRIPTION_MAX_LENGTH,
+    `Description must be at most ${TICKET_DESCRIPTION_MAX_LENGTH} characters`,
+  )
+  .refine(
+    (description) => !DESCRIPTION_CONTROL_CHARACTER.test(description),
+    "Description contains characters that aren't allowed",
+  )
+  .nullable()
+  .transform(blankToNull);
+
+const ticketTypeSchema = z.enum(TicketType, 'Type must be TASK, BUG or STORY');
+const ticketPrioritySchema = z.enum(Priority, 'Priority must be LOW, MEDIUM, HIGH or CRITICAL');
+const ticketStatusSchema = z.enum(Status, 'Status must be TODO, IN_PROGRESS, IN_REVIEW or DONE');
+
 // TKT-1: the create-ticket form and `POST /api/projects/:projectKey/tickets` body. Strict, so
 // fields the server decides (status, number, rank, reporter, assignee) can't be sent: a new ticket
 // always starts in To Do, at the bottom of the column, reported by the caller. The assignee comes
 // with TKT-5.
 export const createTicketSchema = z.strictObject({
-  title: requiredString('Title')
-    .trim()
-    .min(1, 'Title is required')
-    .max(TICKET_TITLE_MAX_LENGTH, `Title must be at most ${TICKET_TITLE_MAX_LENGTH} characters`)
-    .refine(
-      (title) => !CONTROL_CHARACTER.test(title),
-      "Title contains characters that aren't allowed",
-    ),
+  title: ticketTitleSchema,
   // Optional: missing, null, or empty after trimming are all stored as null.
-  description: z
-    .string()
-    .trim()
-    .max(
-      TICKET_DESCRIPTION_MAX_LENGTH,
-      `Description must be at most ${TICKET_DESCRIPTION_MAX_LENGTH} characters`,
-    )
-    .refine(
-      (description) => !DESCRIPTION_CONTROL_CHARACTER.test(description),
-      "Description contains characters that aren't allowed",
-    )
-    .nullish()
-    .transform(blankToNull),
-  type: z.enum(TicketType, 'Type must be TASK, BUG or STORY').default(TicketType.TASK),
-  priority: z
-    .enum(Priority, 'Priority must be LOW, MEDIUM, HIGH or CRITICAL')
-    .default(Priority.MEDIUM),
+  description: ticketDescriptionSchema.optional().transform(blankToNull),
+  type: ticketTypeSchema.default(TicketType.TASK),
+  priority: ticketPrioritySchema.default(Priority.MEDIUM),
   // Optional: missing or null means no due date.
   dueDate: dueDateField.nullish().transform((date) => date ?? null),
 });
@@ -97,3 +105,39 @@ export const ticketSchema = z.object({
 });
 
 export type Ticket = z.infer<typeof ticketSchema>;
+
+// TKT-3: shown when an edit sends only `updatedAt` and no field to change.
+export const TICKET_UPDATE_EMPTY_MESSAGE = 'Change at least one field';
+export const TICKET_UPDATED_AT_MESSAGE =
+  'updatedAt must be the updatedAt of the ticket as it was loaded (an ISO date-time)';
+
+// TKT-3: the edit-ticket form and `PATCH /api/projects/:projectKey/tickets/:ticketKey` body.
+// `updatedAt` is required: the ticket's updatedAt exactly as the client loaded it, so the server
+// can tell that someone else saved the ticket in the meantime (409 EDIT_CONFLICT, architecture
+// §10.3). Every other field is optional: a missing field stays as it is, and at least one must
+// be sent. The text rules are the same as at create; a null or blank description and a null due
+// date clear them. Strict, so fields the server decides (number, rank, reporter, ...) and fields
+// that aren't editable yet (assignee: TKT-5; estimate: waits for DOC-5) are a 400.
+export const updateTicketSchema = z
+  .strictObject({
+    updatedAt: z.iso.datetime({
+      error: (issue) =>
+        issue.input === undefined ? 'updatedAt is required' : TICKET_UPDATED_AT_MESSAGE,
+    }),
+    title: ticketTitleSchema.optional(),
+    description: ticketDescriptionSchema.optional(),
+    type: ticketTypeSchema.optional(),
+    priority: ticketPrioritySchema.optional(),
+    status: ticketStatusSchema.optional(),
+    dueDate: dueDateField.nullable().optional(),
+  })
+  .refine(
+    (input) =>
+      Object.entries(input).some(([field, value]) => field !== 'updatedAt' && value !== undefined),
+    { error: TICKET_UPDATE_EMPTY_MESSAGE },
+  );
+
+/** What the client sends to edit a ticket (before trimming). */
+export type UpdateTicketFormValues = z.input<typeof updateTicketSchema>;
+/** What the server works with: a missing field is undefined (unchanged), a cleared one null. */
+export type UpdateTicketInput = z.output<typeof updateTicketSchema>;
