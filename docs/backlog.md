@@ -341,7 +341,7 @@ Sprint 4 · Size L · Status: In progress · Depends on TKT-1
 AC (extra): up to 50 cards per column ordered by rank, "load more" per column; column headers show the total count.
 - [x] BE · `GET /api/projects/:projectKey/board`: per status → count + first 50 cards by rank
 - [x] BE · "Load more" for one column with a rank cursor
-- [ ] FE · `/projects/:projectKey/board` layout: 4 columns with headers and counts
+- [x] FE · `/projects/:projectKey/board` layout: 4 columns with headers and counts
 - [ ] FE · TicketCard: key, title, type icon, priority, estimate, assignee initials, due date
 - [ ] FE · "Load more" button per column
 - [ ] FE · Loading, empty, and error states

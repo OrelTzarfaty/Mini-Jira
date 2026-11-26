@@ -1,4 +1,4 @@
-import { ErrorCode, PAGE_SIZE, UNAUTHENTICATED_MESSAGE } from '@mini-jira/shared';
+import { BOARD_STATUSES, ErrorCode, PAGE_SIZE, UNAUTHENTICATED_MESSAGE } from '@mini-jira/shared';
 import { http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
 
@@ -19,7 +19,18 @@ export const noProjectsHandler = http.get('/api/projects', () =>
   HttpResponse.json({ items: [], page: 1, pageSize: PAGE_SIZE, total: 0, totalPages: 0 }),
 );
 
+/**
+ * Every project page under the tabs opens on the board (BRD-1), so a test that only checks the
+ * project header still loads one. The default is an empty board; test/board.ts (mockBoard) gives
+ * a test its own.
+ */
+export const emptyBoardHandler = http.get('/api/projects/:projectKey/board', () =>
+  HttpResponse.json({
+    columns: BOARD_STATUSES.map((status) => ({ status, total: 0, items: [], nextCursor: null })),
+  }),
+);
+
 // The mocked API for component tests. Apart from the defaults above, each test describes the
 // responses it needs with server.use(...) (or test/session.ts), so the network stays visible in
 // the test itself. resetHandlers() after each test goes back to the defaults.
-export const server = setupServer(visitorMeHandler, noProjectsHandler);
+export const server = setupServer(visitorMeHandler, noProjectsHandler, emptyBoardHandler);

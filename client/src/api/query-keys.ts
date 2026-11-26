@@ -20,3 +20,10 @@ export function projectMembersQueryKey(
 ): readonly [...ReturnType<typeof projectQueryKey>, 'members'] {
   return [...projectQueryKey(projectKey), 'members'];
 }
+
+/** A project's board (BRD-1). Under the project's key, so creating a ticket (TKT-1) refreshes it. */
+export function boardQueryKey(
+  projectKey: string,
+): readonly [...ReturnType<typeof projectQueryKey>, 'board'] {
+  return [...projectQueryKey(projectKey), 'board'];
+}
