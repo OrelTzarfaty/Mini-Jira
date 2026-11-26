@@ -346,8 +346,8 @@ AC (extra): up to 50 cards per column ordered by rank, "load more" per column; c
 - [x] FE · "Load more" button per column
 - [x] FE · Loading, empty, and error states
 - [x] FE · Phone width: the board scrolls horizontally
-- [ ] QA · Counts and card order are right
-- [ ] QA · "Load more" works on a column with 50+ cards
+- [x] QA · Counts and card order are right
+- [x] QA · "Load more" works on a column with 50+ cards
 
 ### BRD-2 · Drag a card to another column
 Sprint 5 · Size L · Status: To do · Depends on BRD-1
