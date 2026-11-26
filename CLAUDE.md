@@ -100,6 +100,7 @@ Endpoints so far (full details in Swagger at `/api/docs`):
 | `GET` | `/api/projects/:projectKey/members?page=` | The project's members (any member), 20 per page: owner first, then by join time. Each item: `userId`, `name`, `email`, `role`, `joinedAt` |
 | `POST` | `/api/projects/:projectKey/members` | Add a registered user by `email` (owner only, `403` for members). `201` with the member (role `MEMBER`); `404 USER_NOT_FOUND` for an unknown email, `409 ALREADY_MEMBER` if already in the project (both with `details` on `email`) |
 | `DELETE` | `/api/projects/:projectKey/members/:userId` | Remove a member (owner only, `403` for members). `204` no body; `409 CANNOT_REMOVE_OWNER` for the owner, `404 NOT_FOUND` ("Member not found") if the user isn't in the project, `400` if `userId` isn't a UUID. Ticket unassignment comes with TKT-5 |
+| `GET` | `/api/projects/:projectKey/board` | The board (any member): `{ columns: [{ status, total, items, nextCursor }] }`, always all 4 statuses in workflow order (`TODO`, `IN_PROGRESS`, `IN_REVIEW`, `DONE`). `total` = all tickets in the column (header count), `items` = its first 50 cards by rank (then id), `nextCursor` = opaque string for "load more" or `null`. Card: `id`, `key`, `number`, `title`, `type`, `priority`, `status`, `dueDate`, `assignee` (`{ id, name }` or `null`), `updatedAt` (no description, never the rank). Read in one REPEATABLE READ snapshot, so counts match the cards. `Cache-Control: no-store`; unknown params → `400` (filters come with BRD-4) |
 | `POST` | `/api/projects/:projectKey/tickets` | Create a ticket (any member): `title` (1–120), optional `description` (≤ 10,000), `type` (default `TASK`), `priority` (default `MEDIUM`), optional `dueDate` (`YYYY-MM-DD`). Always starts in To Do at the bottom of the column, reporter = caller, no assignee. `201` with the ticket: `id`, `key` (`WEB-13`), `number`, `title`, `description`, `type`, `priority`, `status`, `reporter {id,name}`, `assignee` (null), `dueDate`, `createdAt`, `updatedAt` (no `rank`). Unknown fields (also `status`, `number`, `assigneeId`) → `400`; non-member → `404`. Key from the atomic `ticketCounter` in one transaction, never reused |
 
 ## Features
@@ -111,7 +112,7 @@ Summary only — task-level status lives in [docs/backlog.md](docs/backlog.md).
 | Authentication | AUTH-1..4 | P0 | Done — AUTH-1..4 done (register, log in, log out, session survives refresh) |
 | Projects & members | PRJ-1..6 | P0 | Done — PRJ-1..6 done (create project, My Projects list, add and remove members, edit or delete a project, non-member access) |
 | Tickets | TKT-1..5 | P0 | In progress — TKT-1 (create a ticket): API and "+ Create ticket" popup in the project header built, in review; the Estimate field waits for the mentor (DOC-5) |
-| Board | BRD-1..4 | P0 | In progress — BRD-1 (board columns) being built |
+| Board | BRD-1..4 | P0 | In progress — BRD-1 (board columns): board API built; "load more" and UI being built |
 | Comments & activity | CMT-1..2, ACT-1 | P1 | Not started |
 | List, search, pagination | LST-1..4 | P1 | Not started |
 | My Work | MY-1 | P1 | Not started |

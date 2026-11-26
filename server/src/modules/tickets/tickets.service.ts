@@ -58,7 +58,7 @@ interface TicketRow {
 }
 
 /** A DATE column comes back as midnight UTC of that day; the API sends only the day. */
-function toCalendarDay(date: Date): string {
+export function toCalendarDay(date: Date): string {
   return date.toISOString().slice(0, 10);
 }
 

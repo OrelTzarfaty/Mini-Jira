@@ -203,6 +203,17 @@ describe('GET /api/openapi.json', () => {
     ]);
   });
 
+  it('BRD-1: documents the board endpoint with its parameters and responses', async () => {
+    const spec = await getSpec();
+    const board = spec.paths['/projects/{projectKey}/board']?.get;
+
+    expect(Object.keys(board?.responses ?? {})).toEqual(['200', '400', '401', '404', '500']);
+    expect(board?.parameters).toEqual([
+      expect.objectContaining({ name: 'projectKey', in: 'path', required: true }),
+    ]);
+    expect(Object.keys(spec.components.schemas)).toEqual(expect.arrayContaining(['Board']));
+  });
+
   it('TKT-1: documents the create-ticket endpoint with its parameters and responses', async () => {
     const spec = await getSpec();
     const operation = spec.paths['/projects/{projectKey}/tickets']?.post;

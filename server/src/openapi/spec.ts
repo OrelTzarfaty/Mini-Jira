@@ -1,5 +1,7 @@
 import {
   addMemberSchema,
+  BOARD_COLUMN_LIMIT,
+  boardSchema,
   createProjectSchema,
   createTicketSchema,
   errorResponseSchema,
@@ -123,6 +125,13 @@ const PROJECT_SEARCH_PARAMETER = {
   schema: { type: 'string', maxLength: PROJECT_SEARCH_MAX_LENGTH, example: 'web' },
 };
 
+const BOARD_NO_STORE_HEADER = {
+  'Cache-Control': {
+    description: 'Always `no-store`: the board changes all the time and only members may see it.',
+    schema: { type: 'string', const: 'no-store' },
+  },
+};
+
 export function createOpenApiSpec(): Record<string, unknown> {
   return {
     openapi: '3.1.0',
@@ -137,6 +146,7 @@ export function createOpenApiSpec(): Record<string, unknown> {
       { name: 'Auth', description: 'Accounts and login sessions' },
       { name: 'Projects', description: 'Projects and their members' },
       { name: 'Tickets', description: 'Tickets in a project' },
+      { name: 'Board', description: "A project's board: one column per status" },
     ],
     paths: {
       '/health': {
@@ -502,6 +512,32 @@ export function createOpenApiSpec(): Record<string, unknown> {
           },
         },
       },
+      '/projects/{projectKey}/board': {
+        get: {
+          tags: ['Board'],
+          operationId: 'getBoard',
+          summary: "Get the project's board: four columns with their first cards",
+          description: `BRD-1. Any member of the project (OWNER or MEMBER) may see the board. Always returns the four columns in workflow order (TODO, IN_PROGRESS, IN_REVIEW, DONE), also when a column is empty. Each column has total (all of its tickets, for the header count), items (its first ${BOARD_COLUMN_LIMIT} cards, in the board order that every user sees) and nextCursor (send it to the "load more" endpoint for the next cards; null when there are no more). Cards have only what a card shows (no description). Takes no query parameters yet (the filters come with BRD-4): unknown ones are rejected. A project that does not exist and a project the caller is not a member of get the same 404.`,
+          security: [{ authCookie: [] }],
+          parameters: [PROJECT_KEY_PARAMETER],
+          responses: {
+            '200': { ...jsonResponse('The board', 'Board'), headers: BOARD_NO_STORE_HEADER },
+            '400': jsonResponse(
+              'An unknown query parameter (VALIDATION_ERROR), with details[] on it',
+              'ErrorResponse',
+            ),
+            '401': jsonResponse(
+              'Not logged in (UNAUTHENTICATED): the cookie is missing, invalid or expired, or its user no longer exists',
+              'ErrorResponse',
+            ),
+            '404': jsonResponse(
+              'No such project, or the caller is not a member of it (NOT_FOUND, "Project not found")',
+              'ErrorResponse',
+            ),
+            '500': jsonResponse('Unexpected server error', 'ErrorResponse'),
+          },
+        },
+      },
       '/projects/{projectKey}/tickets': {
         post: {
           tags: ['Tickets'],
@@ -546,6 +582,7 @@ export function createOpenApiSpec(): Record<string, unknown> {
       },
       schemas: {
         AddMemberRequest: toComponentSchema(addMemberSchema, 'input'),
+        Board: toComponentSchema(boardSchema),
         ErrorResponse: toComponentSchema(errorResponseSchema),
         CreateProjectRequest: toComponentSchema(createProjectSchema, 'input'),
         CreateTicketRequest: toComponentSchema(createTicketSchema, 'input'),
