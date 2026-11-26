@@ -299,22 +299,22 @@ AC (extra): key from the atomic `ticketCounter` (architecture §10.1) · new tic
 - (The assignee field is added in TKT-5. "Numbers are never reused" is tested in TKT-4, once delete exists.)
 
 ### TKT-2 · Ticket detail with its own URL
-Sprint 4 · Size M · Status: In review (the estimate in the details panel waits for the mentor's OK, DOC-5) · Depends on TKT-1
-- [ ] BE · `GET /api/projects/:projectKey/tickets/:ticketKey` (scoped by project; the key prefix must match the project)
-- [ ] FE · `/projects/:projectKey/tickets/:ticketKey` page: title, description, details panel ("Created by", "Assigned to", status, priority, type, due date, estimate, dates) (wireframe 04)
-- [ ] FE · "🔗 Copy link" button that copies the ticket URL
-- [ ] FE · Loading and not-found states
-- [ ] QA · Direct URL works after refresh; `WEB-3` under another project's URL → 404
+Sprint 4 · Size M · **Status: Done** — merged into `dev` in [#90](https://github.com/OrelTzarfaty/Mini-Jira/pull/90) (`a15007a`); light QA PASS; the estimate in the details panel waits for the mentor's OK (DOC-5) · Depends on TKT-1
+- [x] BE · `GET /api/projects/:projectKey/tickets/:ticketKey` (scoped by project; the key prefix must match the project)
+- [x] FE · `/projects/:projectKey/tickets/:ticketKey` page: title, description, details panel ("Created by", "Assigned to", status, priority, type, due date, estimate, dates) (wireframe 04)
+- [x] FE · "🔗 Copy link" button that copies the ticket URL
+- [x] FE · Loading and not-found states
+- [x] QA · Direct URL works after refresh; `WEB-3` under another project's URL → 404
 
 ### TKT-3 · Edit a ticket
-Sprint 4 · Size M · Status: To do · Depends on TKT-2
+Sprint 4 · Size M · **Status: In review** · Depends on TKT-2
 AC (extra): the PATCH body includes the `updatedAt` the client loaded; the conditional update (architecture §10.3) is built now, the conflict UX comes in CON-1.
-- [ ] BE · Shared `updateTicketSchema` (includes `updatedAt`)
-- [ ] BE · `PATCH /api/projects/:projectKey/tickets/:ticketKey` with validation and the `updatedAt` check
-- [ ] FE · Edit mode on the ticket page (all fields)
-- [ ] FE · Save: inline errors next to fields, button disabled while saving, input kept on error
-- [ ] QA · Integration: valid edit, title > 120 chars, invalid enum values
-- [ ] QA · Integration: stale `updatedAt` → 409
+- [x] BE · Shared `updateTicketSchema` (includes `updatedAt`)
+- [x] BE · `PATCH /api/projects/:projectKey/tickets/:ticketKey` with validation and the `updatedAt` check
+- [x] FE · Edit mode on the ticket page (all fields)
+- [x] FE · Save: inline errors next to fields, button disabled while saving, input kept on error
+- [x] QA · Integration: valid edit, title > 120 chars, invalid enum values
+- [x] QA · Integration: stale `updatedAt` → 409
 
 ### TKT-4 · Delete a ticket
 Sprint 4 · Size S · Status: To do · Depends on TKT-2
@@ -324,13 +324,13 @@ Sprint 4 · Size S · Status: To do · Depends on TKT-2
 - [ ] QA · Integration: a deleted ticket's number is never reused (TKT-1 key rule)
 
 ### TKT-5 · Assign a ticket
-Sprint 4 · Size M · Status: To do · Depends on TKT-3, PRJ-4
-- [ ] BE · Assignee must be a project member (otherwise `400 VALIDATION_ERROR` on `assigneeId`)
-- [ ] BE · Extend member removal (PRJ-4): unassign their tickets in the same transaction
-- [ ] FE · Assignee picker (project members) in the create and edit forms
-- [ ] FE · "Assign to me" shortcut
-- [ ] QA · Assign to a member, to self, to a non-member (rejected)
-- [ ] QA · Removing a member unassigns their tickets
+Sprint 4 · Size M · **Status: In review** · Depends on TKT-3, PRJ-4
+- [x] BE · Assignee must be a project member (otherwise `400 VALIDATION_ERROR` on `assigneeId`)
+- [x] BE · Extend member removal (PRJ-4): unassign their tickets in the same transaction
+- [x] FE · Assignee picker (project members) in the create and edit forms
+- [x] FE · "Assign to me" shortcut
+- [x] QA · Assign to a member, to self, to a non-member (rejected)
+- [x] QA · Removing a member unassigns their tickets
 
 ---
 

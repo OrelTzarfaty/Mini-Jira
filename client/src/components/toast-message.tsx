@@ -1,25 +1,22 @@
 import { CircleCheckIcon, XIcon } from 'lucide-react';
-import type { ReactElement } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 
 import { Button } from '@/components/ui/button';
 
-interface TicketCreatedMessageProps {
-  /** The new ticket's key, such as WEB-13; null shows nothing. */
-  ticketKey: string | null;
+interface ToastMessageProps {
+  /** What to say, such as "WEB-13 created"; null shows nothing. */
+  message: ReactNode;
   onDismiss: () => void;
 }
 
 /**
- * The short "WEB-13 created" message after Create (wireframe 03 E), in the bottom corner where
- * the board's other messages go (wireframe 03 C). The status paragraph is always in the page, so
- * screen readers announce the message as soon as it appears (WCAG 4.1.3); the Dismiss button
- * sits outside it, so they hear only "WEB-13 created".
+ * A short confirmation in the bottom corner, where the board's other messages go (wireframe 03
+ * C): "WEB-13 created" (TKT-1), "Changes saved" (TKT-3). The status paragraph is always in the
+ * page, so screen readers announce the message as soon as it appears (WCAG 4.1.3); the Dismiss
+ * button sits outside it, so they hear only the message.
  */
-export function TicketCreatedMessage({
-  ticketKey,
-  onDismiss,
-}: TicketCreatedMessageProps): ReactElement {
-  const isShown = ticketKey !== null;
+export function ToastMessage({ message, onDismiss }: ToastMessageProps): ReactElement {
+  const isShown = message !== null;
 
   return (
     // pointer-events-none: clicks pass through the empty space around the message.
@@ -35,9 +32,7 @@ export function TicketCreatedMessage({
           {isShown && (
             <>
               <CircleCheckIcon aria-hidden="true" className="size-4 shrink-0" />
-              <span>
-                <strong className="font-semibold">{ticketKey}</strong> created
-              </span>
+              <span>{message}</span>
             </>
           )}
         </p>

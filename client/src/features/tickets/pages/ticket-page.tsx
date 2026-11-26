@@ -1,13 +1,19 @@
-import { ArrowLeftIcon } from 'lucide-react';
-import type { ReactElement } from 'react';
+import { ArrowLeftIcon, PencilIcon } from 'lucide-react';
+import { useRef, useState } from 'react';
+import type { ReactElement, ReactNode } from 'react';
+import { flushSync } from 'react-dom';
 import { Link } from 'react-router';
 
 import { isNotFoundError } from '@/api/api-error';
+import type { Ticket } from '@mini-jira/shared';
 import { DocumentTitle } from '@/components/document-title';
 import { ErrorState } from '@/components/error-state';
+import { ToastMessage } from '@/components/toast-message';
 import { Button } from '@/components/ui/button';
 import { useCurrentProject } from '@/features/projects/hooks/use-project';
+import { AssignToMeButton } from '@/features/tickets/components/assign-to-me-button';
 import { CopyLinkButton } from '@/features/tickets/components/copy-link-button';
+import { EditTicketForm } from '@/features/tickets/components/edit-ticket-form';
 import { TicketDetails } from '@/features/tickets/components/ticket-details';
 import {
   TicketNotFound,
@@ -15,19 +21,36 @@ import {
 } from '@/features/tickets/components/ticket-page-states';
 import { useTicket } from '@/features/tickets/hooks/use-ticket';
 import { TICKET_TYPE_LABELS } from '@/features/tickets/lib/ticket-labels';
+import { useAutoClearState } from '@/lib/use-auto-clear-state';
 import { useRouteParam } from '@/lib/use-route-param';
+
+// Long enough to read; the page shows the saved values anyway.
+const SAVED_MESSAGE_DURATION_MS = 4000;
 
 /**
  * The ticket page, /projects/WEB/tickets/WEB-12 (TKT-2, wireframe 04 A and H): the title, the
  * description, and the details panel. Its own URL, so a link to it works after a reload or when
- * shared. Read-only for now: Edit, Delete, and the status dropdown come with TKT-3, TKT-4, and
- * BRD-2; comments and activity with CMT-1 and ACT-1.
+ * shared. Edit switches the page to edit mode (TKT-3, wireframe 04 B); "Assign to me" in the
+ * details panel saves the logged-in user as the assignee (TKT-5). Delete and the status
+ * dropdown come with TKT-4 and BRD-2; comments and activity with CMT-1 and ACT-1.
  */
 export function TicketPage(): ReactElement {
   const project = useCurrentProject();
   const ticketKey = useRouteParam('ticketKey');
   const { data: ticket, error, isError, isFetching, refetch } = useTicket(project.key, ticketKey);
+  const [isEditing, setIsEditing] = useState(false);
+  const editButtonRef = useRef<HTMLButtonElement>(null);
+  const [savedMessage, setSavedMessage] = useAutoClearState<string>(SAVED_MESSAGE_DURATION_MS);
   const boardPath = `/projects/${project.key}/board`;
+
+  // Back to view mode, with focus back on Edit (the form that had it is gone). flushSync puts
+  // the button on screen first, so there is something to focus.
+  function closeEditMode(): void {
+    flushSync(() => {
+      setIsEditing(false);
+    });
+    editButtonRef.current?.focus();
+  }
 
   // Checked first: a ticket deleted while open must not stay on screen.
   if (isNotFoundError(error)) {
@@ -74,9 +97,75 @@ export function TicketPage(): ReactElement {
             {project.key} / {ticket.key}
           </p>
         </div>
-        <CopyLinkButton path={`/projects/${project.key}/tickets/${ticket.key}`} />
+        <div className="flex items-center gap-2">
+          <CopyLinkButton path={`/projects/${project.key}/tickets/${ticket.key}`} />
+          {!isEditing && (
+            <Button
+              ref={editButtonRef}
+              variant="outline"
+              className="size-8 px-0 sm:w-auto sm:px-2.5"
+              onClick={() => {
+                setIsEditing(true);
+              }}
+            >
+              <PencilIcon aria-hidden="true" />
+              {/* A phone shows only the icon, like Copy link; the word stays as the button's name. */}
+              <span className="sr-only sm:not-sr-only">Edit</span>
+            </Button>
+          )}
+        </div>
       </div>
 
+      {isEditing ? (
+        <EditTicketForm
+          projectKey={project.key}
+          ticket={ticket}
+          onCancel={closeEditMode}
+          onSaved={() => {
+            closeEditMode();
+            setSavedMessage('Changes saved');
+          }}
+        />
+      ) : (
+        <TicketView
+          ticket={ticket}
+          assigneeAction={
+            <AssignToMeButton
+              projectKey={project.key}
+              ticket={ticket}
+              onAssigned={() => {
+                // The button is gone now (the user is the assignee), so focus goes to Edit,
+                // as after saving an edit.
+                editButtonRef.current?.focus();
+                setSavedMessage('Assigned to you');
+              }}
+              onReload={() => {
+                void refetch();
+              }}
+            />
+          }
+        />
+      )}
+      <ToastMessage
+        message={savedMessage}
+        onDismiss={() => {
+          setSavedMessage(null);
+        }}
+      />
+    </article>
+  );
+}
+
+/** The ticket in view mode: the title, the description, and the details panel (wireframe 04 A). */
+function TicketView({
+  ticket,
+  assigneeAction,
+}: {
+  ticket: Ticket;
+  assigneeAction: ReactNode;
+}): ReactElement {
+  return (
+    <>
       <header className="grid gap-1">
         <p className="text-sm text-muted-foreground">
           {TICKET_TYPE_LABELS[ticket.type]} · {ticket.key}
@@ -91,7 +180,7 @@ export function TicketPage(): ReactElement {
           aria-label="Details"
           className="border-y py-4 md:col-start-2 md:row-start-1 md:rounded-lg md:border md:p-4"
         >
-          <TicketDetails ticket={ticket} />
+          <TicketDetails ticket={ticket} assigneeAction={assigneeAction} />
         </aside>
         <section
           aria-labelledby="ticket-description"
@@ -108,6 +197,6 @@ export function TicketPage(): ReactElement {
           )}
         </section>
       </div>
-    </article>
+    </>
   );
 }

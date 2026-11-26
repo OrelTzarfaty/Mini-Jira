@@ -23,7 +23,8 @@ export interface MembersService {
    */
   addMember(projectId: string, input: AddMemberInput): Promise<Member>;
   /**
-   * PRJ-4: removes the user's MEMBER row from the project. Throws 409 CANNOT_REMOVE_OWNER when
+   * PRJ-4: removes the user's MEMBER row from the project and, in the same transaction,
+   * unassigns their tickets in this project (TKT-5). Throws 409 CANNOT_REMOVE_OWNER when
    * the user is the project's owner, and 404 NOT_FOUND when they aren't in the project.
    */
   removeMember(projectId: string, userId: string): Promise<void>;
@@ -139,9 +140,17 @@ export function createMembersService(prisma: PrismaClient): MembersService {
             : new NotFoundError(MEMBER_NOT_FOUND_MESSAGE);
         }
 
-        // TODO(TKT-5): in this same transaction, unassign the removed user's tickets in this
-        // project (`tx.ticket.updateMany({ where: { projectId, assigneeId: userId }, data:
-        // { assigneeId: null } })`), so the membership and the assignments change together.
+        // PRJ-4, TKT-5: in this same transaction, unassign the removed user's tickets in this
+        // project only, so the membership and the assignments change together (both or
+        // neither). The [assigneeId] index finds them. @updatedAt is bumped on these tickets on
+        // purpose: they changed, so an edit form loaded before the removal gets 409 (CON-1).
+        // The delete above runs first: an assign at the same moment holds a FOR SHARE lock on
+        // the membership row (tickets.service), so the delete waits for it, and this statement
+        // then sees that ticket too.
+        await tx.ticket.updateMany({
+          where: { projectId, assigneeId: userId },
+          data: { assigneeId: null },
+        });
       });
     },
   };

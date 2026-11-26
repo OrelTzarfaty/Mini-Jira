@@ -1,4 +1,4 @@
-import type { CreateTicketInput, Ticket } from '@mini-jira/shared';
+import type { CreateTicketInput, Ticket, UpdateTicketInput } from '@mini-jira/shared';
 import type { RequestHandler } from 'express';
 
 import { requireProjectAccess } from '../../middleware/project-access.js';
@@ -7,11 +7,16 @@ import type { TicketsService } from './tickets.service.js';
 
 // The body type is safe because validateBody(createTicketSchema) runs before this handler.
 type CreateTicketHandler = RequestHandler<{ projectKey: string }, Ticket, CreateTicketInput>;
-type GetTicketHandler = RequestHandler<{ projectKey: string; ticketKey: string }, Ticket>;
+// A Record, not an interface, so it fits the index-signature type Express expects for params.
+type TicketParams = Record<'projectKey' | 'ticketKey', string>;
+type GetTicketHandler = RequestHandler<TicketParams, Ticket>;
+// The body type is safe because validateBody(updateTicketSchema) runs before this handler.
+type UpdateTicketHandler = RequestHandler<TicketParams, Ticket, UpdateTicketInput>;
 
 export interface TicketsController {
   create: CreateTicketHandler;
   get: GetTicketHandler;
+  update: UpdateTicketHandler;
 }
 
 export function createTicketsController(ticketsService: TicketsService): TicketsController {
@@ -31,6 +36,15 @@ export function createTicketsController(ticketsService: TicketsService): Tickets
       const { project } = requireProjectAccess(req);
       const ticket = await ticketsService.getTicket(project, req.params.ticketKey);
       res.set('Cache-Control', 'no-store');
+      res.json(ticket);
+    },
+
+    // TKT-3: any member may edit a ticket; a stale updatedAt gets 409 EDIT_CONFLICT (CON-1).
+    async update(req, res) {
+      const userId = requireUserId(req);
+      const { project } = requireProjectAccess(req);
+      const ticket = await ticketsService.updateTicket(project, req.params.ticketKey, req.body);
+      req.log.info({ userId, projectId: project.id, ticketId: ticket.id }, 'Ticket updated');
       res.json(ticket);
     },
   };

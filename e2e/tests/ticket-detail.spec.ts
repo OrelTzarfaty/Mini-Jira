@@ -65,7 +65,8 @@ test.describe('Ticket page (TKT-2)', () => {
 
     await memberPage.getByRole('button', { name: 'Copy link' }).click();
 
-    await expect(memberPage.getByRole('status')).toHaveText('Link copied');
+    // The page has more than one status message (TKT-3 adds "Changes saved"), so pick by text.
+    await expect(memberPage.getByRole('status').filter({ hasText: 'Link copied' })).toBeVisible();
     // A string expression: the e2e workspace has no DOM types, and the page returns a string.
     const copied: unknown = await memberPage.evaluate('navigator.clipboard.readText()');
     expect(copied).toBe(new URL(ticketPath, baseURL).href);
