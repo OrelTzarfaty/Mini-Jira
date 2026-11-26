@@ -299,7 +299,7 @@ AC (extra): key from the atomic `ticketCounter` (architecture §10.1) · new tic
 - (The assignee field is added in TKT-5. "Numbers are never reused" is tested in TKT-4, once delete exists.)
 
 ### TKT-2 · Ticket detail with its own URL
-Sprint 4 · Size M · Status: To do · Depends on TKT-1
+Sprint 4 · Size M · Status: In progress (the estimate in the details panel waits for the mentor's OK, DOC-5) · Depends on TKT-1
 - [ ] BE · `GET /api/projects/:projectKey/tickets/:ticketKey` (scoped by project; the key prefix must match the project)
 - [ ] FE · `/projects/:projectKey/tickets/:ticketKey` page: title, description, details panel ("Created by", "Assigned to", status, priority, type, due date, estimate, dates) (wireframe 04)
 - [ ] FE · "🔗 Copy link" button that copies the ticket URL
