@@ -1,7 +1,12 @@
 import { z } from 'zod';
 
 import { Role } from '../enums.js';
-import { CONTROL_CHARACTER, requiredString } from './common.js';
+import {
+  blankToNull,
+  CONTROL_CHARACTER,
+  DESCRIPTION_CONTROL_CHARACTER,
+  requiredString,
+} from './common.js';
 import { pageSchema, paginationQuerySchema } from './pagination.js';
 
 export const PROJECT_KEY_MIN_LENGTH = 2;
@@ -35,10 +40,6 @@ const STORED_PROJECT_KEY_PATTERN = new RegExp(
 export function isProjectKey(value: string): boolean {
   return STORED_PROJECT_KEY_PATTERN.test(value);
 }
-
-// A description may span lines, so tab, line feed and carriage return are allowed; every other
-// control character is rejected (PostgreSQL can't store U+0000 in a text column).
-const DESCRIPTION_CONTROL_CHARACTER = /(?![\t\n\r])\p{Cc}/u;
 
 // PRJ-1 and PRJ-5: the name rules, shared by create and edit.
 const projectNameSchema = requiredString('Name')
@@ -78,7 +79,7 @@ export const createProjectSchema = z.strictObject({
     )
     .toUpperCase(),
   // Optional: missing, null, or empty after trimming are all stored as null (one "no description" value).
-  description: projectDescriptionSchema.optional().transform((description) => description ?? null),
+  description: projectDescriptionSchema.optional().transform(blankToNull),
 });
 
 /** What the client sends (before trimming and uppercasing). */

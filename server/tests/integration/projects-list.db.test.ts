@@ -4,6 +4,7 @@ import {
   PROJECT_SEARCH_MAX_LENGTH,
   projectListPageSchema,
   Role,
+  Status,
   UNAUTHENTICATED_MESSAGE,
 } from '@mini-jira/shared';
 import type { Express } from 'express';
@@ -11,6 +12,7 @@ import type request from 'supertest';
 import { afterAll, beforeEach, describe, expect, it } from 'vitest';
 
 import { createProjectsService } from '../../src/modules/projects/projects.service.js';
+import { createTicketsService } from '../../src/modules/tickets/tickets.service.js';
 import { resetDatabase, testPrisma } from '../helpers/database.js';
 import {
   createProjectAccessMatrix,
@@ -109,6 +111,35 @@ describe('GET /api/projects (PRJ-2)', () => {
       expect(response.status).toBe(200);
       expect(projectListPageSchema.parse(response.body).items).toEqual([
         expect.objectContaining({ key: 'WEB', role: Role.MEMBER, openTicketCount: 0 }),
+      ]);
+    });
+
+    it('PRJ-2, TKT-1: openTicketCount counts the tickets that are not Done, per project', async () => {
+      await createProject(matrix.owner.id, 'API', 'Backend');
+      const ticketsService = createTicketsService(testPrisma);
+      const newTicket = {
+        description: null,
+        type: 'TASK',
+        priority: 'MEDIUM',
+        dueDate: null,
+      } as const;
+      const web = { id: matrix.project.id, key: 'WEB' };
+      const api = await testPrisma.project.findUniqueOrThrow({ where: { key: 'API' } });
+      await ticketsService.createTicket(web, matrix.owner.id, { ...newTicket, title: 'Open' });
+      await ticketsService.createTicket(web, matrix.owner.id, { ...newTicket, title: 'Open too' });
+      const done = await ticketsService.createTicket(web, matrix.owner.id, {
+        ...newTicket,
+        title: 'Finished',
+      });
+      await testPrisma.ticket.update({ where: { id: done.id }, data: { status: Status.DONE } });
+      await ticketsService.createTicket(api, matrix.owner.id, { ...newTicket, title: 'Api' });
+
+      const response = await list('owner');
+
+      expect(response.status).toBe(200);
+      expect(projectListPageSchema.parse(response.body).items).toEqual([
+        expect.objectContaining({ key: 'API', openTicketCount: 1 }),
+        expect.objectContaining({ key: 'WEB', openTicketCount: 2 }),
       ]);
     });
 

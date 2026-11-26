@@ -11,3 +11,11 @@ export const requiredString = (label: string): z.ZodString =>
   z.string({
     error: (issue) => (issue.input === undefined ? `${label} is required` : undefined),
   });
+
+// A description may span lines, so tab, line feed and carriage return are allowed; every other
+// control character is rejected (PostgreSQL can't store U+0000 in a text column).
+export const DESCRIPTION_CONTROL_CHARACTER = /(?![\t\n\r])\p{Cc}/u;
+
+/** Missing, null, or empty (after trimming) optional text is stored as null: one "no value". */
+export const blankToNull = (text: string | null | undefined): string | null =>
+  text === undefined || text === null || text === '' ? null : text;

@@ -6,6 +6,7 @@ import {
   projectListItemSchema,
   projectSchema,
   Role,
+  Status,
 } from '@mini-jira/shared';
 import type {
   CreateProjectInput,
@@ -86,12 +87,9 @@ const projectNotFound = (): NotFoundError => new NotFoundError(PROJECT_NOT_FOUND
 export function createProjectsService(prisma: PrismaClient): ProjectsService {
   /** PRJ-5: the number of tickets in the project (every status), for the delete dialog. */
   function countTickets(projectId: string): Promise<number> {
-    // TODO(TKT-1): there is no Ticket model yet, so every project has 0 tickets. Replace with
-    // prisma.ticket.count({ where: { projectId } }) once tickets exist (the projectId index
-    // serves it).
-    void projectId;
-
-    return Promise.resolve(0);
+    // The (projectId, number) unique index and the (projectId, status, rank) index both start
+    // with projectId, so this count reads an index, not the whole table.
+    return prisma.ticket.count({ where: { projectId } });
   }
 
   async function toProjectDetail(project: ProjectRow, role: Role): Promise<ProjectDetail> {
@@ -105,11 +103,17 @@ export function createProjectsService(prisma: PrismaClient): ProjectsService {
    * PRJ-2: the number of open tickets (status not DONE) in each of these projects, for the
    * project cards. Projects missing from the map have none.
    */
-  function countOpenTickets(projectIds: readonly string[]): Promise<ReadonlyMap<string, number>> {
-    // TODO(TKT-1): there is no Ticket model yet, so every project has 0 open tickets. Replace
-    // with one grouped query once tickets exist:
-    // prisma.ticket.groupBy({ by: ['projectId'], where: { projectId: { in: projectIds }, status: { not: 'DONE' } }, _count: true })
-    return Promise.resolve(new Map(projectIds.map((projectId) => [projectId, 0])));
+  async function countOpenTickets(
+    projectIds: readonly string[],
+  ): Promise<ReadonlyMap<string, number>> {
+    // One grouped query for the whole page. The (projectId, status, rank) index covers it.
+    const groups = await prisma.ticket.groupBy({
+      by: ['projectId'],
+      where: { projectId: { in: [...projectIds] }, status: { not: Status.DONE } },
+      _count: { _all: true },
+    });
+
+    return new Map(groups.map(({ projectId, _count }) => [projectId, _count._all]));
   }
 
   return {
@@ -255,9 +259,10 @@ export function createProjectsService(prisma: PrismaClient): ProjectsService {
     // PRJ-5 (architecture §10.5): one DELETE of the project row; PostgreSQL removes the rest
     // through the ON DELETE CASCADE foreign keys in the same statement, so nothing is left
     // half-deleted. deleteMany (not delete) so a project already deleted by a parallel request
-    // is a count of 0 → 404, not a Prisma error.
-    // TODO(TKT-1, CMT-1, ACT-1): Ticket.projectId, Comment.ticketId and Activity.ticketId must be
-    // `onDelete: Cascade`, so deleting a project also removes its tickets, comments and history.
+    // is a count of 0 → 404, not a Prisma error. Ticket.projectId is `onDelete: Cascade` (TKT-1),
+    // so the project's tickets go too.
+    // TODO(CMT-1, ACT-1): Comment.ticketId and Activity.ticketId must be `onDelete: Cascade`, so
+    // deleting a project (through its tickets) also removes its comments and history.
     async deleteProject(projectId) {
       const { count } = await prisma.project.deleteMany({ where: { id: projectId } });
 

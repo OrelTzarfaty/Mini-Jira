@@ -92,14 +92,15 @@ Endpoints so far (full details in Swagger at `/api/docs`):
 | `POST` | `/api/auth/login` | Log in (sets the auth cookie); generic `401 INVALID_CREDENTIALS`, failed logins limited per email + IP and per IP (`429 RATE_LIMITED`) |
 | `POST` | `/api/auth/logout` | Log out: always `204` and clears the auth cookie (public, so a missing or expired session never gets `401`) |
 | `GET` | `/api/auth/me` | The logged-in user (`id`, `name`, `email`), `Cache-Control: no-store`; `401 UNAUTHENTICATED` without a valid session. The web app calls it on start to restore the session |
-| `GET` | `/api/projects?q&page` | My Projects: only projects the caller is a member of, with their `role` and `openTicketCount` (status ≠ Done; 0 until tickets exist), sorted by name then key, page size 20 (`{ items, page, pageSize, total, totalPages }`). Optional `q` searches name or key (case-insensitive; `%`/`_` literal). `Cache-Control: no-store`; unknown params → `400` |
+| `GET` | `/api/projects?q&page` | My Projects: only projects the caller is a member of, with their `role` and `openTicketCount` (status ≠ Done), sorted by name then key, page size 20 (`{ items, page, pageSize, total, totalPages }`). Optional `q` searches name or key (case-insensitive; `%`/`_` literal). `Cache-Control: no-store`; unknown params → `400` |
 | `POST` | `/api/projects` | Create a project (`name`, `key`, optional `description`); the key is uppercased, must be 2–6 letters and can't be changed later. The creator becomes Owner in the same transaction. `201` with the project and `role`; `409 PROJECT_KEY_TAKEN` |
-| `GET` | `/api/projects/:projectKey` | One project with the caller's `role` and `ticketCount` (all tickets, for the delete dialog; 0 until tickets exist) (members only). A missing project and a non-member get the same `404 NOT_FOUND` ("Project not found"), so the response never reveals that a project exists. All project routes use `loadProjectAccess` (404) and owner-only ones add `requireOwner` (403) |
+| `GET` | `/api/projects/:projectKey` | One project with the caller's `role` and `ticketCount` (all its tickets, any status, for the delete dialog) (members only). A missing project and a non-member get the same `404 NOT_FOUND` ("Project not found"), so the response never reveals that a project exists. All project routes use `loadProjectAccess` (404) and owner-only ones add `requireOwner` (403) |
 | `PATCH` | `/api/projects/:projectKey` | Edit `name` and/or `description` (owner only, `403` for members). Strict body: `key` or any other field → `400`, so the key never changes; empty body → `400`; a missing field stays as it is; `null` or blank `description` clears it (stored as `null`, like create). `200` with the same shape as GET |
-| `DELETE` | `/api/projects/:projectKey` | Delete the project (owner only, `403` for members): hard delete, memberships cascade (tickets, comments, activity cascade once their tables exist). `204` no body; `404` if already gone |
+| `DELETE` | `/api/projects/:projectKey` | Delete the project (owner only, `403` for members): hard delete, memberships and tickets cascade (comments and activity cascade once their tables exist). `204` no body; `404` if already gone |
 | `GET` | `/api/projects/:projectKey/members?page=` | The project's members (any member), 20 per page: owner first, then by join time. Each item: `userId`, `name`, `email`, `role`, `joinedAt` |
 | `POST` | `/api/projects/:projectKey/members` | Add a registered user by `email` (owner only, `403` for members). `201` with the member (role `MEMBER`); `404 USER_NOT_FOUND` for an unknown email, `409 ALREADY_MEMBER` if already in the project (both with `details` on `email`) |
 | `DELETE` | `/api/projects/:projectKey/members/:userId` | Remove a member (owner only, `403` for members). `204` no body; `409 CANNOT_REMOVE_OWNER` for the owner, `404 NOT_FOUND` ("Member not found") if the user isn't in the project, `400` if `userId` isn't a UUID. Ticket unassignment comes with TKT-5 |
+| `POST` | `/api/projects/:projectKey/tickets` | Create a ticket (any member): `title` (1–120), optional `description` (≤ 10,000), `type` (default `TASK`), `priority` (default `MEDIUM`), optional `dueDate` (`YYYY-MM-DD`). Always starts in To Do at the bottom of the column, reporter = caller, no assignee. `201` with the ticket: `id`, `key` (`WEB-13`), `number`, `title`, `description`, `type`, `priority`, `status`, `reporter {id,name}`, `assignee` (null), `dueDate`, `createdAt`, `updatedAt` (no `rank`). Unknown fields (also `status`, `number`, `assigneeId`) → `400`; non-member → `404`. Key from the atomic `ticketCounter` in one transaction, never reused |
 
 ## Features
 
@@ -108,8 +109,8 @@ Summary only — task-level status lives in [docs/backlog.md](docs/backlog.md).
 | Area | IDs | Priority | Status |
 |---|---|---|---|
 | Authentication | AUTH-1..4 | P0 | Done — AUTH-1..4 done (register, log in, log out, session survives refresh) |
-| Projects & members | PRJ-1..6 | P0 | In progress — PRJ-1..4 and PRJ-6 done (create project, My Projects list, add and remove members, non-member access); PRJ-5 (edit or delete project) built, in review |
-| Tickets | TKT-1..5 | P0 | Not started |
+| Projects & members | PRJ-1..6 | P0 | Done — PRJ-1..6 done (create project, My Projects list, add and remove members, edit or delete a project, non-member access) |
+| Tickets | TKT-1..5 | P0 | In progress — TKT-1 (create a ticket): API and "+ Create ticket" popup in the project header built, in review; the Estimate field waits for the mentor (DOC-5) |
 | Board | BRD-1..4 | P0 | Not started |
 | Comments & activity | CMT-1..2, ACT-1 | P1 | Not started |
 | List, search, pagination | LST-1..4 | P1 | Not started |

@@ -269,33 +269,33 @@ Sprint 3 · Size S · **Status: Done** — merged into `dev` in [#86](https://gi
 - (Unassigning their tickets is added in TKT-5, when tickets exist.)
 
 ### PRJ-5 · Edit or delete a project
-Sprint 3 · Size M · Status: In review — all tasks built (API, settings edit form, delete dialog, component and E2E tests) · Depends on PRJ-6, PRJ-3
+Sprint 3 · Size M · **Status: Done** — merged into `dev` in [#88](https://github.com/OrelTzarfaty/Mini-Jira/pull/88) (`c5ba042`); light QA PASS · Depends on PRJ-6, PRJ-3
 - [x] BE · `PATCH /api/projects/:projectKey` (owner; name and description only)
 - [x] BE · `DELETE /api/projects/:projectKey` (owner; cascades members, tickets, comments, activity)
 - [x] FE · Edit form (name, description) in project settings
 - [x] FE · Delete with a confirmation dialog: shows the ticket count, the owner must type the project key to enable Delete; redirect to My Projects (wireframe 06 D)
 - [x] QA · Member gets 403 on both; key can't be changed; after delete everything is gone (checked again after tickets exist)
-- (The "everything is gone" check is repeated once tickets, comments, and activity exist.)
+- (The "everything is gone" check covers tickets since TKT-1 and is repeated once comments and activity exist.)
 
 ---
 
 ## E4 · Tickets — Sprint 4
 
 ### TKT-1 · Create a ticket
-Sprint 4 · Size L · Status: To do · Depends on PRJ-6
+Sprint 4 · Size L · Status: In review (API and web form done; the Estimate tasks wait for the mentor's OK, DOC-5) · Depends on PRJ-6
 AC (extra): key from the atomic `ticketCounter` (architecture §10.1) · new ticket goes to the end of To Do.
-- [ ] BE · Migration: `Ticket` + indexes (architecture §8.1), including the optional `estimateMinutes`
+- [x] BE · Migration: `Ticket` + indexes (architecture §8.1), including the optional `estimateMinutes` (`estimateMinutes` not added yet: it waits for DOC-5)
 - [ ] BE · Shared `parseEstimate` / `formatEstimate`: `30m`, `4h`, `2d`, `1d 4h` ↔ minutes (1d = 8h)
-- [ ] BE · `lib/ticket-key.ts`: format/parse `WEB-12`
-- [ ] BE · `lib/rank.ts`: fractional-indexing wrapper
-- [ ] BE · Shared `createTicketSchema`
-- [ ] BE · `POST /api/projects/:projectKey/tickets` in one transaction: increment counter → rank → insert
-- [ ] FE · "Create ticket" dialog: title, description, type, priority, inline errors
-- [ ] FE · Due date field (date picker)
+- [x] BE · `lib/ticket-key.ts`: format/parse `WEB-12`
+- [x] BE · `lib/rank.ts`: fractional-indexing wrapper
+- [x] BE · Shared `createTicketSchema`
+- [x] BE · `POST /api/projects/:projectKey/tickets` in one transaction: increment counter → rank → insert
+- [x] FE · "Create ticket" dialog: title, description, type, priority, inline errors
+- [x] FE · Due date field (date picker)
 - [ ] FE · Estimate field (optional, `30m` / `4h` / `2d`, inline format error)
-- [ ] FE · After create: refresh the board/list and show the new key
-- [ ] QA · Unit: key format/parse, rank helper, estimate parse/format (valid and invalid inputs)
-- [ ] QA · Integration: 20 parallel creates → unique, contiguous keys
+- [x] FE · After create: refresh the board/list and show the new key
+- [ ] QA · Unit: key format/parse, rank helper, estimate parse/format (valid and invalid inputs) (key and rank done; estimate waits for DOC-5)
+- [x] QA · Integration: 20 parallel creates → unique, contiguous keys
 - (The assignee field is added in TKT-5. "Numbers are never reused" is tested in TKT-4, once delete exists.)
 
 ### TKT-2 · Ticket detail with its own URL

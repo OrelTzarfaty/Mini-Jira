@@ -1,6 +1,7 @@
 import {
   addMemberSchema,
   createProjectSchema,
+  createTicketSchema,
   errorResponseSchema,
   healthResponseSchema,
   loginSchema,
@@ -14,6 +15,9 @@ import {
   projectSchema,
   publicUserSchema,
   registerSchema,
+  TICKET_DESCRIPTION_MAX_LENGTH,
+  TICKET_TITLE_MAX_LENGTH,
+  ticketSchema,
   updateProjectSchema,
 } from '@mini-jira/shared';
 import { z } from 'zod';
@@ -132,6 +136,7 @@ export function createOpenApiSpec(): Record<string, unknown> {
       { name: 'System', description: 'API status' },
       { name: 'Auth', description: 'Accounts and login sessions' },
       { name: 'Projects', description: 'Projects and their members' },
+      { name: 'Tickets', description: 'Tickets in a project' },
     ],
     paths: {
       '/health': {
@@ -257,7 +262,7 @@ export function createOpenApiSpec(): Record<string, unknown> {
           operationId: 'listMyProjects',
           summary: 'List the projects the caller is a member of',
           description:
-            "PRJ-2. Only projects where the caller is a member (OWNER or MEMBER); role is the caller's role in each, and openTicketCount the number of its tickets that are not Done (0 until tickets exist). Sorted by name, then by key. Paginated: a page past the end returns no items with the real total and totalPages. Unknown query parameters are rejected. Answers with Cache-Control: no-store, so no browser or shared cache keeps the user's data.",
+            "PRJ-2. Only projects where the caller is a member (OWNER or MEMBER); role is the caller's role in each, and openTicketCount the number of its tickets that are not Done. Sorted by name, then by key. Paginated: a page past the end returns no items with the real total and totalPages. Unknown query parameters are rejected. Answers with Cache-Control: no-store, so no browser or shared cache keeps the user's data.",
           security: [{ authCookie: [] }],
           parameters: [PROJECT_SEARCH_PARAMETER, PAGE_QUERY_PARAMETER],
           responses: {
@@ -316,7 +321,7 @@ export function createOpenApiSpec(): Record<string, unknown> {
           operationId: 'getProject',
           summary: 'Get a project the caller is a member of',
           description:
-            'PRJ-6. Returns the project with the role the caller has in it (OWNER or MEMBER), and (PRJ-5) ticketCount, the number of its tickets in every status (0 until tickets exist). The key in the URL is matched exactly: it must be the stored uppercase key ("WEB", not "web"). A project that does not exist and a project the caller is not a member of get the same 404, so the answer never reveals whether the project exists.',
+            'PRJ-6. Returns the project with the role the caller has in it (OWNER or MEMBER), and (PRJ-5) ticketCount, the number of its tickets in every status. The key in the URL is matched exactly: it must be the stored uppercase key ("WEB", not "web"). A project that does not exist and a project the caller is not a member of get the same 404, so the answer never reveals whether the project exists.',
           security: [{ authCookie: [] }],
           parameters: [PROJECT_KEY_PARAMETER],
           responses: {
@@ -497,6 +502,38 @@ export function createOpenApiSpec(): Record<string, unknown> {
           },
         },
       },
+      '/projects/{projectKey}/tickets': {
+        post: {
+          tags: ['Tickets'],
+          operationId: 'createTicket',
+          summary: 'Create a ticket in the project',
+          description: `TKT-1. Any member of the project (OWNER or MEMBER) may create a ticket; the caller becomes its reporter. The ticket always starts in To Do, at the bottom of the column, with no assignee. Its key is the project key and the next number of the project (WEB-13): numbers are handed out one at a time even when several tickets are created at the same moment, and a number is never reused. The title (1-${TICKET_TITLE_MAX_LENGTH} characters) and the description (optional, up to ${TICKET_DESCRIPTION_MAX_LENGTH}) are trimmed; a missing, null or empty description is stored as null. type defaults to TASK and priority to MEDIUM. dueDate is an optional calendar day (YYYY-MM-DD) or null. Fields the server sets (status, number, rank, assignee, reporter) and any other unknown fields are rejected. A project that does not exist and a project the caller is not a member of get the same 404. Browsers must send the request from the web app (same origin), or it gets 403.`,
+          security: [{ authCookie: [] }],
+          parameters: [PROJECT_KEY_PARAMETER],
+          requestBody: jsonRequestBody('CreateTicketRequest'),
+          responses: {
+            '201': jsonResponse('The ticket was created, with its key (e.g. WEB-13)', 'Ticket'),
+            '400': jsonResponse(
+              'Invalid input (VALIDATION_ERROR), with one entry in details[] per field',
+              'ErrorResponse',
+            ),
+            '401': jsonResponse(
+              'Not logged in (UNAUTHENTICATED): the cookie is missing, invalid or expired, or its user no longer exists',
+              'ErrorResponse',
+            ),
+            '403': jsonResponse('A cross-site request (FORBIDDEN)', 'ErrorResponse'),
+            '404': jsonResponse(
+              'No such project, or the caller is not a member of it (NOT_FOUND, "Project not found")',
+              'ErrorResponse',
+            ),
+            '413': jsonResponse(
+              'The request body is over 100 kB (PAYLOAD_TOO_LARGE)',
+              'ErrorResponse',
+            ),
+            '500': jsonResponse('Unexpected server error', 'ErrorResponse'),
+          },
+        },
+      },
     },
     components: {
       securitySchemes: {
@@ -511,6 +548,7 @@ export function createOpenApiSpec(): Record<string, unknown> {
         AddMemberRequest: toComponentSchema(addMemberSchema, 'input'),
         ErrorResponse: toComponentSchema(errorResponseSchema),
         CreateProjectRequest: toComponentSchema(createProjectSchema, 'input'),
+        CreateTicketRequest: toComponentSchema(createTicketSchema, 'input'),
         HealthResponse: toComponentSchema(healthResponseSchema),
         LoginRequest: toComponentSchema(loginSchema, 'input'),
         Member: toComponentSchema(memberSchema),
@@ -520,6 +558,7 @@ export function createOpenApiSpec(): Record<string, unknown> {
         ProjectListPage: toComponentSchema(projectListPageSchema),
         PublicUser: toComponentSchema(publicUserSchema),
         RegisterRequest: toComponentSchema(registerSchema, 'input'),
+        Ticket: toComponentSchema(ticketSchema),
         UpdateProjectRequest: toComponentSchema(updateProjectSchema, 'input'),
       },
     },

@@ -5,12 +5,13 @@ import { NavLink, Outlet } from 'react-router';
 import { CURRENT_PAGE_CLASSES } from '@/components/top-bar';
 import { Button } from '@/components/ui/button';
 import { useCurrentProject } from '@/features/projects/hooks/use-project';
+import { CreateTicketDialog } from '@/features/tickets/components/create-ticket-dialog';
 
 /**
  * The project header above the board, list, and settings: "[WEB] Website Redesign" and the
  * Board · List · Settings tabs (wireframes 03, 05, 06 A). The Settings tab is the owner's only
- * (wireframe 03, decided 2026-11-18). The ticket page has its own header (wireframe 04), so it
- * sits outside this layout.
+ * (wireframe 03, decided 2026-11-18); every member sees "+ Create ticket" (TKT-1). The ticket
+ * page has its own header (wireframe 04), so it sits outside this layout.
  */
 export function ProjectTabsLayout(): ReactElement {
   const project = useCurrentProject();
@@ -31,18 +32,22 @@ export function ProjectTabsLayout(): ReactElement {
           {/* The space keeps the key and name apart for screen readers ("WEB Website Redesign"). */}
           <span className="min-w-0 break-words">{project.name}</span>
         </h1>
-        {/* -ml-2.5 lines the first tab's text up with the title above it. */}
-        <nav aria-label="Project" className="-ml-2.5">
-          <ul className="flex flex-wrap gap-1">
-            {tabs.map((tab) => (
-              <li key={tab.to}>
-                <Button asChild variant="ghost" className={CURRENT_PAGE_CLASSES}>
-                  <NavLink to={tab.to}>{tab.label}</NavLink>
-                </Button>
-              </li>
-            ))}
-          </ul>
-        </nav>
+        {/* The tabs on the left, "+ Create ticket" on the right (wireframe 03 A). */}
+        <div className="flex items-center justify-between gap-2">
+          {/* -ml-2.5 lines the first tab's text up with the title above it. */}
+          <nav aria-label="Project" className="-ml-2.5">
+            <ul className="flex flex-wrap gap-1">
+              {tabs.map((tab) => (
+                <li key={tab.to}>
+                  <Button asChild variant="ghost" className={CURRENT_PAGE_CLASSES}>
+                    <NavLink to={tab.to}>{tab.label}</NavLink>
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          </nav>
+          <CreateTicketDialog projectKey={project.key} />
+        </div>
       </header>
       <Outlet />
     </>
