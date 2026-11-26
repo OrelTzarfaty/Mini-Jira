@@ -325,12 +325,12 @@ Sprint 4 · Size S · Status: To do · Depends on TKT-2
 
 ### TKT-5 · Assign a ticket
 Sprint 4 · Size M · **Status: In progress** · Depends on TKT-3, PRJ-4
-- [ ] BE · Assignee must be a project member (otherwise `400 VALIDATION_ERROR` on `assigneeId`)
-- [ ] BE · Extend member removal (PRJ-4): unassign their tickets in the same transaction
+- [x] BE · Assignee must be a project member (otherwise `400 VALIDATION_ERROR` on `assigneeId`)
+- [x] BE · Extend member removal (PRJ-4): unassign their tickets in the same transaction
 - [ ] FE · Assignee picker (project members) in the create and edit forms
 - [ ] FE · "Assign to me" shortcut
-- [ ] QA · Assign to a member, to self, to a non-member (rejected)
-- [ ] QA · Removing a member unassigns their tickets
+- [x] QA · Assign to a member, to self, to a non-member (rejected)
+- [x] QA · Removing a member unassigns their tickets
 
 ---
 
