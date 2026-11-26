@@ -1,5 +1,6 @@
 import { EDIT_CONFLICT_MESSAGE, ErrorCode } from '@mini-jira/shared';
 import type { Ticket } from '@mini-jira/shared';
+import { useRef } from 'react';
 import type { ReactElement } from 'react';
 
 import { ApiError } from '@/api/api-error';
@@ -35,6 +36,7 @@ export function AssignToMeButton({
 }: AssignToMeButtonProps): ReactElement | null {
   const me = useCurrentUser();
   const assignMutation = useUpdateTicketMutation(projectKey, ticket.key);
+  const assignButtonRef = useRef<HTMLButtonElement>(null);
 
   if (ticket.assignee?.id === me.id) {
     return null;
@@ -46,6 +48,7 @@ export function AssignToMeButton({
   return (
     <div className="grid gap-2">
       <Button
+        ref={assignButtonRef}
         type="button"
         variant="link"
         className="h-auto min-h-6 justify-self-start px-0"
@@ -72,6 +75,8 @@ export function AssignToMeButton({
           onClick={() => {
             assignMutation.reset();
             onReload();
+            // This button goes away with the error, so focus goes back to "Assign to me".
+            assignButtonRef.current?.focus();
           }}
         >
           Reload ticket

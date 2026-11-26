@@ -369,6 +369,7 @@ describe('"Assign to me" on the ticket page (TKT-5)', () => {
       await screen.findByRole('heading', { level: 1, name: 'Renamed by Noa' }),
     ).toBeInTheDocument();
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Assign to me' })).toHaveFocus();
 
     await userEvent.click(screen.getByRole('button', { name: 'Assign to me' }));
 
