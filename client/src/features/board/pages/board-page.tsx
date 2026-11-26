@@ -10,6 +10,7 @@ import { BoardSkeleton } from '@/features/board/components/board-skeleton';
 import { useBoard } from '@/features/board/hooks/use-board';
 import { useCurrentProject } from '@/features/projects/hooks/use-project';
 import { useProjectTabs } from '@/features/projects/hooks/use-project-tabs';
+import { TicketDeletedMessage } from '@/features/tickets/components/ticket-deleted-message';
 
 // Narrow screens: the columns sit side by side and the board scrolls sideways, stopping at each
 // column (wireframe 03 H). It reaches the screen edges (the negative margin undoes the page
@@ -62,6 +63,8 @@ export function BoardPage(): ReactElement {
     <>
       <DocumentTitle title={`${project.key} board`} />
       {renderContent()}
+      {/* "WEB-12 deleted" after deleting a ticket on its page (TKT-4). */}
+      <TicketDeletedMessage />
     </>
   );
 }

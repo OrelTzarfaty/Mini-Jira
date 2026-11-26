@@ -3,14 +3,16 @@ import {
   EDIT_CONFLICT_MESSAGE,
   ErrorCode,
   PROJECT_NOT_FOUND_MESSAGE,
+  Role,
   Status,
+  TICKET_DELETE_FORBIDDEN_MESSAGE,
   TICKET_NOT_FOUND_MESSAGE,
   ticketSchema,
 } from '@mini-jira/shared';
 import type { CreateTicketInput, Ticket, UpdateTicketInput } from '@mini-jira/shared';
 
 import type { Prisma, PrismaClient } from '../../generated/prisma/client.js';
-import { ConflictError, NotFoundError, ValidationError } from '../../lib/errors.js';
+import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from '../../lib/errors.js';
 import { isRecordNotFound } from '../../lib/prisma-errors.js';
 import { rankBetween } from '../../lib/rank.js';
 import { formatTicketKey, parseTicketKey } from '../../lib/ticket-key.js';
@@ -50,6 +52,19 @@ export interface TicketsService {
     ticketKey: string,
     input: UpdateTicketInput,
   ): Promise<Ticket>;
+
+  /**
+   * TKT-4: hard-deletes the ticket with this key in this project. Only its reporter or the
+   * project owner may: any other member gets 403. Throws 404 for the same keys as getTicket, and
+   * when the ticket is already gone.
+   */
+  deleteTicket(project: TicketProject, ticketKey: string, caller: TicketCaller): Promise<void>;
+}
+
+/** TKT-4: who is asking, for the reporter-or-owner rule. */
+export interface TicketCaller {
+  userId: string;
+  role: Role;
 }
 
 // Only the fields the API returns; users show only their public id and name.
@@ -287,6 +302,27 @@ export function createTicketsService(prisma: PrismaClient): TicketsService {
       });
 
       return toTicketResponse(project.key, ticket);
+    },
+
+    // TKT-4 (architecture §6 rule 4, §10.5): the permission is part of the DELETE itself, so
+    // there is no "read the reporter, then delete" gap. A member's delete only matches a ticket
+    // they reported; the owner's matches any ticket of the project. Both are scoped by the
+    // project id and found through the (projectId, number) unique index. Only when nothing was
+    // deleted do we look again, to tell "not yours" (403) from "not there" (404, also when a
+    // parallel request deleted it first). The number is never handed out again: the project's
+    // ticketCounter only goes up (§10.1). Comments and activity will go with the ticket through
+    // ON DELETE CASCADE once their tables exist.
+    async deleteTicket(project, ticketKey, { userId, role }) {
+      const ticketWhere = { projectId: project.id, number: ticketNumberIn(project, ticketKey) };
+      const { count } = await prisma.ticket.deleteMany({
+        where: role === Role.OWNER ? ticketWhere : { ...ticketWhere, reporterId: userId },
+      });
+      if (count > 0) {
+        return;
+      }
+
+      const stillThere = await prisma.ticket.count({ where: ticketWhere });
+      throw stillThere > 0 ? new ForbiddenError(TICKET_DELETE_FORBIDDEN_MESSAGE) : ticketNotFound();
     },
   };
 }

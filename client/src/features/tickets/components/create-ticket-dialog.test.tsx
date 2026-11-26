@@ -13,6 +13,7 @@ import { mockProject, TEST_PROJECT } from '@/test/project';
 import { renderRoute } from '@/test/render-route';
 import { server } from '@/test/server';
 import { mockLoggedIn, TEST_USER } from '@/test/session';
+import { findTicketMessage } from '@/test/tickets';
 
 const TICKETS_URL = `/api/projects/${TEST_PROJECT.key}/tickets`;
 const NEW_TICKET: Ticket = {
@@ -129,7 +130,7 @@ describe('CreateTicketDialog', () => {
 
     await submit(popup);
 
-    expect(await screen.findByRole('status')).toHaveTextContent(/^WEB-13 created$/);
+    expect(await findTicketMessage('WEB-13 created')).toBeInTheDocument();
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(queryClient.getQueryState([...PROJECTS_QUERY_KEY, 'list'])?.isInvalidated).toBe(true);
     expect(queryClient.getQueryState(projectTicketsKey)?.isInvalidated).toBe(true);
@@ -151,8 +152,7 @@ describe('CreateTicketDialog', () => {
     const popup = await openPopup();
     await userEvent.type(within(popup).getByLabelText('Title'), 'Fix login redirect');
     await submit(popup);
-    const message = await screen.findByRole('status');
-    expect(message).toHaveTextContent('WEB-13 created');
+    const message = await findTicketMessage('WEB-13 created');
 
     await userEvent.click(screen.getByRole('button', { name: 'Dismiss' }));
 
