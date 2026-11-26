@@ -49,7 +49,8 @@ function DueDate({ ticket }: { ticket: Ticket }): ReactElement {
     >
       <CalendarIcon aria-hidden="true" className="size-4 shrink-0" />
       <time dateTime={ticket.dueDate}>{formatCalendarDate(ticket.dueDate)}</time>
-      {overdue && <span className="font-medium">· Overdue</span>}
+      {/* The leading space keeps the words apart for screen readers. */}
+      {overdue && <span className="font-medium"> · Overdue</span>}
     </span>
   );
 }

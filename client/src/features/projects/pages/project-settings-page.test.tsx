@@ -9,6 +9,7 @@ import { mockProject, TEST_PROJECT } from '@/test/project';
 import { renderRoute } from '@/test/render-route';
 import { server } from '@/test/server';
 import { mockLoggedIn } from '@/test/session';
+import { mockTicket } from '@/test/tickets';
 
 const MEMBER_PROJECT = { ...TEST_PROJECT, role: Role.MEMBER };
 
@@ -100,8 +101,9 @@ describe('Project header and settings page', () => {
   it('PRJ-3: the ticket page has no project tabs (wireframe 04)', async () => {
     mockLoggedIn();
     mockProject();
+    mockTicket();
 
-    renderRoute('/projects/WEB/tickets/WEB-1');
+    renderRoute('/projects/WEB/tickets/WEB-12');
 
     expect(await screen.findByRole('heading', { level: 1 })).toBeInTheDocument();
     expect(screen.queryByRole('navigation', { name: 'Project' })).not.toBeInTheDocument();
