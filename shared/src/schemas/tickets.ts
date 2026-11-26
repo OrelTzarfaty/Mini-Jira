@@ -16,6 +16,9 @@ export const TICKET_DESCRIPTION_MAX_LENGTH = 10_000;
 // TKT-2: the one 404 message for a ticket that isn't in the project: an unknown number, a key
 // with another project's prefix, or a malformed key.
 export const TICKET_NOT_FOUND_MESSAGE = 'Ticket not found';
+// TKT-4: a member who is neither the ticket's reporter nor the project owner tried to delete it (403).
+export const TICKET_DELETE_FORBIDDEN_MESSAGE =
+  'Only the reporter or the project owner can delete this ticket';
 export const DUE_DATE_FORMAT_MESSAGE = 'Due date must be a real date in the format YYYY-MM-DD';
 
 // The years PostgreSQL's DATE column and a JavaScript Date agree on. Year 0000 is a valid

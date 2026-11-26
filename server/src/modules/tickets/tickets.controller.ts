@@ -8,10 +8,12 @@ import type { TicketsService } from './tickets.service.js';
 // The body type is safe because validateBody(createTicketSchema) runs before this handler.
 type CreateTicketHandler = RequestHandler<{ projectKey: string }, Ticket, CreateTicketInput>;
 type GetTicketHandler = RequestHandler<{ projectKey: string; ticketKey: string }, Ticket>;
+type DeleteTicketHandler = RequestHandler<{ projectKey: string; ticketKey: string }, void>;
 
 export interface TicketsController {
   create: CreateTicketHandler;
   get: GetTicketHandler;
+  delete: DeleteTicketHandler;
 }
 
 export function createTicketsController(ticketsService: TicketsService): TicketsController {
@@ -32,6 +34,16 @@ export function createTicketsController(ticketsService: TicketsService): Tickets
       const ticket = await ticketsService.getTicket(project, req.params.ticketKey);
       res.set('Cache-Control', 'no-store');
       res.json(ticket);
+    },
+
+    // TKT-4: any member may ask; the service allows only the reporter or the project owner.
+    async delete(req, res) {
+      const userId = requireUserId(req);
+      const { project, role } = requireProjectAccess(req);
+      const { ticketKey } = req.params;
+      await ticketsService.deleteTicket(project, ticketKey, { userId, role });
+      req.log.info({ userId, projectId: project.id, ticketKey }, 'Ticket deleted');
+      res.status(204).end();
     },
   };
 }
