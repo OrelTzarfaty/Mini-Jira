@@ -2,6 +2,8 @@ import {
   addMemberSchema,
   createProjectSchema,
   createTicketSchema,
+  EDIT_CONFLICT_MESSAGE,
+  ErrorCode,
   errorResponseSchema,
   healthResponseSchema,
   loginSchema,
@@ -17,8 +19,10 @@ import {
   registerSchema,
   TICKET_DESCRIPTION_MAX_LENGTH,
   TICKET_TITLE_MAX_LENGTH,
+  TICKET_UPDATE_EMPTY_MESSAGE,
   ticketSchema,
   updateProjectSchema,
+  updateTicketSchema,
 } from '@mini-jira/shared';
 import { z } from 'zod';
 
@@ -43,6 +47,22 @@ function jsonResponse(description: string, schemaName: string): Record<string, u
     content: {
       'application/json': {
         schema: { $ref: `#/components/schemas/${schemaName}` },
+      },
+    },
+  };
+}
+
+/** An error response with named examples of the body, shown in Swagger UI. */
+function jsonErrorResponse(
+  description: string,
+  examples: Record<string, { summary: string; value: unknown }>,
+): Record<string, unknown> {
+  return {
+    description,
+    content: {
+      'application/json': {
+        schema: { $ref: '#/components/schemas/ErrorResponse' },
+        examples,
       },
     },
   };
@@ -569,6 +589,85 @@ export function createOpenApiSpec(): Record<string, unknown> {
             '500': jsonResponse('Unexpected server error', 'ErrorResponse'),
           },
         },
+        patch: {
+          tags: ['Tickets'],
+          operationId: 'updateTicket',
+          summary: 'Edit a ticket',
+          description: `TKT-3. Any member of the project (OWNER or MEMBER) may edit a ticket of the project. Send updatedAt exactly as GET returned it, plus at least one field to change: title, description, type, priority, status, dueDate. A missing field stays as it is; a null or blank description and a null dueDate clear them. The rules are the same as at create (title 1-${TICKET_TITLE_MAX_LENGTH} characters, description up to ${TICKET_DESCRIPTION_MAX_LENGTH}, both trimmed). If someone else saved the ticket after updatedAt (an edit or a board move), nothing is saved and the answer is 409 EDIT_CONFLICT (CON-1): reload the ticket and apply the change again. A new status puts the ticket at the bottom of that column. The assignee (TKT-5), the key, the number, the reporter and any other unknown fields are rejected. The key rules and the 404 answers are the same as for GET. Browsers must send the request from the web app (same origin), or it gets 403.`,
+          security: [{ authCookie: [] }],
+          parameters: [PROJECT_KEY_PARAMETER, TICKET_KEY_PARAMETER],
+          requestBody: jsonRequestBody('UpdateTicketRequest'),
+          responses: {
+            '200': jsonResponse(
+              'The updated ticket, in the same shape as GET, with its new updatedAt',
+              'Ticket',
+            ),
+            '400': jsonErrorResponse(
+              'Invalid input (VALIDATION_ERROR): a bad field or an unknown field (details[] per field), or no field to change',
+              {
+                titleTooLong: {
+                  summary: 'A title over the limit',
+                  value: {
+                    error: {
+                      code: ErrorCode.VALIDATION_ERROR,
+                      message: `Title must be at most ${TICKET_TITLE_MAX_LENGTH} characters`,
+                      details: [
+                        {
+                          field: 'title',
+                          message: `Title must be at most ${TICKET_TITLE_MAX_LENGTH} characters`,
+                        },
+                      ],
+                    },
+                  },
+                },
+                unknownField: {
+                  summary: 'A field that is not editable here',
+                  value: {
+                    error: {
+                      code: ErrorCode.VALIDATION_ERROR,
+                      message: 'Unknown field',
+                      details: [{ field: 'assigneeId', message: 'Unknown field' }],
+                    },
+                  },
+                },
+                nothingToChange: {
+                  summary: 'Only updatedAt was sent',
+                  value: {
+                    error: {
+                      code: ErrorCode.VALIDATION_ERROR,
+                      message: TICKET_UPDATE_EMPTY_MESSAGE,
+                    },
+                  },
+                },
+              },
+            ),
+            '401': jsonResponse(
+              'Not logged in (UNAUTHENTICATED): the cookie is missing, invalid or expired, or its user no longer exists',
+              'ErrorResponse',
+            ),
+            '403': jsonResponse('A cross-site request (FORBIDDEN)', 'ErrorResponse'),
+            '404': jsonResponse(
+              'No such project or the caller is not a member of it (NOT_FOUND, "Project not found"), or no such ticket in the project, also when it was deleted while saving (NOT_FOUND, "Ticket not found")',
+              'ErrorResponse',
+            ),
+            '409': jsonErrorResponse(
+              'Someone else saved the ticket after the updatedAt that was sent (EDIT_CONFLICT); nothing was saved',
+              {
+                editConflict: {
+                  summary: 'A stale updatedAt',
+                  value: {
+                    error: { code: ErrorCode.EDIT_CONFLICT, message: EDIT_CONFLICT_MESSAGE },
+                  },
+                },
+              },
+            ),
+            '413': jsonResponse(
+              'The request body is over 100 kB (PAYLOAD_TOO_LARGE)',
+              'ErrorResponse',
+            ),
+            '500': jsonResponse('Unexpected server error', 'ErrorResponse'),
+          },
+        },
       },
     },
     components: {
@@ -596,6 +695,7 @@ export function createOpenApiSpec(): Record<string, unknown> {
         RegisterRequest: toComponentSchema(registerSchema, 'input'),
         Ticket: toComponentSchema(ticketSchema),
         UpdateProjectRequest: toComponentSchema(updateProjectSchema, 'input'),
+        UpdateTicketRequest: toComponentSchema(updateTicketSchema, 'input'),
       },
     },
   };

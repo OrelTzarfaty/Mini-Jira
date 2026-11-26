@@ -1,13 +1,15 @@
 import {
+  EDIT_CONFLICT_MESSAGE,
+  ErrorCode,
   PROJECT_NOT_FOUND_MESSAGE,
   Status,
   TICKET_NOT_FOUND_MESSAGE,
   ticketSchema,
 } from '@mini-jira/shared';
-import type { CreateTicketInput, Ticket } from '@mini-jira/shared';
+import type { CreateTicketInput, Ticket, UpdateTicketInput } from '@mini-jira/shared';
 
 import type { PrismaClient } from '../../generated/prisma/client.js';
-import { NotFoundError } from '../../lib/errors.js';
+import { ConflictError, NotFoundError } from '../../lib/errors.js';
 import { isRecordNotFound } from '../../lib/prisma-errors.js';
 import { rankBetween } from '../../lib/rank.js';
 import { formatTicketKey, parseTicketKey } from '../../lib/ticket-key.js';
@@ -34,6 +36,17 @@ export interface TicketsService {
    * prefix is another project's key, or the project has no ticket with that number.
    */
   getTicket(project: TicketProject, ticketKey: string): Promise<Ticket>;
+
+  /**
+   * TKT-3: saves the sent fields if the ticket is still at the `updatedAt` the client loaded
+   * (CON-1, architecture §10.3). Throws 404 like getTicket (also when the ticket is deleted while
+   * saving) and 409 EDIT_CONFLICT when someone else changed the ticket in the meantime.
+   */
+  updateTicket(
+    project: TicketProject,
+    ticketKey: string,
+    input: UpdateTicketInput,
+  ): Promise<Ticket>;
 }
 
 // Only the fields the API returns; users show only their public id and name.
@@ -86,6 +99,20 @@ function toTicketResponse(projectKey: string, ticket: TicketRow): Ticket {
 
 const ticketNotFound = (): NotFoundError => new NotFoundError(TICKET_NOT_FOUND_MESSAGE);
 
+/** TKT-2: the ticket number from a key, or a 404 when the key isn't one of this project's. */
+function ticketNumberIn(project: TicketProject, ticketKey: string): number {
+  const parts = parseTicketKey(ticketKey);
+  if (parts?.projectKey !== project.key) {
+    throw ticketNotFound();
+  }
+
+  return parts.number;
+}
+
+/** "2026-12-01" is parsed as midnight UTC, which the DATE column stores as that day. */
+const toDueDateColumn = (dueDate: string | null): Date | null =>
+  dueDate === null ? null : new Date(dueDate);
+
 export function createTicketsService(prisma: PrismaClient): TicketsService {
   return {
     // TKT-1 (architecture §10.1, §10.2): one transaction, three steps, in this order.
@@ -123,8 +150,7 @@ export function createTicketsService(prisma: PrismaClient): TicketsService {
               status: Status.TODO,
               rank: rankBetween(lastInTodo?.rank ?? null, null),
               reporterId,
-              // "2026-12-01" is parsed as midnight UTC, which the DATE column stores as that day.
-              dueDate: dueDate === null ? null : new Date(dueDate),
+              dueDate: toDueDateColumn(dueDate),
             },
             select: TICKET_FIELDS,
           });
@@ -145,18 +171,76 @@ export function createTicketsService(prisma: PrismaClient): TicketsService {
     // a 404 and never another project's ticket. The query is also scoped by the project id
     // (architecture §6), and the (projectId, number) unique index finds the row directly.
     async getTicket(project, ticketKey) {
-      const parts = parseTicketKey(ticketKey);
-      if (parts?.projectKey !== project.key) {
-        throw ticketNotFound();
-      }
-
+      const number = ticketNumberIn(project, ticketKey);
       const ticket = await prisma.ticket.findUnique({
-        where: { projectId_number: { projectId: project.id, number: parts.number } },
+        where: { projectId_number: { projectId: project.id, number } },
         select: TICKET_FIELDS,
       });
       if (!ticket) {
         throw ticketNotFound();
       }
+
+      return toTicketResponse(project.key, ticket);
+    },
+
+    // TKT-3 (architecture §10.3): one transaction.
+    // 1. Find the ticket by key, scoped by the project like getTicket.
+    // 2. A new status puts the ticket at the bottom of the new column, like a /position move
+    //    without neighbours (§10.2), so the (projectId, status, rank) order stays valid.
+    // 3. The conditional update: `WHERE id AND updatedAt = <the client's updatedAt>`. In READ
+    //    COMMITTED a concurrent save that commits first changes updatedAt (@updatedAt sets it on
+    //    every update), so PostgreSQL re-checks the row and this update matches 0 rows: no lost
+    //    update. 0 rows means the ticket was deleted (404) or changed (409); either way nothing
+    //    was written. Only the picked fields reach Prisma; a missing field (undefined) stays as it is.
+    async updateTicket(project, ticketKey, { updatedAt, dueDate, status, ...fields }) {
+      const number = ticketNumberIn(project, ticketKey);
+
+      const ticket = await prisma.$transaction(async (tx) => {
+        const current = await tx.ticket.findUnique({
+          where: { projectId_number: { projectId: project.id, number } },
+          select: { id: true, status: true },
+        });
+        if (!current) {
+          throw ticketNotFound();
+        }
+
+        let rank: string | undefined;
+        if (status !== undefined && status !== current.status) {
+          const lastInStatus = await tx.ticket.findFirst({
+            where: { projectId: project.id, status },
+            orderBy: { rank: 'desc' },
+            select: { rank: true },
+          });
+          rank = rankBetween(lastInStatus?.rank ?? null, null);
+        }
+
+        const { count } = await tx.ticket.updateMany({
+          where: { id: current.id, projectId: project.id, updatedAt: new Date(updatedAt) },
+          data: {
+            title: fields.title,
+            description: fields.description,
+            type: fields.type,
+            priority: fields.priority,
+            status,
+            rank,
+            dueDate: dueDate === undefined ? undefined : toDueDateColumn(dueDate),
+          },
+        });
+        if (count === 0) {
+          const stillThere = await tx.ticket.findUnique({
+            where: { id: current.id },
+            select: { id: true },
+          });
+          throw stillThere
+            ? new ConflictError(ErrorCode.EDIT_CONFLICT, EDIT_CONFLICT_MESSAGE)
+            : ticketNotFound();
+        }
+
+        // ACT-1: the activity entries for a changed status or priority (and assignee, TKT-5) are
+        // written here, in this transaction, so the history and the ticket change together.
+
+        return tx.ticket.findUniqueOrThrow({ where: { id: current.id }, select: TICKET_FIELDS });
+      });
 
       return toTicketResponse(project.key, ticket);
     },

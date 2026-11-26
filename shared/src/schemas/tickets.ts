@@ -106,6 +106,9 @@ export const ticketSchema = z.object({
 
 export type Ticket = z.infer<typeof ticketSchema>;
 
+// TKT-3, CON-1: the 409 EDIT_CONFLICT message when someone else saved the ticket after the
+// client loaded it (architecture §10.3).
+export const EDIT_CONFLICT_MESSAGE = 'This ticket was updated by someone else';
 // TKT-3: shown when an edit sends only `updatedAt` and no field to change.
 export const TICKET_UPDATE_EMPTY_MESSAGE = 'Change at least one field';
 export const TICKET_UPDATED_AT_MESSAGE =

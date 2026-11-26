@@ -1,4 +1,4 @@
-import { createTicketSchema } from '@mini-jira/shared';
+import { createTicketSchema, updateTicketSchema } from '@mini-jira/shared';
 import { Router } from 'express';
 
 import type { PrismaClient } from '../../generated/prisma/client.js';
@@ -40,6 +40,15 @@ export function createTicketsRouter({ prisma, authCookie }: TicketsRouterOptions
     requireAuth,
     loadProjectAccess,
     controller.get,
+  );
+
+  // TKT-3: any member may edit a ticket. Same order as create: access checks first, then the body.
+  router.patch(
+    '/projects/:projectKey/tickets/:ticketKey',
+    requireAuth,
+    loadProjectAccess,
+    validateBody(updateTicketSchema),
+    controller.update,
   );
 
   return router;
