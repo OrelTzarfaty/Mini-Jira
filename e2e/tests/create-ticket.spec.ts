@@ -46,7 +46,10 @@ test.describe('Create a ticket (TKT-1)', () => {
       reporter: { name: SEED_USERS.member.name },
     });
     await expect(popup).toBeHidden();
-    await expect(memberPage.getByRole('status')).toHaveText(`${project.key}-1 created`);
+    // The board has a status region for each short message ("created", "deleted").
+    await expect(memberPage.getByRole('status').filter({ hasText: 'created' })).toHaveText(
+      `${project.key}-1 created`,
+    );
     await expect(memberPage.getByRole('button', { name: 'Create ticket' })).toBeFocused();
     expect(consoleErrors).toEqual([]);
   });

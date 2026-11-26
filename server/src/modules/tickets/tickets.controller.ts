@@ -12,11 +12,13 @@ type TicketParams = Record<'projectKey' | 'ticketKey', string>;
 type GetTicketHandler = RequestHandler<TicketParams, Ticket>;
 // The body type is safe because validateBody(updateTicketSchema) runs before this handler.
 type UpdateTicketHandler = RequestHandler<TicketParams, Ticket, UpdateTicketInput>;
+type DeleteTicketHandler = RequestHandler<TicketParams, void>;
 
 export interface TicketsController {
   create: CreateTicketHandler;
   get: GetTicketHandler;
   update: UpdateTicketHandler;
+  delete: DeleteTicketHandler;
 }
 
 export function createTicketsController(ticketsService: TicketsService): TicketsController {
@@ -46,6 +48,16 @@ export function createTicketsController(ticketsService: TicketsService): Tickets
       const ticket = await ticketsService.updateTicket(project, req.params.ticketKey, req.body);
       req.log.info({ userId, projectId: project.id, ticketId: ticket.id }, 'Ticket updated');
       res.json(ticket);
+    },
+
+    // TKT-4: any member may ask; the service allows only the reporter or the project owner.
+    async delete(req, res) {
+      const userId = requireUserId(req);
+      const { project, role } = requireProjectAccess(req);
+      const { ticketKey } = req.params;
+      await ticketsService.deleteTicket(project, ticketKey, { userId, role });
+      req.log.info({ userId, projectId: project.id, ticketKey }, 'Ticket deleted');
+      res.status(204).end();
     },
   };
 }

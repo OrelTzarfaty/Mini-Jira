@@ -51,5 +51,15 @@ export function createTicketsRouter({ prisma, authCookie }: TicketsRouterOptions
     controller.update,
   );
 
+  // TKT-4: any member may call it, but only the ticket's reporter or the project owner may
+  // delete (403 for other members, decided in the service). The app-wide origin check blocks
+  // cross-site DELETEs.
+  router.delete(
+    '/projects/:projectKey/tickets/:ticketKey',
+    requireAuth,
+    loadProjectAccess,
+    controller.delete,
+  );
+
   return router;
 }

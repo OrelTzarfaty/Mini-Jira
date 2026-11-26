@@ -317,7 +317,7 @@ AC (extra): the PATCH body includes the `updatedAt` the client loaded; the condi
 - [x] QA · Integration: stale `updatedAt` → 409
 
 ### TKT-4 · Delete a ticket
-Sprint 4 · Size S · Status: To do · Depends on TKT-2
+Sprint 4 · Size S · Status: In review · Depends on TKT-2
 - [ ] BE · `DELETE …/tickets/:ticketKey`: reporter or owner only, otherwise 403
 - [ ] FE · Delete button only for the reporter or owner; confirmation dialog
 - [ ] QA · Reporter and owner can delete; another member gets 403 and doesn't see the button
