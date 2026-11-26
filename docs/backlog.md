@@ -282,7 +282,7 @@ Sprint 3 · Size M · **Status: Done** — merged into `dev` in [#88](https://gi
 ## E4 · Tickets — Sprint 4
 
 ### TKT-1 · Create a ticket
-Sprint 4 · Size L · Status: In review (API and web form done; the Estimate tasks wait for the mentor's OK, DOC-5) · Depends on PRJ-6
+Sprint 4 · Size L · **Status: Done** — merged into `dev` in [#89](https://github.com/OrelTzarfaty/Mini-Jira/pull/89) (`231016a`); light QA PASS; the Estimate tasks wait for the mentor's OK (DOC-5) · Depends on PRJ-6
 AC (extra): key from the atomic `ticketCounter` (architecture §10.1) · new ticket goes to the end of To Do.
 - [x] BE · Migration: `Ticket` + indexes (architecture §8.1), including the optional `estimateMinutes` (`estimateMinutes` not added yet: it waits for DOC-5)
 - [ ] BE · Shared `parseEstimate` / `formatEstimate`: `30m`, `4h`, `2d`, `1d 4h` ↔ minutes (1d = 8h)
@@ -299,7 +299,7 @@ AC (extra): key from the atomic `ticketCounter` (architecture §10.1) · new tic
 - (The assignee field is added in TKT-5. "Numbers are never reused" is tested in TKT-4, once delete exists.)
 
 ### TKT-2 · Ticket detail with its own URL
-Sprint 4 · Size M · Status: In progress (the estimate in the details panel waits for the mentor's OK, DOC-5) · Depends on TKT-1
+Sprint 4 · Size M · Status: In review (the estimate in the details panel waits for the mentor's OK, DOC-5) · Depends on TKT-1
 - [ ] BE · `GET /api/projects/:projectKey/tickets/:ticketKey` (scoped by project; the key prefix must match the project)
 - [ ] FE · `/projects/:projectKey/tickets/:ticketKey` page: title, description, details panel ("Created by", "Assigned to", status, priority, type, due date, estimate, dates) (wireframe 04)
 - [ ] FE · "🔗 Copy link" button that copies the ticket URL
