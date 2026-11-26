@@ -324,7 +324,7 @@ Sprint 4 · Size S · Status: To do · Depends on TKT-2
 - [ ] QA · Integration: a deleted ticket's number is never reused (TKT-1 key rule)
 
 ### TKT-5 · Assign a ticket
-Sprint 4 · Size M · Status: To do · Depends on TKT-3, PRJ-4
+Sprint 4 · Size M · **Status: In progress** · Depends on TKT-3, PRJ-4
 - [ ] BE · Assignee must be a project member (otherwise `400 VALIDATION_ERROR` on `assigneeId`)
 - [ ] BE · Extend member removal (PRJ-4): unassign their tickets in the same transaction
 - [ ] FE · Assignee picker (project members) in the create and edit forms
