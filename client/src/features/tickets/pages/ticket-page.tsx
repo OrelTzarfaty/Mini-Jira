@@ -1,6 +1,6 @@
 import { ArrowLeftIcon, PencilIcon } from 'lucide-react';
 import { useRef, useState } from 'react';
-import type { ReactElement } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 import { flushSync } from 'react-dom';
 import { Link } from 'react-router';
 
@@ -11,6 +11,7 @@ import { ErrorState } from '@/components/error-state';
 import { ToastMessage } from '@/components/toast-message';
 import { Button } from '@/components/ui/button';
 import { useCurrentProject } from '@/features/projects/hooks/use-project';
+import { AssignToMeButton } from '@/features/tickets/components/assign-to-me-button';
 import { CopyLinkButton } from '@/features/tickets/components/copy-link-button';
 import { EditTicketForm } from '@/features/tickets/components/edit-ticket-form';
 import { TicketDetails } from '@/features/tickets/components/ticket-details';
@@ -29,7 +30,8 @@ const SAVED_MESSAGE_DURATION_MS = 4000;
 /**
  * The ticket page, /projects/WEB/tickets/WEB-12 (TKT-2, wireframe 04 A and H): the title, the
  * description, and the details panel. Its own URL, so a link to it works after a reload or when
- * shared. Edit switches the page to edit mode (TKT-3, wireframe 04 B). Delete and the status
+ * shared. Edit switches the page to edit mode (TKT-3, wireframe 04 B); "Assign to me" in the
+ * details panel saves the logged-in user as the assignee (TKT-5). Delete and the status
  * dropdown come with TKT-4 and BRD-2; comments and activity with CMT-1 and ACT-1.
  */
 export function TicketPage(): ReactElement {
@@ -125,7 +127,24 @@ export function TicketPage(): ReactElement {
           }}
         />
       ) : (
-        <TicketView ticket={ticket} />
+        <TicketView
+          ticket={ticket}
+          assigneeAction={
+            <AssignToMeButton
+              projectKey={project.key}
+              ticket={ticket}
+              onAssigned={() => {
+                // The button is gone now (the user is the assignee), so focus goes to Edit,
+                // as after saving an edit.
+                editButtonRef.current?.focus();
+                setSavedMessage('Assigned to you');
+              }}
+              onReload={() => {
+                void refetch();
+              }}
+            />
+          }
+        />
       )}
       <ToastMessage
         message={savedMessage}
@@ -138,7 +157,13 @@ export function TicketPage(): ReactElement {
 }
 
 /** The ticket in view mode: the title, the description, and the details panel (wireframe 04 A). */
-function TicketView({ ticket }: { ticket: Ticket }): ReactElement {
+function TicketView({
+  ticket,
+  assigneeAction,
+}: {
+  ticket: Ticket;
+  assigneeAction: ReactNode;
+}): ReactElement {
   return (
     <>
       <header className="grid gap-1">
@@ -155,7 +180,7 @@ function TicketView({ ticket }: { ticket: Ticket }): ReactElement {
           aria-label="Details"
           className="border-y py-4 md:col-start-2 md:row-start-1 md:rounded-lg md:border md:p-4"
         >
-          <TicketDetails ticket={ticket} />
+          <TicketDetails ticket={ticket} assigneeAction={assigneeAction} />
         </aside>
         <section
           aria-labelledby="ticket-description"

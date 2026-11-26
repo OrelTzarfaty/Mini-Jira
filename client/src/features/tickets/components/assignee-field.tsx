@@ -1,5 +1,6 @@
 import type { TicketUser } from '@mini-jira/shared';
-import type { ReactElement, Ref } from 'react';
+import { useRef } from 'react';
+import type { ReactElement, RefCallback } from 'react';
 
 import { FormField } from '@/components/form-field';
 import { Button } from '@/components/ui/button';
@@ -18,7 +19,7 @@ interface AssigneeFieldProps {
   value: string | null;
   onChange: (assigneeId: string | null) => void;
   onBlur: () => void;
-  selectRef: Ref<HTMLSelectElement>;
+  selectRef: RefCallback<HTMLSelectElement>;
   error: string | undefined;
   /** The ticket's assignee when the form opened, so it shows before the members arrive. */
   currentAssignee?: TicketUser | null;
@@ -28,7 +29,8 @@ interface AssigneeFieldProps {
  * The assignee picker (TKT-5): "Unassigned" and every member of the project, by name. The
  * browser's own select, like the other ticket fields: keyboard and screen reader friendly, and
  * the phone's native picker. The logged-in user and the ticket's assignee are always choices,
- * so the field still works while the members load or if loading them failed.
+ * so the field still works while the members load or if loading them failed. "Assign to me"
+ * under it (wireframes 03 E and 04 B) picks the logged-in user in one click.
  */
 export function AssigneeField({
   label,
@@ -41,6 +43,7 @@ export function AssigneeField({
   currentAssignee = null,
 }: AssigneeFieldProps): ReactElement {
   const me = useCurrentUser();
+  const selectElement = useRef<HTMLSelectElement | null>(null);
   const members = useAllProjectMembers(projectKey);
   const loadedUsers = (members.data ?? []).map(({ userId, name }) => ({ id: userId, name }));
   const knownUsers = [...loadedUsers, me, ...(currentAssignee ? [currentAssignee] : [])];
@@ -59,7 +62,10 @@ export function AssigneeField({
         {(fieldControl) => (
           <NativeSelect
             {...fieldControl}
-            ref={selectRef}
+            ref={(element) => {
+              selectRef(element);
+              selectElement.current = element;
+            }}
             // Disabled only while loading: the list isn't complete yet. After an error the
             // known choices (Unassigned, me, the current assignee) still work.
             disabled={members.isPending}
@@ -90,6 +96,23 @@ export function AssigneeField({
           }}
         >
           Try again
+        </Button>
+      )}
+      {/* Only when someone else is chosen: choosing yourself again would do nothing. */}
+      {value !== me.id && (
+        <Button
+          type="button"
+          variant="link"
+          className="h-auto min-h-6 justify-self-start px-0"
+          // While the members load the picker is disabled and couldn't take the focus.
+          disabled={members.isPending}
+          onClick={() => {
+            onChange(me.id);
+            // The link goes away now, so focus moves to the picker that shows the choice.
+            selectElement.current?.focus();
+          }}
+        >
+          Assign to me
         </Button>
       )}
     </div>
