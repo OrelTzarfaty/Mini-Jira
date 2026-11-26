@@ -516,7 +516,7 @@ export function createOpenApiSpec(): Record<string, unknown> {
           operationId: 'removeProjectMember',
           summary: 'Remove a member from the project (owner only)',
           description:
-            "PRJ-4. Only the project owner may remove members. The owner can't be removed (409 CANNOT_REMOVE_OWNER), so a project always keeps its owner, also when requests race. Send no request body. Browsers must send the request from the web app (same origin), or it gets 403.",
+            "PRJ-4. Only the project owner may remove members. The owner can't be removed (409 CANNOT_REMOVE_OWNER), so a project always keeps its owner, also when requests race. In the same transaction, the member's tickets in this project become unassigned (TKT-5); their tickets in other projects stay as they are. Those tickets get a new updatedAt, so an edit based on an older updatedAt gets 409 EDIT_CONFLICT. Send no request body. Browsers must send the request from the web app (same origin), or it gets 403.",
           security: [{ authCookie: [] }],
           parameters: [PROJECT_KEY_PARAMETER, USER_ID_PARAMETER],
           responses: {
