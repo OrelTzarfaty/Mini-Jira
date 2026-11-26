@@ -9,6 +9,7 @@ import {
 import type { ErrorResponse, Ticket } from '@mini-jira/shared';
 import { http, HttpResponse } from 'msw';
 
+import { TEST_MEMBERS } from './members';
 import { TEST_PROJECT } from './project';
 import { server } from './server';
 import { TEST_USER } from './session';
@@ -139,8 +140,15 @@ export function mockUpdateTicket(
         return HttpResponse.json(error.body, { status: error.status });
       }
 
-      // Saved the way the server saves it: the sent fields change, a new updatedAt.
-      current = { ...current, ...updateTicketSchema.parse(body), updatedAt: SAVED_UPDATED_AT };
+      // Saved the way the server saves it: the sent fields change, a new updatedAt, and an
+      // assigneeId becomes the member it names (TKT-5).
+      const { assigneeId, ...fields } = updateTicketSchema.parse(body);
+      current = { ...current, ...fields, updatedAt: SAVED_UPDATED_AT };
+
+      if (assigneeId !== undefined) {
+        const member = TEST_MEMBERS.find(({ userId }) => userId === assigneeId);
+        current.assignee = member ? { id: member.userId, name: member.name } : null;
+      }
 
       return HttpResponse.json(current);
     }),
