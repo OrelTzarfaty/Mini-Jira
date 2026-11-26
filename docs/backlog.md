@@ -321,7 +321,7 @@ Sprint 4 · Size S · Status: In progress · Depends on TKT-2
 - [x] BE · `DELETE …/tickets/:ticketKey`: reporter or owner only, otherwise 403
 - [ ] FE · Delete button only for the reporter or owner; confirmation dialog
 - [ ] QA · Reporter and owner can delete; another member gets 403 and doesn't see the button
-- [ ] QA · Integration: a deleted ticket's number is never reused (TKT-1 key rule)
+- [x] QA · Integration: a deleted ticket's number is never reused (TKT-1 key rule)
 
 ### TKT-5 · Assign a ticket
 Sprint 4 · Size M · Status: To do · Depends on TKT-3, PRJ-4
