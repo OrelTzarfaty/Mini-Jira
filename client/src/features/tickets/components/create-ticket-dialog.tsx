@@ -1,11 +1,12 @@
 import { PlusIcon } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import type { ReactElement } from 'react';
 
+import { ToastMessage } from '@/components/toast-message';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { CreateTicketForm } from '@/features/tickets/components/create-ticket-form';
-import { TicketCreatedMessage } from '@/features/tickets/components/ticket-created-message';
+import { useAutoClearState } from '@/lib/use-auto-clear-state';
 
 // Long enough to read the key; the board shows the new card anyway, so nothing is lost after.
 const CREATED_MESSAGE_DURATION_MS = 6000;
@@ -16,39 +17,16 @@ const CREATED_MESSAGE_DURATION_MS = 6000;
  * The form lives inside the popup's content, so closing it (Cancel, ✕, Esc) throws away what
  * was typed, and Radix returns focus to the button. After Create, "WEB-13 created" shows.
  */
-interface CreateTicketDialogProps {
-  projectKey: string;
-  /** Whether the popup is open: the project header owns it, so the board's empty state can open it too (BRD-1). */
-  isOpen: boolean;
-  onOpenChange: (isOpen: boolean) => void;
-}
-
-export function CreateTicketDialog({
-  projectKey,
-  isOpen,
-  onOpenChange,
-}: CreateTicketDialogProps): ReactElement {
-  const [createdTicketKey, setCreatedTicketKey] = useState<string | null>(null);
+export function CreateTicketDialog({ projectKey }: { projectKey: string }): ReactElement {
+  const [isOpen, setIsOpen] = useState(false);
+  // Hides "WEB-13 created" after a few seconds; a new ticket's key restarts the timer.
+  const [createdTicketKey, setCreatedTicketKey] = useAutoClearState<string>(
+    CREATED_MESSAGE_DURATION_MS,
+  );
   // The new key waits here until the popup has fully closed: while it is open, Radix hides the
   // rest of the page from screen readers (aria-hidden), and a message that appears there then
   // isn't announced. Only event handlers read it, so a ref is enough.
   const keyToAnnounceRef = useRef<string | null>(null);
-
-  // Hides "WEB-13 created" after a few seconds: a timer is outside React, so an effect syncs
-  // with it. A new ticket's key restarts the timer.
-  useEffect(() => {
-    if (createdTicketKey === null) {
-      return undefined;
-    }
-
-    const timer = window.setTimeout(() => {
-      setCreatedTicketKey(null);
-    }, CREATED_MESSAGE_DURATION_MS);
-
-    return () => {
-      window.clearTimeout(timer);
-    };
-  }, [createdTicketKey]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -82,8 +60,14 @@ export function CreateTicketDialog({
           }}
         />
       </DialogContent>
-      <TicketCreatedMessage
-        ticketKey={createdTicketKey}
+      <ToastMessage
+        message={
+          createdTicketKey && (
+            <>
+              <strong className="font-semibold">{createdTicketKey}</strong> created
+            </>
+          )
+        }
         onDismiss={() => {
           setCreatedTicketKey(null);
         }}

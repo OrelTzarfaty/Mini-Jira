@@ -1,8 +1,8 @@
 import { LinkIcon } from 'lucide-react';
-import { useEffect, useState } from 'react';
 import type { ReactElement } from 'react';
 
 import { Button } from '@/components/ui/button';
+import { useAutoClearState } from '@/lib/use-auto-clear-state';
 
 // Long enough to read "Link copied", short enough that a second copy shows a fresh message.
 const MESSAGE_DURATION_MS = 3000;
@@ -26,22 +26,8 @@ interface CopyLinkButtonProps {
  * bar, so the shared link never carries anything extra.
  */
 export function CopyLinkButton({ path }: CopyLinkButtonProps): ReactElement {
-  const [result, setResult] = useState<CopyResult | null>(null);
-
-  // Hides the message after a few seconds: a timer is outside React, so an effect syncs with it.
-  useEffect(() => {
-    if (result === null) {
-      return undefined;
-    }
-
-    const timer = window.setTimeout(() => {
-      setResult(null);
-    }, MESSAGE_DURATION_MS);
-
-    return () => {
-      window.clearTimeout(timer);
-    };
-  }, [result]);
+  // Hides the message after a few seconds.
+  const [result, setResult] = useAutoClearState<CopyResult>(MESSAGE_DURATION_MS);
 
   async function copyLink(): Promise<void> {
     const url = new URL(path, window.location.origin).href;

@@ -147,7 +147,8 @@ describe('Ticket page', () => {
     await user.click(await screen.findByRole('button', { name: 'Copy link' }));
 
     expect(await navigator.clipboard.readText()).toBe(`${window.location.origin}${TICKET_PATH}`);
-    expect(screen.getByRole('status')).toHaveTextContent('Link copied');
+    // The page has more than one status message (TKT-3 adds "Changes saved"), so find it by text.
+    expect(screen.getByText('Link copied')).toHaveAttribute('role', 'status');
   });
 
   it('TKT-2: says so when the browser refuses to copy', async () => {
@@ -158,6 +159,6 @@ describe('Ticket page', () => {
 
     await user.click(await screen.findByRole('button', { name: 'Copy link' }));
 
-    expect(await screen.findByRole('status')).toHaveTextContent("Couldn't copy the link");
+    expect(await screen.findByText("Couldn't copy the link")).toHaveAttribute('role', 'status');
   });
 });
