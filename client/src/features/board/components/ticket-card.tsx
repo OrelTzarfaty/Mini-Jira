@@ -16,8 +16,9 @@ import type { ReactElement, Ref } from 'react';
 import { Link } from 'react-router';
 
 import { Avatar } from '@/components/avatar';
-import { formatDueDate, isOverdue } from '@/features/board/lib/due-date';
+import { isOverdue } from '@/features/tickets/lib/is-overdue';
 import { PRIORITY_LABELS, TICKET_TYPE_LABELS } from '@/features/tickets/lib/ticket-labels';
+import { formatDueDate } from '@/lib/format-date';
 import { cn } from '@/lib/utils';
 
 // Wireframe 03 B: ☑ Task · 🐞 Bug · 📘 Story.
@@ -79,7 +80,7 @@ export function TicketCard({ projectKey, card, ref }: TicketCardProps): ReactEle
 }
 
 function DueDate({ dueDate, status }: { dueDate: string; status: Status }): ReactElement {
-  const overdue = isOverdue(dueDate, status);
+  const overdue = isOverdue({ dueDate, status });
   // Red is for overdue dates only (DESIGN.md), and never alone: the calendar icon changes too.
   const Icon = overdue ? CalendarX2Icon : CalendarIcon;
 
