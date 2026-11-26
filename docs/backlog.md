@@ -337,7 +337,7 @@ Sprint 4 · Size M · Status: To do · Depends on TKT-3, PRJ-4
 ## E5 · Board — Sprints 4–5
 
 ### BRD-1 · Board with one column per status
-Sprint 4 · Size L · Status: To do · Depends on TKT-1
+Sprint 4 · Size L · Status: In progress · Depends on TKT-1
 AC (extra): up to 50 cards per column ordered by rank, "load more" per column; column headers show the total count.
 - [ ] BE · `GET /api/projects/:projectKey/board`: per status → count + first 50 cards by rank
 - [ ] BE · "Load more" for one column with a rank cursor
