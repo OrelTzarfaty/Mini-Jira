@@ -4,11 +4,12 @@ import {
   Status,
   TICKET_NOT_FOUND_MESSAGE,
   TicketType,
+  updateTicketSchema,
 } from '@mini-jira/shared';
-import type { Ticket } from '@mini-jira/shared';
-import { screen } from '@testing-library/react';
+import type { ErrorResponse, Ticket } from '@mini-jira/shared';
 import { http, HttpResponse } from 'msw';
 
+import { TEST_MEMBERS } from './members';
 import { TEST_PROJECT } from './project';
 import { server } from './server';
 import { TEST_USER } from './session';
@@ -101,12 +102,62 @@ export function mockTicketOnHold(ticket: Ticket = TEST_TICKET): { answer: () => 
   };
 }
 
+/** The updatedAt the PATCH mock gives a saved ticket. */
+export const SAVED_UPDATED_AT = '2026-11-26T10:00:00.000Z';
+
+interface MockUpdateTicketOptions {
+  /** Answer with this error instead of saving. */
+  error?: { status: number; body: ErrorResponse };
+  /** Hold the answer until the test calls answer(), to see the saving state. */
+  hold?: boolean;
+}
+
 /**
- * The short "WEB-13 created" / "WEB-12 deleted" status message (TKT-1, TKT-4). The board has one
- * status region for each, so the message is found by its whole text.
+ * Makes PATCH /api/projects/:projectKey/tickets/:ticketKey (TKT-3) save the sent fields into the
+ * ticket, with a new updatedAt, and the GET answer with the saved ticket from then on. Returns
+ * the bodies it was sent.
  */
-export async function findTicketMessage(text: string): Promise<HTMLElement> {
-  return screen.findByText(
-    (_, element) => element?.getAttribute('role') === 'status' && element.textContent === text,
+export function mockUpdateTicket(
+  ticket: Ticket = TEST_TICKET,
+  { error, hold = false }: MockUpdateTicketOptions = {},
+): { bodies: unknown[]; answer: () => void } {
+  const bodies: unknown[] = [];
+  const { promise, resolve } = Promise.withResolvers<undefined>();
+  let current = ticket;
+
+  if (!hold) {
+    resolve(undefined);
+  }
+
+  server.use(
+    http.get(TICKET_URL, () => HttpResponse.json(current)),
+    http.patch(TICKET_URL, async ({ request }) => {
+      const body: unknown = await request.json();
+      bodies.push(body);
+      await promise;
+
+      if (error) {
+        return HttpResponse.json(error.body, { status: error.status });
+      }
+
+      // Saved the way the server saves it: the sent fields change, a new updatedAt, and an
+      // assigneeId becomes the member it names (TKT-5).
+      const { assigneeId, ...fields } = updateTicketSchema.parse(body);
+      current = { ...current, ...fields, updatedAt: SAVED_UPDATED_AT };
+
+      if (assigneeId !== undefined) {
+        const member = TEST_MEMBERS.find(({ userId }) => userId === assigneeId);
+        current.assignee = member ? { id: member.userId, name: member.name } : null;
+      }
+
+      return HttpResponse.json(current);
+    }),
   );
+
+  return {
+    bodies,
+    answer: () => {
+      resolve(undefined);
+    },
+  };
 }

@@ -235,15 +235,39 @@ describe('GET /api/openapi.json', () => {
     ]);
   });
 
-  it('TKT-4: documents the delete-ticket endpoint with its parameters and responses', async () => {
+  it('TKT-3: documents the edit-ticket endpoint with its responses and error examples', async () => {
     const spec = await getSpec();
-    const operation = spec.paths['/projects/{projectKey}/tickets/{ticketKey}']?.delete;
+    const operation = spec.paths['/projects/{projectKey}/tickets/{ticketKey}']?.patch;
 
-    expect(Object.keys(operation?.responses ?? {})).toEqual(['204', '401', '403', '404', '500']);
+    expect(Object.keys(operation?.responses ?? {})).toEqual([
+      '200',
+      '400',
+      '401',
+      '403',
+      '404',
+      '409',
+      '413',
+      '500',
+    ]);
     expect(operation?.parameters).toEqual([
       expect.objectContaining({ name: 'projectKey', in: 'path', required: true }),
       expect.objectContaining({ name: 'ticketKey', in: 'path', required: true }),
     ]);
+    expect(operation?.responses['409']).toMatchObject({
+      content: {
+        'application/json': {
+          examples: {
+            editConflict: { value: { error: { code: ErrorCode.EDIT_CONFLICT } } },
+          },
+        },
+      },
+    });
+    const request = spec.components.schemas.UpdateTicketRequest as unknown as {
+      required: string[];
+      additionalProperties: boolean;
+    };
+    expect(request.required).toEqual(['updatedAt']);
+    expect(request.additionalProperties).toBe(false);
   });
 
   it('SETUP-3: builds the error schema from the shared error codes', async () => {

@@ -8,6 +8,7 @@ import { describe, expect, it } from 'vitest';
 
 import { createQueryClient } from '@/api/query-client';
 import { PROJECTS_QUERY_KEY, projectQueryKey } from '@/api/query-keys';
+import { mockMembers } from '@/test/members';
 import { mockProject, TEST_PROJECT } from '@/test/project';
 import { renderRoute } from '@/test/render-route';
 import { server } from '@/test/server';
@@ -53,6 +54,8 @@ function recordCreatedTickets(): unknown[] {
 async function openPopup(queryClient: QueryClient = createQueryClient()): Promise<HTMLElement> {
   mockLoggedIn();
   mockProject({ ...TEST_PROJECT, role: Role.MEMBER });
+  // The assignee picker lists the project's members (TKT-5).
+  mockMembers();
   renderRoute(`/projects/${TEST_PROJECT.key}/board`, undefined, { queryClient });
   await userEvent.click(await screen.findByRole('button', { name: 'Create ticket' }));
 
@@ -138,6 +141,7 @@ describe('CreateTicketDialog', () => {
         type: 'BUG',
         priority: 'HIGH',
         dueDate: null,
+        assigneeId: null,
       },
     ]);
     expect(screen.getByRole('button', { name: 'Create ticket' })).toHaveFocus();

@@ -1,4 +1,4 @@
-import type { CreateTicketInput, Ticket } from '@mini-jira/shared';
+import type { CreateTicketInput, Ticket, UpdateTicketInput } from '@mini-jira/shared';
 import type { RequestHandler } from 'express';
 
 import { requireProjectAccess } from '../../middleware/project-access.js';
@@ -7,13 +7,16 @@ import type { TicketsService } from './tickets.service.js';
 
 // The body type is safe because validateBody(createTicketSchema) runs before this handler.
 type CreateTicketHandler = RequestHandler<{ projectKey: string }, Ticket, CreateTicketInput>;
-type GetTicketHandler = RequestHandler<{ projectKey: string; ticketKey: string }, Ticket>;
-type DeleteTicketHandler = RequestHandler<{ projectKey: string; ticketKey: string }, void>;
+// A Record, not an interface, so it fits the index-signature type Express expects for params.
+type TicketParams = Record<'projectKey' | 'ticketKey', string>;
+type GetTicketHandler = RequestHandler<TicketParams, Ticket>;
+// The body type is safe because validateBody(updateTicketSchema) runs before this handler.
+type UpdateTicketHandler = RequestHandler<TicketParams, Ticket, UpdateTicketInput>;
 
 export interface TicketsController {
   create: CreateTicketHandler;
   get: GetTicketHandler;
-  delete: DeleteTicketHandler;
+  update: UpdateTicketHandler;
 }
 
 export function createTicketsController(ticketsService: TicketsService): TicketsController {
@@ -36,14 +39,13 @@ export function createTicketsController(ticketsService: TicketsService): Tickets
       res.json(ticket);
     },
 
-    // TKT-4: any member may ask; the service allows only the reporter or the project owner.
-    async delete(req, res) {
+    // TKT-3: any member may edit a ticket; a stale updatedAt gets 409 EDIT_CONFLICT (CON-1).
+    async update(req, res) {
       const userId = requireUserId(req);
-      const { project, role } = requireProjectAccess(req);
-      const { ticketKey } = req.params;
-      await ticketsService.deleteTicket(project, ticketKey, { userId, role });
-      req.log.info({ userId, projectId: project.id, ticketKey }, 'Ticket deleted');
-      res.status(204).end();
+      const { project } = requireProjectAccess(req);
+      const ticket = await ticketsService.updateTicket(project, req.params.ticketKey, req.body);
+      req.log.info({ userId, projectId: project.id, ticketId: ticket.id }, 'Ticket updated');
+      res.json(ticket);
     },
   };
 }

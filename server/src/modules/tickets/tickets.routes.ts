@@ -1,4 +1,4 @@
-import { createTicketSchema } from '@mini-jira/shared';
+import { createTicketSchema, updateTicketSchema } from '@mini-jira/shared';
 import { Router } from 'express';
 
 import type { PrismaClient } from '../../generated/prisma/client.js';
@@ -42,14 +42,13 @@ export function createTicketsRouter({ prisma, authCookie }: TicketsRouterOptions
     controller.get,
   );
 
-  // TKT-4: any member may call it, but only the ticket's reporter or the project owner may
-  // delete (403 for other members, decided in the service). The app-wide origin check blocks
-  // cross-site DELETEs.
-  router.delete(
+  // TKT-3: any member may edit a ticket. Same order as create: access checks first, then the body.
+  router.patch(
     '/projects/:projectKey/tickets/:ticketKey',
     requireAuth,
     loadProjectAccess,
-    controller.delete,
+    validateBody(updateTicketSchema),
+    controller.update,
   );
 
   return router;

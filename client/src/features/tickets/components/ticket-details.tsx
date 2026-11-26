@@ -57,22 +57,31 @@ function DueDate({ ticket }: { ticket: Ticket }): ReactElement {
 
 /**
  * The ticket's details panel (wireframe 04 A, TKT-2): who has it and who made it, the status,
- * priority, type, due date, and dates. Read-only for now: changing them comes with TKT-3 and
- * TKT-5. The Estimate waits for the mentor's OK (DOC-5), so it isn't shown.
+ * priority, type, due date, and dates. `assigneeAction` goes under the assignee: the page's
+ * "Assign to me" (TKT-5). The Estimate waits for the mentor's OK (DOC-5), so it isn't shown.
  */
-export function TicketDetails({ ticket }: { ticket: Ticket }): ReactElement {
+export function TicketDetails({
+  ticket,
+  assigneeAction,
+}: {
+  ticket: Ticket;
+  assigneeAction?: ReactNode;
+}): ReactElement {
   return (
     <dl className="grid gap-3 md:gap-4">
       <Detail label="Status">{STATUS_LABELS[ticket.status]}</Detail>
       <Detail label="Assigned to">
-        {ticket.assignee ? (
-          <Person user={ticket.assignee} />
-        ) : (
-          <span className="flex items-center gap-2 text-muted-foreground">
-            <CircleDashedIcon aria-hidden="true" className="size-6 shrink-0" />
-            Unassigned
-          </span>
-        )}
+        <div className="grid gap-1">
+          {ticket.assignee ? (
+            <Person user={ticket.assignee} />
+          ) : (
+            <span className="flex items-center gap-2 text-muted-foreground">
+              <CircleDashedIcon aria-hidden="true" className="size-6 shrink-0" />
+              Unassigned
+            </span>
+          )}
+          {assigneeAction}
+        </div>
       </Detail>
       <Detail label="Created by">
         <Person user={ticket.reporter} />

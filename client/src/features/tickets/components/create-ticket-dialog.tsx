@@ -2,11 +2,14 @@ import { PlusIcon } from 'lucide-react';
 import { useRef, useState } from 'react';
 import type { ReactElement } from 'react';
 
+import { ToastMessage } from '@/components/toast-message';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { CreateTicketForm } from '@/features/tickets/components/create-ticket-form';
-import { TicketMessage } from '@/features/tickets/components/ticket-message';
-import { useTicketMessage } from '@/features/tickets/hooks/use-ticket-message';
+import { useAutoClearState } from '@/lib/use-auto-clear-state';
+
+// Long enough to read the key; the board shows the new card anyway, so nothing is lost after.
+const CREATED_MESSAGE_DURATION_MS = 6000;
 
 /**
  * The "+ Create ticket" button in the project header and its popup (wireframe 03 A, E, H;
@@ -16,7 +19,10 @@ import { useTicketMessage } from '@/features/tickets/hooks/use-ticket-message';
  */
 export function CreateTicketDialog({ projectKey }: { projectKey: string }): ReactElement {
   const [isOpen, setIsOpen] = useState(false);
-  const createdMessage = useTicketMessage();
+  // Hides "WEB-13 created" after a few seconds; a new ticket's key restarts the timer.
+  const [createdTicketKey, setCreatedTicketKey] = useAutoClearState<string>(
+    CREATED_MESSAGE_DURATION_MS,
+  );
   // The new key waits here until the popup has fully closed: while it is open, Radix hides the
   // rest of the page from screen readers (aria-hidden), and a message that appears there then
   // isn't announced. Only event handlers read it, so a ref is enough.
@@ -54,10 +60,17 @@ export function CreateTicketDialog({ projectKey }: { projectKey: string }): Reac
           }}
         />
       </DialogContent>
-      <TicketMessage
-        ticketKey={createdMessage.ticketKey}
-        action="created"
-        onDismiss={createdMessage.dismiss}
+      <ToastMessage
+        message={
+          createdTicketKey && (
+            <>
+              <strong className="font-semibold">{createdTicketKey}</strong> created
+            </>
+          )
+        }
+        onDismiss={() => {
+          setCreatedTicketKey(null);
+        }}
       />
     </Dialog>
   );
