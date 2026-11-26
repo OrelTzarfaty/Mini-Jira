@@ -183,8 +183,12 @@ describe('GET /api/projects/:projectKey/board (BRD-1)', () => {
       });
 
       const board = (await getBoard()).body as Board;
+      const column = (await getColumn(Status.TODO)).body as BoardColumn;
 
+      // The totals and the cards come from different queries: both must be scoped.
       expect(board.columns.map(({ total }) => total)).toEqual([0, 0, 0, 0]);
+      expect(board.columns.flatMap(({ items }) => items)).toEqual([]);
+      expect(column).toEqual({ status: Status.TODO, total: 0, items: [], nextCursor: null });
     });
 
     it(`BRD-1: a column with more than ${BOARD_COLUMN_LIMIT} tickets returns the first ${BOARD_COLUMN_LIMIT} and a cursor`, async () => {
