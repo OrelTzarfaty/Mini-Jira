@@ -6,6 +6,7 @@ import {
   TicketType,
 } from '@mini-jira/shared';
 import type { Ticket } from '@mini-jira/shared';
+import { screen } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
 
 import { TEST_PROJECT } from './project';
@@ -98,4 +99,14 @@ export function mockTicketOnHold(ticket: Ticket = TEST_TICKET): { answer: () => 
       resolve(undefined);
     },
   };
+}
+
+/**
+ * The short "WEB-13 created" / "WEB-12 deleted" status message (TKT-1, TKT-4). The board has one
+ * status region for each, so the message is found by its whole text.
+ */
+export async function findTicketMessage(text: string): Promise<HTMLElement> {
+  return screen.findByText(
+    (_, element) => element?.getAttribute('role') === 'status' && element.textContent === text,
+  );
 }

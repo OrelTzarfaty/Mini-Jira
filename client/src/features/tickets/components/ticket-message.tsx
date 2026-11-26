@@ -3,22 +3,21 @@ import type { ReactElement } from 'react';
 
 import { Button } from '@/components/ui/button';
 
-interface TicketCreatedMessageProps {
-  /** The new ticket's key, such as WEB-13; null shows nothing. */
+interface TicketMessageProps {
+  /** The ticket's key, such as WEB-13; null shows nothing. */
   ticketKey: string | null;
+  /** What happened to the ticket: "WEB-13 created" (TKT-1) or "WEB-12 deleted" (TKT-4). */
+  action: 'created' | 'deleted';
   onDismiss: () => void;
 }
 
 /**
- * The short "WEB-13 created" message after Create (wireframe 03 E), in the bottom corner where
- * the board's other messages go (wireframe 03 C). The status paragraph is always in the page, so
- * screen readers announce the message as soon as it appears (WCAG 4.1.3); the Dismiss button
- * sits outside it, so they hear only "WEB-13 created".
+ * The short "WEB-13 created" / "WEB-12 deleted" message (wireframes 03 E and 04 D), in the bottom
+ * corner where the board's other messages go (wireframe 03 C). The status paragraph is always in
+ * the page, so screen readers announce the message as soon as it appears (WCAG 4.1.3); the
+ * Dismiss button sits outside it, so they hear only "WEB-13 created".
  */
-export function TicketCreatedMessage({
-  ticketKey,
-  onDismiss,
-}: TicketCreatedMessageProps): ReactElement {
+export function TicketMessage({ ticketKey, action, onDismiss }: TicketMessageProps): ReactElement {
   const isShown = ticketKey !== null;
 
   return (
@@ -36,7 +35,7 @@ export function TicketCreatedMessage({
             <>
               <CircleCheckIcon aria-hidden="true" className="size-4 shrink-0" />
               <span>
-                <strong className="font-semibold">{ticketKey}</strong> created
+                <strong className="font-semibold">{ticketKey}</strong> {action}
               </span>
             </>
           )}
