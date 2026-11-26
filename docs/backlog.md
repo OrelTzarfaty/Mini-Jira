@@ -299,12 +299,12 @@ AC (extra): key from the atomic `ticketCounter` (architecture §10.1) · new tic
 - (The assignee field is added in TKT-5. "Numbers are never reused" is tested in TKT-4, once delete exists.)
 
 ### TKT-2 · Ticket detail with its own URL
-Sprint 4 · Size M · Status: In review (the estimate in the details panel waits for the mentor's OK, DOC-5) · Depends on TKT-1
-- [ ] BE · `GET /api/projects/:projectKey/tickets/:ticketKey` (scoped by project; the key prefix must match the project)
-- [ ] FE · `/projects/:projectKey/tickets/:ticketKey` page: title, description, details panel ("Created by", "Assigned to", status, priority, type, due date, estimate, dates) (wireframe 04)
-- [ ] FE · "🔗 Copy link" button that copies the ticket URL
-- [ ] FE · Loading and not-found states
-- [ ] QA · Direct URL works after refresh; `WEB-3` under another project's URL → 404
+Sprint 4 · Size M · **Status: Done** — merged into `dev` in [#90](https://github.com/OrelTzarfaty/Mini-Jira/pull/90) (`a15007a`); light QA PASS; the estimate in the details panel waits for the mentor's OK (DOC-5) · Depends on TKT-1
+- [x] BE · `GET /api/projects/:projectKey/tickets/:ticketKey` (scoped by project; the key prefix must match the project)
+- [x] FE · `/projects/:projectKey/tickets/:ticketKey` page: title, description, details panel ("Created by", "Assigned to", status, priority, type, due date, estimate, dates) (wireframe 04)
+- [x] FE · "🔗 Copy link" button that copies the ticket URL
+- [x] FE · Loading and not-found states
+- [x] QA · Direct URL works after refresh; `WEB-3` under another project's URL → 404
 
 ### TKT-3 · Edit a ticket
 Sprint 4 · Size M · Status: To do · Depends on TKT-2
@@ -317,7 +317,7 @@ AC (extra): the PATCH body includes the `updatedAt` the client loaded; the condi
 - [ ] QA · Integration: stale `updatedAt` → 409
 
 ### TKT-4 · Delete a ticket
-Sprint 4 · Size S · Status: To do · Depends on TKT-2
+Sprint 4 · Size S · Status: In progress · Depends on TKT-2
 - [ ] BE · `DELETE …/tickets/:ticketKey`: reporter or owner only, otherwise 403
 - [ ] FE · Delete button only for the reporter or owner; confirmation dialog
 - [ ] QA · Reporter and owner can delete; another member gets 403 and doesn't see the button
