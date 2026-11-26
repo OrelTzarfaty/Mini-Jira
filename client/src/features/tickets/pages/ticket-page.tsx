@@ -2,12 +2,17 @@ import { ArrowLeftIcon } from 'lucide-react';
 import type { ReactElement } from 'react';
 import { Link } from 'react-router';
 
+import { isNotFoundError } from '@/api/api-error';
 import { DocumentTitle } from '@/components/document-title';
-import { PageSkeleton } from '@/components/page-skeleton';
+import { ErrorState } from '@/components/error-state';
 import { Button } from '@/components/ui/button';
 import { useCurrentProject } from '@/features/projects/hooks/use-project';
 import { CopyLinkButton } from '@/features/tickets/components/copy-link-button';
 import { TicketDetails } from '@/features/tickets/components/ticket-details';
+import {
+  TicketNotFound,
+  TicketPageSkeleton,
+} from '@/features/tickets/components/ticket-page-states';
 import { useTicket } from '@/features/tickets/hooks/use-ticket';
 import { TICKET_TYPE_LABELS } from '@/features/tickets/lib/ticket-labels';
 import { useRouteParam } from '@/lib/use-route-param';
@@ -21,13 +26,34 @@ import { useRouteParam } from '@/lib/use-route-param';
 export function TicketPage(): ReactElement {
   const project = useCurrentProject();
   const ticketKey = useRouteParam('ticketKey');
-  const { data: ticket } = useTicket(project.key, ticketKey);
+  const { data: ticket, error, isError, isFetching, refetch } = useTicket(project.key, ticketKey);
   const boardPath = `/projects/${project.key}/board`;
 
-  if (!ticket) {
-    return <PageSkeleton label="Loading the ticket" />;
+  // Checked first: a ticket deleted while open must not stay on screen.
+  if (isNotFoundError(error)) {
+    return <TicketNotFound boardPath={boardPath} />;
   }
 
+  if (!ticket) {
+    if (isError && !isFetching) {
+      return (
+        <div className="grid gap-4">
+          <DocumentTitle title="Something went wrong" />
+          <h1 className="text-2xl font-semibold">Something went wrong</h1>
+          <ErrorState
+            message="Couldn't load this ticket."
+            onRetry={() => {
+              void refetch();
+            }}
+          />
+        </div>
+      );
+    }
+
+    return <TicketPageSkeleton />;
+  }
+
+  // A failed background refresh keeps showing the ticket the user already has.
   return (
     <article className="grid gap-6">
       <DocumentTitle title={`${ticket.key} ${ticket.title}`} />
