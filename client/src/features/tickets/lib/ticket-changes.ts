@@ -1,6 +1,6 @@
 import type { Ticket, UpdateTicketInput } from '@mini-jira/shared';
 
-/** The fields the edit form changes (TKT-3). The assignee comes with TKT-5. */
+/** The edit form's fields (TKT-3) that the ticket holds under the same name. */
 const EDITABLE_FIELDS = [
   'title',
   'description',
@@ -24,6 +24,13 @@ export function ticketChanges(loaded: Ticket, edited: UpdateTicketInput): Update
     if (value !== undefined && value !== loaded[field]) {
       Object.assign(changes, { [field]: value });
     }
+  }
+
+  // TKT-5: the ticket holds the assignee as a user ({ id, name }), the form as their id.
+  const loadedAssigneeId = loaded.assignee?.id ?? null;
+
+  if (edited.assigneeId !== undefined && edited.assigneeId !== loadedAssigneeId) {
+    changes.assigneeId = edited.assigneeId;
   }
 
   return Object.keys(changes).length > 1 ? changes : null;

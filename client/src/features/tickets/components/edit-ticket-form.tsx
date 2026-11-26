@@ -4,10 +4,11 @@ import type { Ticket, UpdateTicketInput } from '@mini-jira/shared';
 import { useEffect, useId, useState } from 'react';
 import type { ReactElement } from 'react';
 import { Loader2Icon } from 'lucide-react';
-import { useForm, useWatch } from 'react-hook-form';
+import { Controller, useForm, useWatch } from 'react-hook-form';
 
 import { FormAlert } from '@/components/form-alert';
 import { Button } from '@/components/ui/button';
+import { AssigneeField } from '@/features/tickets/components/assignee-field';
 import {
   TicketChoiceField,
   TicketDescriptionField,
@@ -44,9 +45,10 @@ interface EditTicketFormProps {
 
 /**
  * The ticket page's edit mode (wireframe 04 B, TKT-3): title and description on the left, status,
- * priority, type, and due date on the right. The shared updateTicketSchema checks it. The assignee
- * comes with TKT-5; the estimate waits for the mentor's OK (DOC-5). The server's field errors show
- * under the same fields, and nothing typed is lost on any error.
+ * assignee (TKT-5), priority, type, and due date on the right. The shared updateTicketSchema
+ * checks it; the estimate waits for the mentor's OK (DOC-5). The server's field errors show under
+ * the same fields (also "Assignee must be a project member"), and nothing typed is lost on any
+ * error.
  */
 export function EditTicketForm({
   projectKey,
@@ -77,6 +79,7 @@ export function EditTicketForm({
       priority: loadedTicket.priority,
       status: loadedTicket.status,
       dueDate: loadedTicket.dueDate,
+      assigneeId: loadedTicket.assignee?.id ?? null,
     },
   });
   const title = useWatch({ control, name: 'title' }) ?? '';
@@ -156,6 +159,22 @@ export function EditTicketForm({
             labels={STATUS_LABELS}
             registration={register('status')}
             error={errors.status?.message}
+          />
+          <Controller
+            control={control}
+            name="assigneeId"
+            render={({ field }) => (
+              <AssigneeField
+                label="Assigned to"
+                projectKey={projectKey}
+                value={field.value ?? null}
+                onChange={field.onChange}
+                onBlur={field.onBlur}
+                selectRef={field.ref}
+                error={errors.assigneeId?.message}
+                currentAssignee={loadedTicket.assignee}
+              />
+            )}
           />
           <TicketChoiceField
             label="Priority"

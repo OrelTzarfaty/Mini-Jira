@@ -3,11 +3,12 @@ import { createTicketSchema, Priority, TicketType } from '@mini-jira/shared';
 import type { CreateTicketInput, Ticket } from '@mini-jira/shared';
 import { Loader2Icon } from 'lucide-react';
 import type { ReactElement } from 'react';
-import { useForm, useWatch } from 'react-hook-form';
+import { Controller, useForm, useWatch } from 'react-hook-form';
 
 import { FormAlert } from '@/components/form-alert';
 import { Button } from '@/components/ui/button';
 import { DialogClose, DialogFooter } from '@/components/ui/dialog';
+import { AssigneeField } from '@/features/tickets/components/assignee-field';
 import {
   TicketChoiceField,
   TicketDescriptionField,
@@ -30,8 +31,8 @@ interface CreateTicketFormProps {
 
 /**
  * The Create ticket form (wireframe 03 E, TKT-1). The shared createTicketSchema checks it, and
- * the server's field errors show under the same fields. The assignee comes with TKT-5; the
- * estimate waits for the mentor's OK (DOC-5).
+ * the server's field errors show under the same fields, also "Assignee must be a project member"
+ * under the assignee (TKT-5). The estimate waits for the mentor's OK (DOC-5).
  */
 export function CreateTicketForm({ projectKey, onCreated }: CreateTicketFormProps): ReactElement {
   const createTicketMutation = useCreateTicketMutation(projectKey);
@@ -50,6 +51,7 @@ export function CreateTicketForm({ projectKey, onCreated }: CreateTicketFormProp
       type: TicketType.TASK,
       priority: Priority.MEDIUM,
       dueDate: null,
+      assigneeId: null,
     },
   });
   const title = useWatch({ control, name: 'title' });
@@ -81,7 +83,8 @@ export function CreateTicketForm({ projectKey, onCreated }: CreateTicketFormProp
         registration={register('description')}
         error={errors.description?.message}
       />
-      <div className="grid grid-cols-2 gap-4">
+      {/* items-start: a taller cell (the assignee's hint) doesn't stretch the one beside it. */}
+      <div className="grid grid-cols-2 items-start gap-4">
         <TicketChoiceField
           label="Type"
           labels={TICKET_TYPE_LABELS}
@@ -93,6 +96,21 @@ export function CreateTicketForm({ projectKey, onCreated }: CreateTicketFormProp
           labels={PRIORITY_LABELS}
           registration={register('priority')}
           error={errors.priority?.message}
+        />
+        <Controller
+          control={control}
+          name="assigneeId"
+          render={({ field }) => (
+            <AssigneeField
+              label="Assignee"
+              projectKey={projectKey}
+              value={field.value ?? null}
+              onChange={field.onChange}
+              onBlur={field.onBlur}
+              selectRef={field.ref}
+              error={errors.assigneeId?.message}
+            />
+          )}
         />
         <TicketDueDateField
           registration={register('dueDate', { setValueAs: emptyToNull })}

@@ -3,6 +3,7 @@ import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 
+import { mockMembers } from '@/test/members';
 import { mockProject } from '@/test/project';
 import { renderRoute } from '@/test/render-route';
 import { mockLoggedIn } from '@/test/session';
@@ -14,6 +15,8 @@ const TICKET_PATH = '/projects/WEB/tickets/WEB-12';
 async function openEditMode(): Promise<HTMLElement> {
   mockLoggedIn();
   mockProject();
+  // The assignee picker lists the project's members (TKT-5).
+  mockMembers();
   renderRoute(TICKET_PATH);
   await userEvent.click(await screen.findByRole('button', { name: 'Edit' }));
 
@@ -43,8 +46,8 @@ describe('Edit ticket (TKT-3)', () => {
     expect(within(form).getByLabelText('Priority')).toHaveValue(Priority.HIGH);
     expect(within(form).getByLabelText('Type')).toHaveValue(TEST_TICKET.type);
     expect(within(form).getByLabelText('Due date (optional)')).toHaveValue(TEST_TICKET.dueDate);
-    // Not editable here: the assignee comes with TKT-5, the estimate waits for DOC-5.
-    expect(within(form).queryByLabelText(/Assign/)).not.toBeInTheDocument();
+    expect(within(form).getByLabelText('Assigned to')).toHaveValue(TEST_TICKET.assignee?.id);
+    // Not editable here: the estimate waits for DOC-5.
     expect(within(form).queryByLabelText(/Estimate/)).not.toBeInTheDocument();
 
     await userEvent.clear(title);
