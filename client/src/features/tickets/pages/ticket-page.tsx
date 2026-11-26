@@ -6,6 +6,7 @@ import { DocumentTitle } from '@/components/document-title';
 import { PageSkeleton } from '@/components/page-skeleton';
 import { Button } from '@/components/ui/button';
 import { useCurrentProject } from '@/features/projects/hooks/use-project';
+import { CopyLinkButton } from '@/features/tickets/components/copy-link-button';
 import { TicketDetails } from '@/features/tickets/components/ticket-details';
 import { useTicket } from '@/features/tickets/hooks/use-ticket';
 import { TICKET_TYPE_LABELS } from '@/features/tickets/lib/ticket-labels';
@@ -47,6 +48,7 @@ export function TicketPage(): ReactElement {
             {project.key} / {ticket.key}
           </p>
         </div>
+        <CopyLinkButton path={`/projects/${project.key}/tickets/${ticket.key}`} />
       </div>
 
       <header className="grid gap-1">
