@@ -224,6 +224,17 @@ describe('GET /api/openapi.json', () => {
     );
   });
 
+  it('TKT-2: documents the get-ticket endpoint with its parameters and responses', async () => {
+    const spec = await getSpec();
+    const operation = spec.paths['/projects/{projectKey}/tickets/{ticketKey}']?.get;
+
+    expect(Object.keys(operation?.responses ?? {})).toEqual(['200', '401', '404', '500']);
+    expect(operation?.parameters).toEqual([
+      expect.objectContaining({ name: 'projectKey', in: 'path', required: true }),
+      expect.objectContaining({ name: 'ticketKey', in: 'path', required: true }),
+    ]);
+  });
+
   it('SETUP-3: builds the error schema from the shared error codes', async () => {
     const spec = await getSpec();
 

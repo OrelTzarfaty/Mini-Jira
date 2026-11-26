@@ -13,6 +13,9 @@ export const TICKET_TITLE_MAX_LENGTH = 120;
 // excerpt) while staying far below the 100 kB request body limit, even when every character
 // takes 4 bytes in UTF-8.
 export const TICKET_DESCRIPTION_MAX_LENGTH = 10_000;
+// TKT-2: the one 404 message for a ticket that isn't in the project: an unknown number, a key
+// with another project's prefix, or a malformed key.
+export const TICKET_NOT_FOUND_MESSAGE = 'Ticket not found';
 export const DUE_DATE_FORMAT_MESSAGE = 'Due date must be a real date in the format YYYY-MM-DD';
 
 // The years PostgreSQL's DATE column and a JavaScript Date agree on. Year 0000 is a valid

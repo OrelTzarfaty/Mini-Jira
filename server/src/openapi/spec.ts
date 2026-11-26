@@ -104,6 +104,16 @@ const USER_ID_PARAMETER = {
   schema: { type: 'string', format: 'uuid' },
 };
 
+// TKT-2: the ticket key in /projects/{projectKey}/tickets/{ticketKey}.
+const TICKET_KEY_PARAMETER = {
+  name: 'ticketKey',
+  in: 'path',
+  required: true,
+  description:
+    'The ticket key: the project key, a dash and the ticket number (e.g. WEB-12). The prefix must be the project key in the same URL.',
+  schema: { type: 'string', example: 'WEB-12' },
+};
+
 // LST-4: the query parameter of every paginated list.
 const PAGE_QUERY_PARAMETER = {
   name: 'page',
@@ -528,6 +538,32 @@ export function createOpenApiSpec(): Record<string, unknown> {
             ),
             '413': jsonResponse(
               'The request body is over 100 kB (PAYLOAD_TOO_LARGE)',
+              'ErrorResponse',
+            ),
+            '500': jsonResponse('Unexpected server error', 'ErrorResponse'),
+          },
+        },
+      },
+      '/projects/{projectKey}/tickets/{ticketKey}': {
+        get: {
+          tags: ['Tickets'],
+          operationId: 'getTicket',
+          summary: 'Get a ticket by its key',
+          description:
+            'TKT-2. Any member of the project (OWNER or MEMBER) may read a ticket of the project. The key is matched exactly: an uppercase project key, a dash, and the number without leading zeros (WEB-12). A key whose prefix is not the project key in the URL (WEB-3 under /projects/API/tickets/WEB-3), a malformed key, and a number the project has no ticket with all get the same 404. A project that does not exist and a project the caller is not a member of get the 404 "Project not found". Answers with Cache-Control: no-store.',
+          security: [{ authCookie: [] }],
+          parameters: [PROJECT_KEY_PARAMETER, TICKET_KEY_PARAMETER],
+          responses: {
+            '200': {
+              ...jsonResponse('The ticket', 'Ticket'),
+              headers: NO_STORE_HEADER,
+            },
+            '401': jsonResponse(
+              'Not logged in (UNAUTHENTICATED): the cookie is missing, invalid or expired, or its user no longer exists',
+              'ErrorResponse',
+            ),
+            '404': jsonResponse(
+              'No such project or the caller is not a member of it (NOT_FOUND, "Project not found"), or no such ticket in the project (NOT_FOUND, "Ticket not found")',
               'ErrorResponse',
             ),
             '500': jsonResponse('Unexpected server error', 'ErrorResponse'),
