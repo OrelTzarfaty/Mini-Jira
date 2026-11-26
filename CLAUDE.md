@@ -103,6 +103,7 @@ Endpoints so far (full details in Swagger at `/api/docs`):
 | `GET` | `/api/projects/:projectKey/board` | The board (any member): `{ columns: [{ status, total, items, nextCursor }] }`, always all 4 statuses in workflow order (`TODO`, `IN_PROGRESS`, `IN_REVIEW`, `DONE`). `total` = all tickets in the column (header count), `items` = its first 50 cards by rank (then id), `nextCursor` = opaque string for "load more" or `null`. Card: `id`, `key`, `number`, `title`, `type`, `priority`, `status`, `dueDate`, `assignee` (`{ id, name }` or `null`), `updatedAt` (no description, never the rank). Read in one REPEATABLE READ snapshot, so counts match the cards. `Cache-Control: no-store`; unknown params → `400` (filters come with BRD-4) |
 | `GET` | `/api/projects/:projectKey/board/columns/:status?cursor=` | "Load more" for one column (any member): `{ status, total, items, nextCursor }`, the next 50 cards after `cursor` (from the top without it). Keyset paging on (rank, id), so cards moved meanwhile are never skipped or repeated. `400` for an unknown status, a cursor the API didn't produce, or unknown params. `Cache-Control: no-store` |
 | `POST` | `/api/projects/:projectKey/tickets` | Create a ticket (any member): `title` (1–120), optional `description` (≤ 10,000), `type` (default `TASK`), `priority` (default `MEDIUM`), optional `dueDate` (`YYYY-MM-DD`). Always starts in To Do at the bottom of the column, reporter = caller, no assignee. `201` with the ticket: `id`, `key` (`WEB-13`), `number`, `title`, `description`, `type`, `priority`, `status`, `reporter {id,name}`, `assignee` (null), `dueDate`, `createdAt`, `updatedAt` (no `rank`). Unknown fields (also `status`, `number`, `assigneeId`) → `400`; non-member → `404`. Key from the atomic `ticketCounter` in one transaction, never reused |
+| `GET` | `/api/projects/:projectKey/tickets/:ticketKey` | One ticket by its key (any member), same shape as the create response, `Cache-Control: no-store`. The key prefix must match the project: `WEB-3` under `/projects/API/...`, a malformed key, or an unknown number → `404 NOT_FOUND` ("Ticket not found"); non-member or missing project → `404` ("Project not found"); no session → `401`. Query scoped by project id + number |
 
 ## Features
 
@@ -112,7 +113,7 @@ Summary only — task-level status lives in [docs/backlog.md](docs/backlog.md).
 |---|---|---|---|
 | Authentication | AUTH-1..4 | P0 | Done — AUTH-1..4 done (register, log in, log out, session survives refresh) |
 | Projects & members | PRJ-1..6 | P0 | Done — PRJ-1..6 done (create project, My Projects list, add and remove members, edit or delete a project, non-member access) |
-| Tickets | TKT-1..5 | P0 | In progress — TKT-1 (create a ticket): API and "+ Create ticket" popup in the project header merged; the Estimate field waits for the mentor (DOC-5) |
+| Tickets | TKT-1..5 | P0 | In progress — TKT-1 (create a ticket) done; TKT-2 (ticket page with its own URL, Copy link) built, in review; the Estimate field waits for the mentor (DOC-5) |
 | Board | BRD-1..4 | P0 | In progress — BRD-1 (board columns): API and UI built (columns with totals, cards, "load more" per column, phone scrolling), in review |
 | Comments & activity | CMT-1..2, ACT-1 | P1 | Not started |
 | List, search, pagination | LST-1..4 | P1 | Not started |

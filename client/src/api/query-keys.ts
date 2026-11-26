@@ -27,3 +27,14 @@ export function boardQueryKey(
 ): readonly [...ReturnType<typeof projectQueryKey>, 'board'] {
   return [...projectQueryKey(projectKey), 'board'];
 }
+
+/**
+ * One ticket by its key (TKT-2). Under the project's key, so creating a ticket (which marks every
+ * project query stale) and deleting the project refresh or drop it too.
+ */
+export function ticketQueryKey(
+  projectKey: string,
+  ticketKey: string,
+): readonly [...ReturnType<typeof projectQueryKey>, 'tickets', string] {
+  return [...projectQueryKey(projectKey), 'tickets', ticketKey];
+}

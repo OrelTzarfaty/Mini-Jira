@@ -1,11 +1,16 @@
-import { PROJECT_NOT_FOUND_MESSAGE, Status, ticketSchema } from '@mini-jira/shared';
+import {
+  PROJECT_NOT_FOUND_MESSAGE,
+  Status,
+  TICKET_NOT_FOUND_MESSAGE,
+  ticketSchema,
+} from '@mini-jira/shared';
 import type { CreateTicketInput, Ticket } from '@mini-jira/shared';
 
 import type { PrismaClient } from '../../generated/prisma/client.js';
 import { NotFoundError } from '../../lib/errors.js';
 import { isRecordNotFound } from '../../lib/prisma-errors.js';
 import { rankBetween } from '../../lib/rank.js';
-import { formatTicketKey } from '../../lib/ticket-key.js';
+import { formatTicketKey, parseTicketKey } from '../../lib/ticket-key.js';
 
 /** The project a ticket belongs to: its id for the queries and its key for the ticket key. */
 export interface TicketProject {
@@ -23,6 +28,12 @@ export interface TicketsService {
     reporterId: string,
     input: CreateTicketInput,
   ): Promise<Ticket>;
+
+  /**
+   * TKT-2: the ticket with this key in this project. Throws 404 when the key is malformed, its
+   * prefix is another project's key, or the project has no ticket with that number.
+   */
+  getTicket(project: TicketProject, ticketKey: string): Promise<Ticket>;
 }
 
 // Only the fields the API returns; users show only their public id and name.
@@ -72,6 +83,8 @@ function toTicketResponse(projectKey: string, ticket: TicketRow): Ticket {
     updatedAt: ticket.updatedAt.toISOString(),
   });
 }
+
+const ticketNotFound = (): NotFoundError => new NotFoundError(TICKET_NOT_FOUND_MESSAGE);
 
 export function createTicketsService(prisma: PrismaClient): TicketsService {
   return {
@@ -126,6 +139,26 @@ export function createTicketsService(prisma: PrismaClient): TicketsService {
         }
         throw error;
       }
+    },
+
+    // TKT-2: the key's prefix must be this project's key, so WEB-3 under /projects/API/... is
+    // a 404 and never another project's ticket. The query is also scoped by the project id
+    // (architecture §6), and the (projectId, number) unique index finds the row directly.
+    async getTicket(project, ticketKey) {
+      const parts = parseTicketKey(ticketKey);
+      if (parts?.projectKey !== project.key) {
+        throw ticketNotFound();
+      }
+
+      const ticket = await prisma.ticket.findUnique({
+        where: { projectId_number: { projectId: project.id, number: parts.number } },
+        select: TICKET_FIELDS,
+      });
+      if (!ticket) {
+        throw ticketNotFound();
+      }
+
+      return toTicketResponse(project.key, ticket);
     },
   };
 }

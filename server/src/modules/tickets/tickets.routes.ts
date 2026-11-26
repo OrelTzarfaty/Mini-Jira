@@ -34,5 +34,13 @@ export function createTicketsRouter({ prisma, authCookie }: TicketsRouterOptions
     controller.create,
   );
 
+  // TKT-2: any member may read a ticket of the project by its key (WEB-12).
+  router.get(
+    '/projects/:projectKey/tickets/:ticketKey',
+    requireAuth,
+    loadProjectAccess,
+    controller.get,
+  );
+
   return router;
 }

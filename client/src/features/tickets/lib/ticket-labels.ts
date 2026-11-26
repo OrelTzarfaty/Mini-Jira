@@ -15,7 +15,10 @@ export const PRIORITY_LABELS: Record<Priority, string> = {
   [Priority.CRITICAL]: 'Critical',
 };
 
-/** The words the screens show for each status (wireframe 03 A), in workflow order. */
+/**
+ * The words the screens show for each status (wireframes 03 and 04), in board column order: the
+ * board's column headers (BRD-1) and the ticket page (TKT-2).
+ */
 export const STATUS_LABELS: Record<Status, string> = {
   [Status.TODO]: 'To Do',
   [Status.IN_PROGRESS]: 'In Progress',
