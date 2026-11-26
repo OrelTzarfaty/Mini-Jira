@@ -80,7 +80,9 @@ export function BoardColumn({ projectKey, column, emptyState }: BoardColumnProps
           <span className="sr-only">{column.total === 1 ? 'ticket' : 'tickets'}</span>
         </span>
       </h2>
-      <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-3 pt-1 pb-3">
+      {/* relative: the screen-reader-only text (position absolute) stays inside the scrolling area;
+          without it, the text of the last cards would stretch the whole page. */}
+      <div className="relative flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-3 pt-1 pb-3">
         {cards.length === 0 ? (
           emptyState
         ) : (
@@ -128,8 +130,11 @@ export function BoardColumn({ projectKey, column, emptyState }: BoardColumnProps
 
 /**
  * The column's frame, shared with the loading placeholder so both line up. The height fills
- * the screen below the project header (12.5rem: top bar, page padding, and header), with a floor
- * so a short window still shows a few cards.
+ * the screen below the project header (13.125rem: top bar, page padding, header, and the room
+ * under the board), with a floor so a short window still shows a few cards. `relative` keeps the
+ * heading's screen-reader-only text inside the column. Below 1024px a column keeps a usable
+ * width (at most 80% of the screen, so the next one peeks in) and the board scrolls sideways
+ * (wireframe 03 H); from 1024px the four share the width.
  */
 export const COLUMN_CLASSES =
-  'flex h-[max(20rem,calc(100dvh-12.5rem))] min-w-0 flex-col rounded-lg bg-muted';
+  'relative flex h-[max(20rem,calc(100dvh-13.125rem))] w-[min(18rem,80vw)] shrink-0 snap-start flex-col rounded-lg bg-muted lg:w-auto lg:min-w-0 lg:flex-1';

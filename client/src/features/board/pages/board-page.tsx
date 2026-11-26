@@ -11,7 +11,11 @@ import { useBoard } from '@/features/board/hooks/use-board';
 import { useCurrentProject } from '@/features/projects/hooks/use-project';
 import { useProjectTabs } from '@/features/projects/hooks/use-project-tabs';
 
-const BOARD_CLASSES = 'grid grid-cols-4 gap-3';
+// Narrow screens: the columns sit side by side and the board scrolls sideways, stopping at each
+// column (wireframe 03 H). It reaches the screen edges (the negative margin undoes the page
+// padding), so a peeking column isn't cut off early, and scroll-padding keeps the stop aligned.
+const BOARD_CLASSES =
+  '-mx-4 flex scroll-px-4 gap-3 overflow-x-auto px-4 pb-2 max-lg:snap-x max-lg:snap-mandatory sm:-mx-6 sm:scroll-px-6 sm:px-6';
 
 /**
  * The project board (BRD-1, wireframe 03 A, G): one column per status, left to right in workflow
