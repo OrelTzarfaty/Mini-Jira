@@ -37,7 +37,7 @@ test.describe("Non-members can't access a project (PRJ-6)", () => {
     ).toBeVisible();
     await expect(page).toHaveTitle('Project not found · Mini-Jira');
     await expect(page.getByText(project.name)).toHaveCount(0);
-    await expect(page.getByRole('heading', { name: `${project.key} board` })).toHaveCount(0);
+    await expect(page.getByRole('region', { name: /^To Do/ })).toHaveCount(0);
 
     await page.getByRole('link', { name: 'Back to My Projects' }).click();
     await expect(page).toHaveURL('/projects');
@@ -77,9 +77,9 @@ test.describe("Non-members can't access a project (PRJ-6)", () => {
     await page.goto(`/projects/${project.key}/board`);
 
     expect((await projectResponse).status()).toBe(200);
-    await expect(
-      page.getByRole('heading', { level: 1, name: `${project.key} board` }),
-    ).toBeVisible();
+    // The board's h1 is the project header (BRD-1); an empty project shows its To Do column.
+    await expect(page.getByRole('heading', { level: 1, name: project.name })).toBeVisible();
+    await expect(page.getByRole('region', { name: 'To Do 0 tickets' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Project not found' })).toHaveCount(0);
     expect(consoleErrors).toEqual([]);
   });

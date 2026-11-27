@@ -1,10 +1,12 @@
 import { Role } from '@mini-jira/shared';
+import { useState } from 'react';
 import type { ReactElement } from 'react';
 import { NavLink, Outlet } from 'react-router';
 
 import { CURRENT_PAGE_CLASSES } from '@/components/top-bar';
 import { Button } from '@/components/ui/button';
 import { useCurrentProject } from '@/features/projects/hooks/use-project';
+import type { ProjectTabsContext } from '@/features/projects/hooks/use-project-tabs';
 import { CreateTicketDialog } from '@/features/tickets/components/create-ticket-dialog';
 
 /**
@@ -15,6 +17,14 @@ import { CreateTicketDialog } from '@/features/tickets/components/create-ticket-
  */
 export function ProjectTabsLayout(): ReactElement {
   const project = useCurrentProject();
+  // Here rather than in the popup, so a page below can open the same popup (one popup, one
+  // "WEB-13 created" message, whichever button opened it).
+  const [isCreateTicketOpen, setIsCreateTicketOpen] = useState(false);
+  const pageContext: ProjectTabsContext = {
+    openCreateTicket: () => {
+      setIsCreateTicketOpen(true);
+    },
+  };
   const basePath = `/projects/${project.key}`;
   const tabs = [
     { label: 'Board', to: `${basePath}/board` },
@@ -46,10 +56,14 @@ export function ProjectTabsLayout(): ReactElement {
               ))}
             </ul>
           </nav>
-          <CreateTicketDialog projectKey={project.key} />
+          <CreateTicketDialog
+            projectKey={project.key}
+            isOpen={isCreateTicketOpen}
+            onOpenChange={setIsCreateTicketOpen}
+          />
         </div>
       </header>
-      <Outlet />
+      <Outlet context={pageContext} />
     </>
   );
 }

@@ -21,6 +21,13 @@ export function projectMembersQueryKey(
   return [...projectQueryKey(projectKey), 'members'];
 }
 
+/** A project's board (BRD-1). Under the project's key, so creating a ticket (TKT-1) refreshes it. */
+export function boardQueryKey(
+  projectKey: string,
+): readonly [...ReturnType<typeof projectQueryKey>, 'board'] {
+  return [...projectQueryKey(projectKey), 'board'];
+}
+
 /**
  * One ticket by its key (TKT-2). Under the project's key, so creating a ticket (which marks every
  * project query stale) and deleting the project refresh or drop it too.

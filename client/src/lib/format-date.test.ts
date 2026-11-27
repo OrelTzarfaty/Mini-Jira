@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { formatCalendarDate, todayCalendarDate } from './format-date';
+import { formatCalendarDate, formatDueDate, todayCalendarDate } from './format-date';
 
 describe('formatCalendarDate', () => {
   it.each([
@@ -9,6 +9,19 @@ describe('formatCalendarDate', () => {
     ['2026-12-31', 'Dec 31, 2026'],
   ])('TKT-2: shows %s as %s, whatever the time zone', (date, expected) => {
     expect(formatCalendarDate(date)).toBe(expected);
+  });
+});
+
+describe('formatDueDate', () => {
+  // Noon local time, so the tests mean the same day in every time zone.
+  const NOW = new Date(2026, 10, 26, 12);
+
+  it('BRD-1: shows a date of this year as month and day', () => {
+    expect(formatDueDate('2026-11-30', NOW)).toBe('Nov 30');
+  });
+
+  it('BRD-1: adds the year to a date in another year', () => {
+    expect(formatDueDate('2027-01-05', NOW)).toBe('Jan 5, 2027');
   });
 });
 

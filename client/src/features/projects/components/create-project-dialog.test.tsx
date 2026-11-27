@@ -152,7 +152,9 @@ describe('CreateProjectDialog', () => {
 
     await submit(popup);
 
-    expect(await screen.findByRole('heading', { level: 1, name: 'WEB board' })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', { level: 1, name: 'WEB Website Redesign' }),
+    ).toBeInTheDocument();
     expect(router.state.location.pathname).toBe('/projects/WEB/board');
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(sentBody).toEqual({ name: 'Website Redesign', key: 'WEB', description: null });
@@ -177,7 +179,9 @@ describe('CreateProjectDialog', () => {
 
     letServerAnswer();
 
-    expect(await screen.findByRole('heading', { level: 1, name: 'WEB board' })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', { level: 1, name: 'WEB Website Redesign' }),
+    ).toBeInTheDocument();
   });
 
   it('PRJ-1: 409 PROJECT_KEY_TAKEN shows the error under Key and keeps what was typed', async () => {

@@ -307,7 +307,7 @@ Sprint 4 · Size M · **Status: Done** — merged into `dev` in [#90](https://gi
 - [x] QA · Direct URL works after refresh; `WEB-3` under another project's URL → 404
 
 ### TKT-3 · Edit a ticket
-Sprint 4 · Size M · **Status: In review** · Depends on TKT-2
+Sprint 4 · Size M · **Status: Done** — merged into `dev` in [#92](https://github.com/OrelTzarfaty/Mini-Jira/pull/92) (`4a931e0`); light QA PASS · Depends on TKT-2
 AC (extra): the PATCH body includes the `updatedAt` the client loaded; the conditional update (architecture §10.3) is built now, the conflict UX comes in CON-1.
 - [x] BE · Shared `updateTicketSchema` (includes `updatedAt`)
 - [x] BE · `PATCH /api/projects/:projectKey/tickets/:ticketKey` with validation and the `updatedAt` check
@@ -317,14 +317,14 @@ AC (extra): the PATCH body includes the `updatedAt` the client loaded; the condi
 - [x] QA · Integration: stale `updatedAt` → 409
 
 ### TKT-4 · Delete a ticket
-Sprint 4 · Size S · Status: In review · Depends on TKT-2
-- [ ] BE · `DELETE …/tickets/:ticketKey`: reporter or owner only, otherwise 403
-- [ ] FE · Delete button only for the reporter or owner; confirmation dialog
-- [ ] QA · Reporter and owner can delete; another member gets 403 and doesn't see the button
-- [ ] QA · Integration: a deleted ticket's number is never reused (TKT-1 key rule)
+Sprint 4 · Size S · **Status: Done** — merged into `dev` in [#93](https://github.com/OrelTzarfaty/Mini-Jira/pull/93) (`ff1a74b`); light QA PASS · Depends on TKT-2
+- [x] BE · `DELETE …/tickets/:ticketKey`: reporter or owner only, otherwise 403
+- [x] FE · Delete button only for the reporter or owner; confirmation dialog
+- [x] QA · Reporter and owner can delete; another member gets 403 and doesn't see the button
+- [x] QA · Integration: a deleted ticket's number is never reused (TKT-1 key rule)
 
 ### TKT-5 · Assign a ticket
-Sprint 4 · Size M · **Status: In review** · Depends on TKT-3, PRJ-4
+Sprint 4 · Size M · **Status: Done** — merged into `dev` in [#94](https://github.com/OrelTzarfaty/Mini-Jira/pull/94) (`c09e8c6`); full QA PASS · Depends on TKT-3, PRJ-4
 - [x] BE · Assignee must be a project member (otherwise `400 VALIDATION_ERROR` on `assigneeId`)
 - [x] BE · Extend member removal (PRJ-4): unassign their tickets in the same transaction
 - [x] FE · Assignee picker (project members) in the create and edit forms
@@ -337,17 +337,17 @@ Sprint 4 · Size M · **Status: In review** · Depends on TKT-3, PRJ-4
 ## E5 · Board — Sprints 4–5
 
 ### BRD-1 · Board with one column per status
-Sprint 4 · Size L · Status: To do · Depends on TKT-1
+Sprint 4 · Size L · Status: In progress · Depends on TKT-1
 AC (extra): up to 50 cards per column ordered by rank, "load more" per column; column headers show the total count.
-- [ ] BE · `GET /api/projects/:projectKey/board`: per status → count + first 50 cards by rank
-- [ ] BE · "Load more" for one column with a rank cursor
-- [ ] FE · `/projects/:projectKey/board` layout: 4 columns with headers and counts
-- [ ] FE · TicketCard: key, title, type icon, priority, estimate, assignee initials, due date
-- [ ] FE · "Load more" button per column
-- [ ] FE · Loading, empty, and error states
-- [ ] FE · Phone width: the board scrolls horizontally
-- [ ] QA · Counts and card order are right
-- [ ] QA · "Load more" works on a column with 50+ cards
+- [x] BE · `GET /api/projects/:projectKey/board`: per status → count + first 50 cards by rank
+- [x] BE · "Load more" for one column with a rank cursor
+- [x] FE · `/projects/:projectKey/board` layout: 4 columns with headers and counts
+- [x] FE · TicketCard: key, title, type icon, priority, estimate, assignee initials, due date (estimate waits for DOC-5)
+- [x] FE · "Load more" button per column
+- [x] FE · Loading, empty, and error states
+- [x] FE · Phone width: the board scrolls horizontally
+- [x] QA · Counts and card order are right
+- [x] QA · "Load more" works on a column with 50+ cards
 
 ### BRD-2 · Drag a card to another column
 Sprint 5 · Size L · Status: To do · Depends on BRD-1

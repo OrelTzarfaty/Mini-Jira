@@ -9,10 +9,10 @@ import { mockLoggedIn } from '@/test/session';
 describe('routes', () => {
   it.each([
     ['/projects', 'My Projects'],
-    ['/projects/WEB/board', 'WEB board'],
     ['/projects/WEB/list?status=TODO&page=2', 'WEB list'],
     ['/my-work', 'My Work'],
-    // /projects/WEB/settings (PRJ-3) and the ticket page (TKT-2) have their own tests.
+    // The board (BRD-1), /projects/WEB/settings (PRJ-3) and the ticket page (TKT-2) have their
+    // own tests.
   ])('SETUP-5: %s shows the "%s" page with a matching tab title', async (path, title) => {
     mockLoggedIn();
     // The project pages render only after their project loads (PRJ-6).

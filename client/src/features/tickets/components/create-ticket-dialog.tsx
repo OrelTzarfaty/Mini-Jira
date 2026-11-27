@@ -1,5 +1,5 @@
 import { PlusIcon } from 'lucide-react';
-import { useRef, useState } from 'react';
+import { useRef } from 'react';
 import type { ReactElement } from 'react';
 
 import { ToastMessage } from '@/components/toast-message';
@@ -17,8 +17,18 @@ const CREATED_MESSAGE_DURATION_MS = 6000;
  * The form lives inside the popup's content, so closing it (Cancel, ✕, Esc) throws away what
  * was typed, and Radix returns focus to the button. After Create, "WEB-13 created" shows.
  */
-export function CreateTicketDialog({ projectKey }: { projectKey: string }): ReactElement {
-  const [isOpen, setIsOpen] = useState(false);
+interface CreateTicketDialogProps {
+  projectKey: string;
+  /** Whether the popup is open: the project header owns it, so the board's empty state can open it too (BRD-1). */
+  isOpen: boolean;
+  onOpenChange: (isOpen: boolean) => void;
+}
+
+export function CreateTicketDialog({
+  projectKey,
+  isOpen,
+  onOpenChange,
+}: CreateTicketDialogProps): ReactElement {
   // Hides "WEB-13 created" after a few seconds; a new ticket's key restarts the timer.
   const [createdTicketKey, setCreatedTicketKey] = useAutoClearState<string>(
     CREATED_MESSAGE_DURATION_MS,
@@ -29,7 +39,7 @@ export function CreateTicketDialog({ projectKey }: { projectKey: string }): Reac
   const keyToAnnounceRef = useRef<string | null>(null);
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>
         {/* On a phone only the (+) shows (wireframe 03 H); the label stays as the button's
             accessible name, so screen readers still hear "Create ticket". */}
@@ -56,7 +66,7 @@ export function CreateTicketDialog({ projectKey }: { projectKey: string }): Reac
           projectKey={projectKey}
           onCreated={(ticket) => {
             keyToAnnounceRef.current = ticket.key;
-            setIsOpen(false);
+            onOpenChange(false);
           }}
         />
       </DialogContent>
